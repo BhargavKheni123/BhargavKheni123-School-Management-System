@@ -21,8 +21,10 @@ namespace digital.Controllers
         private readonly IAdminRepository _adminRepository;
         private readonly IStudentRepository _studentRepository;
         private readonly IAttendanceRepository _attendanceRepository;
+        private readonly ICategoryRepository _categoryRepository;
+        private readonly ISubCategoryRepository _subCategoryRepository;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IUserRepository userRepository, ITeacherMasterRepository teacherMasterRepository, IAdminRepository adminRepository, IStudentRepository studentRepository, IAttendanceRepository attendanceRepository)
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IUserRepository userRepository, ITeacherMasterRepository teacherMasterRepository, IAdminRepository adminRepository, IStudentRepository studentRepository, IAttendanceRepository attendanceRepository, ICategoryRepository categoryRepository, ISubCategoryRepository subCategoryRepository)
         {
             _logger = logger;
             _context = context;
@@ -31,6 +33,8 @@ namespace digital.Controllers
             _adminRepository = adminRepository;
             _studentRepository = studentRepository;
             _attendanceRepository = attendanceRepository;
+            _categoryRepository = categoryRepository;
+            _subCategoryRepository = subCategoryRepository;
         }
 
         public IActionResult Index()
@@ -163,18 +167,17 @@ namespace digital.Controllers
         [HttpGet]
         public IActionResult Category()
         {
-            var list = _context.Categories.ToList();
+            var list = _categoryRepository.GetAllCategories();
             return View(list);
         }
 
         [HttpPost]
         public IActionResult Category(Category cat)
         {
-            cat.CreatedDate = DateTime.Now;
-            _context.Categories.Add(cat);
-            _context.SaveChanges();
+            _categoryRepository.AddCategory(cat);
             return RedirectToAction("Category");
         }
+
 
         [HttpGet]
         public IActionResult Edit(int id)
@@ -211,22 +214,12 @@ namespace digital.Controllers
         {
             var vm = new SubCategoryViewModel
             {
-                Categories = _context.Categories
-                    .Select(c => new SelectListItem
-                    {
-                        Value = c.Id.ToString(),
-                        Text = c.Name
-                    }).ToList(),
-
-                SubCategoryList = _context.SubCategories
-                    .Include(s => s.Category)
-                    .ToList()
+                Categories = _categoryRepository.GetCategorySelectList(),
+                SubCategoryList = _subCategoryRepository.GetSubCategoriesWithCategory()
             };
-
             return View(vm);
         }
 
-        // ?? Handle Add / Insert SubCategory
         [HttpPost]
         public IActionResult Subcategories(int CategoryId, string Name)
         {
@@ -235,26 +228,21 @@ namespace digital.Controllers
                 var newSubCategory = new SubCategory
                 {
                     CategoryId = CategoryId,
-                    Name = Name,
-                    CreatedDate = DateTime.Now,
-                    CreatedBy = "admin" // or fetch from session/login
+                    Name = Name
                 };
 
-                _context.SubCategories.Add(newSubCategory);
-                _context.SaveChanges();
+                _subCategoryRepository.AddSubCategory(newSubCategory);
             }
 
-            // Reload the view model after saving
             var vm = new SubCategoryViewModel
             {
-                Categories = _context.Categories
-                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList(),
-                SubCategoryList = _context.SubCategories.Include(s => s.Category).ToList()
+                Categories = _categoryRepository.GetCategorySelectList(),
+                SubCategoryList = _subCategoryRepository.GetSubCategoriesWithCategory()
             };
 
             return View(vm);
         }
+
 
 
         [HttpGet]
@@ -502,6 +490,7 @@ namespace digital.Controllers
 
 
 
+
         [HttpGet]
         public IActionResult TimeTableForm()
         {
@@ -552,9 +541,6 @@ namespace digital.Controllers
 
             return View();
         }
-
-
-
 
 
         [HttpGet]
