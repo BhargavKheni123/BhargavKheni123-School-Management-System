@@ -27,6 +27,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 	  <StaticWebAsset Remove="wwwroot\build\config\.eslintrc.json" />
+   <Content Remove="wwwroot\build\config\.eslintrc.json" />
   </ItemGroup>
 
 </Project>
