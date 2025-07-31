@@ -14,6 +14,7 @@ namespace digital.Repositories
             _context = context;
         }
 
+
         public List<Attendance> GetAttendanceByStudentId(int studentId)
         {
             return _context.Attendance.Where(a => a.StudentId == studentId).ToList();
