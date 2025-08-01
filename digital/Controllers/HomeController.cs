@@ -24,8 +24,14 @@ namespace digital.Controllers
         private readonly ICategoryRepository _categoryRepository;
         private readonly ISubCategoryRepository _subCategoryRepository;
         private readonly ITimeTableRepository _timeTableRepository;
+        private readonly IGenericRepository<Category> _categoryRepo;
+        private readonly IGenericRepository<SubCategory> _subCategoryRepo;
+        private readonly IGenericRepository<Student> _studentRepo;
+        private readonly IGenericRepository<TimeTable> _timeTableRepo;
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IUserRepository userRepository, ITeacherMasterRepository teacherMasterRepository, IAdminRepository adminRepository, IStudentRepository studentRepository, IAttendanceRepository attendanceRepository, ICategoryRepository categoryRepository, ISubCategoryRepository subCategoryRepository, ITimeTableRepository timeTableRepository)
+
+        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IUserRepository userRepository, ITeacherMasterRepository teacherMasterRepository, IAdminRepository adminRepository, IStudentRepository studentRepository, IAttendanceRepository attendanceRepository, ICategoryRepository categoryRepository, ISubCategoryRepository subCategoryRepository, ITimeTableRepository timeTableRepository,
+                             IGenericRepository<Category> categoryRepo, IGenericRepository<SubCategory> subCategoryRepo, IGenericRepository<Student> studentRepo, IGenericRepository<TimeTable> timeTableRepo)
         {
             _logger = logger;
             _context = context;
@@ -37,6 +43,10 @@ namespace digital.Controllers
             _categoryRepository = categoryRepository;
             _subCategoryRepository = subCategoryRepository;
             _timeTableRepository = timeTableRepository;
+            _categoryRepo = categoryRepo;
+            _subCategoryRepo = subCategoryRepo;
+            _studentRepo = studentRepo;
+            _timeTableRepo = timeTableRepo;
         }
 
         public IActionResult Index()
@@ -182,31 +192,31 @@ namespace digital.Controllers
 
 
         [HttpGet]
-        public IActionResult Edit(int id)
+        public async Task<IActionResult> Edit(int id)
         {
-            var cat = _context.Categories.FirstOrDefault(c => c.Id == id);
+            var cat = await _categoryRepo.GetByIdAsync(id);
             return View(cat);
         }
 
         [HttpPost]
-        public IActionResult Edit(Category cat)
+        public async Task<IActionResult> Edit(Category cat)
         {
-            var existing = _context.Categories.FirstOrDefault(c => c.Id == cat.Id);
-            if (existing != null)
+            if (ModelState.IsValid)
             {
-                existing.Name = cat.Name;
-                _context.SaveChanges();
+                await _categoryRepo.UpdateAsync(cat);
+                await _categoryRepo.SaveAsync();
+                return RedirectToAction("Category");
             }
-            return RedirectToAction("Category");
+            return View(cat);
         }
 
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var cat = _context.Categories.FirstOrDefault(c => c.Id == id);
+            var cat = await _categoryRepo.GetByIdAsync(id);
             if (cat != null)
             {
-                _context.Categories.Remove(cat);
-                _context.SaveChanges();
+                await _categoryRepo.DeleteAsync(cat);
+                await _categoryRepo.SaveAsync();
             }
             return RedirectToAction("Category");
         }
@@ -248,13 +258,11 @@ namespace digital.Controllers
 
 
         [HttpGet]
-        public IActionResult EditSub(int id)
+        public async Task<IActionResult> EditSub(int id)
         {
-            var subCategory = _context.SubCategories.FirstOrDefault(s => s.Id == id);
+            var subCategory = await _subCategoryRepo.GetByIdAsync(id);
             if (subCategory == null)
-            {
                 return NotFound();
-            }
 
             ViewBag.Categories = _context.Categories
                 .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
@@ -264,53 +272,55 @@ namespace digital.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditSub(SubCategory updatedSubCategory)
+        public async Task<IActionResult> EditSub(SubCategory updatedSubCategory)
         {
-            var sub = _context.SubCategories.FirstOrDefault(s => s.Id == updatedSubCategory.Id);
-            if (sub != null)
+            if (ModelState.IsValid)
             {
-                sub.CategoryId = updatedSubCategory.CategoryId;
-                sub.Name = updatedSubCategory.Name;
-                sub.CreatedDate = DateTime.Now;
-                sub.CreatedBy = "admin";
+                updatedSubCategory.CreatedDate = DateTime.Now;
+                updatedSubCategory.CreatedBy = "admin";
 
-                _context.SaveChanges();
+                await _subCategoryRepo.UpdateAsync(updatedSubCategory);
+                await _subCategoryRepo.SaveAsync();
+
                 return RedirectToAction("Subcategories");
             }
 
-            return NotFound();
+            return View(updatedSubCategory);
         }
 
+
         [HttpPost]
-        public IActionResult UpdateSub(int id, int CategoryId, string Name)
+        public async Task<IActionResult> UpdateSub(int id, int CategoryId, string Name)
         {
-            var sub = _context.SubCategories.Find(id);
+            var sub = await _subCategoryRepo.GetByIdAsync(id);
             if (sub != null)
             {
                 sub.CategoryId = CategoryId;
                 sub.Name = Name;
                 sub.CreatedDate = DateTime.Now;
-                sub.CreatedBy = "admin"; 
+                sub.CreatedBy = "admin";
 
-                _context.SubCategories.Update(sub);
-                _context.SaveChanges();
+                await _subCategoryRepo.UpdateAsync(sub);
+                await _subCategoryRepo.SaveAsync();
             }
 
             return RedirectToAction("Subcategories");
         }
+
 
         [HttpGet]
-        public IActionResult DeleteSub(int id)
+        public async Task<IActionResult> DeleteSub(int id)
         {
-            var sub = _context.SubCategories.Find(id);
+            var sub = await _subCategoryRepo.GetByIdAsync(id);
             if (sub != null)
             {
-                _context.SubCategories.Remove(sub);
-                _context.SaveChanges();
+                await _subCategoryRepo.DeleteAsync(sub);
+                await _subCategoryRepo.SaveAsync();
             }
 
             return RedirectToAction("Subcategories");
         }
+
 
 
 
@@ -377,11 +387,10 @@ namespace digital.Controllers
         }
 
 
-
         [HttpGet]
-        public IActionResult EditStudent(int id)
+        public async Task<IActionResult> EditStudent(int id)
         {
-            var student = _context.Student.FirstOrDefault(x => x.Id == id);
+            var student = await _studentRepo.GetByIdAsync(id);
             if (student == null) return NotFound();
 
             ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name", student.CategoryId);
@@ -389,29 +398,14 @@ namespace digital.Controllers
 
             return View("EditStudent", student);
         }
+
         [HttpPost]
-        public IActionResult EditStudent(Student student)
+        public async Task<IActionResult> EditStudent(Student student)
         {
             if (ModelState.IsValid)
             {
-                var existingStudent = _context.Student.FirstOrDefault(s => s.Id == student.Id);
-                if (existingStudent == null)
-                {
-                    return NotFound();
-                }
-
-                existingStudent.Name = student.Name;
-                existingStudent.CategoryId = student.CategoryId;
-                existingStudent.SubCategoryId = student.SubCategoryId;
-                existingStudent.DOB = student.DOB;
-                existingStudent.Gender = student.Gender;
-                existingStudent.MobileNumber = student.MobileNumber;
-                existingStudent.Address = student.Address;
-                existingStudent.Email = student.Email;
-                existingStudent.Password = student.Password;
-
-                _context.Student.Update(existingStudent);
-                _context.SaveChanges();
+                await _studentRepo.UpdateAsync(student);
+                await _studentRepo.SaveAsync();
 
                 TempData["Success"] = "Student Updated Successfully!";
                 return RedirectToAction("Student");
@@ -423,16 +417,18 @@ namespace digital.Controllers
         }
 
 
-        public IActionResult DeleteStudent(int id)
+
+        public async Task<IActionResult> DeleteStudent(int id)
         {
-            var student = _context.Student.FirstOrDefault(x => x.Id == id);
+            var student = await _studentRepo.GetByIdAsync(id);
             if (student != null)
             {
-                _context.Student.Remove(student);
-                _context.SaveChanges();
+                await _studentRepo.DeleteAsync(student);
+                await _studentRepo.SaveAsync();
             }
             return RedirectToAction("Student");
         }
+
         [HttpGet]
         public JsonResult GetSubCategories(int categoryId)
         {
@@ -567,15 +563,12 @@ namespace digital.Controllers
 
 
 
-
         [HttpGet]
-        public IActionResult EditTimeTable(int id)
+        public async Task<IActionResult> EditTimeTable(int id)
         {
-            var record = _context.TimeTables.FirstOrDefault(x => x.Id == id);
-
+            var record = await _timeTableRepo.GetByIdAsync(id);
             if (record == null)
                 return NotFound();
-
 
             ViewBag.StdList = _context.Categories
                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
@@ -593,16 +586,16 @@ namespace digital.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditTimeTable(TimeTable model)
+        public async Task<IActionResult> EditTimeTable(TimeTable model)
         {
             if (ModelState.IsValid)
             {
-                _context.TimeTables.Update(model);
-                _context.SaveChanges();
+                await _timeTableRepo.UpdateAsync(model);
+                await _timeTableRepo.SaveAsync();
+
                 TempData["Message"] = "Record updated successfully!";
                 return RedirectToAction("TimeTableForm");
             }
-
 
             ViewBag.StdList = _context.Categories
                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
@@ -619,13 +612,13 @@ namespace digital.Controllers
             return View("UpdateTimeTable", model);
         }
 
-        public IActionResult DeleteTimeTable(int id)
+        public async Task<IActionResult> DeleteTimeTable(int id)
         {
-            var record = _context.TimeTables.FirstOrDefault(x => x.Id == id);
+            var record = await _timeTableRepo.GetByIdAsync(id);
             if (record != null)
             {
-                _context.TimeTables.Remove(record);
-                _context.SaveChanges();
+                await _timeTableRepo.DeleteAsync(record);
+                await _timeTableRepo.SaveAsync();
                 TempData["Message"] = "Record deleted successfully!";
             }
             return RedirectToAction("TimeTableForm");
