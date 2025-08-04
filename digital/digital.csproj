@@ -36,6 +36,7 @@
 	  </None>
 	  <StaticWebAsset Remove="wwwroot/build/config/postcss.config.js" />
 	  <Content Remove="wwwroot/build/config/postcss.config.js" />
+	  <Content Remove="wwwroot/build/config/rollup.config.js" />
   </ItemGroup>
 
 </Project>
