@@ -20,8 +20,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="15.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
@@ -30,6 +30,12 @@
     </PackageReference>
 	  <StaticWebAsset Remove="wwwroot\build\config\.eslintrc.json" />
    <Content Remove="wwwroot\build\config\.eslintrc.json" />
+   <Content Update="wwwroot\build\config\postcss.config.js" ExcludeFromPublish="true" />
+	  <None Update="wwwroot/build/config/postcss.config.js">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </None>
+	  <StaticWebAsset Remove="wwwroot/build/config/postcss.config.js" />
+	  <Content Remove="wwwroot/build/config/postcss.config.js" />
   </ItemGroup>
 
 </Project>
