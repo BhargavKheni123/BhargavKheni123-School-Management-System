@@ -2,8 +2,11 @@ using digital.Interfaces;
 using digital.Models;
 using digital.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using digital.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -18,6 +21,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddAutoMapper(typeof(digital.Mapping.AutoMapperProfile).Assembly);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITeacherMasterRepository, TeacherMasterRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();

@@ -6,7 +6,8 @@ namespace digital.Interfaces
     public interface IStudentRepository
     {
         Student GetStudentById(int id);
-        IEnumerable<object> GetAllStudentsWithCategoryAndSubCategory();
+        List<Student> GetAllStudentsWithCategoryAndSubCategory();
+
         void AddStudent(Student student);
     }
 }

@@ -1,6 +1,8 @@
-﻿using digital.Interfaces;
+﻿using AutoMapper;
+using digital.Interfaces;
 using digital.Models;
 using digital.Repositories;
+using digital.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -28,10 +30,25 @@ namespace digital.Controllers
         private readonly IGenericRepository<SubCategory> _subCategoryRepo;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<TimeTable> _timeTableRepo;
+        private readonly IMapper _mapper;
 
 
-        public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IUserRepository userRepository, ITeacherMasterRepository teacherMasterRepository, IAdminRepository adminRepository, IStudentRepository studentRepository, IAttendanceRepository attendanceRepository, ICategoryRepository categoryRepository, ISubCategoryRepository subCategoryRepository, ITimeTableRepository timeTableRepository,
-                             IGenericRepository<Category> categoryRepo, IGenericRepository<SubCategory> subCategoryRepo, IGenericRepository<Student> studentRepo, IGenericRepository<TimeTable> timeTableRepo)
+
+        public HomeController(ILogger<HomeController> logger, 
+            ApplicationDbContext context, 
+            IUserRepository userRepository, 
+            ITeacherMasterRepository teacherMasterRepository, 
+            IAdminRepository adminRepository, 
+            IStudentRepository studentRepository, 
+            IAttendanceRepository attendanceRepository, 
+            ICategoryRepository categoryRepository, 
+            ISubCategoryRepository subCategoryRepository, 
+            ITimeTableRepository timeTableRepository,
+            IGenericRepository<Category> categoryRepo, 
+            IGenericRepository<SubCategory> subCategoryRepo, 
+            IGenericRepository<Student> studentRepo, 
+            IGenericRepository<TimeTable> timeTableRepo,
+            IMapper mapper)
         {
             _logger = logger;
             _context = context;
@@ -47,6 +64,7 @@ namespace digital.Controllers
             _subCategoryRepo = subCategoryRepo;
             _studentRepo = studentRepo;
             _timeTableRepo = timeTableRepo;
+            _mapper = mapper;
         }
 
         public IActionResult Index()
@@ -176,87 +194,103 @@ namespace digital.Controllers
         }
 
 
+        // GET: Display list of categories
         [HttpGet]
         public IActionResult Category()
         {
-            var list = _categoryRepository.GetAllCategories();
-            return View(list);
+            var categories = _categoryRepository.GetAllCategories();
+            var viewModelList = _mapper.Map<List<CategoryViewModel>>(categories);
+            return View(viewModelList);
         }
 
+        // POST: Add a new category
         [HttpPost]
-        public IActionResult Category(Category cat)
-        {
-            _categoryRepository.AddCategory(cat);
-            return RedirectToAction("Category");
-        }
-
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var cat = await _categoryRepo.GetByIdAsync(id);
-            return View(cat);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Edit(Category cat)
+        public IActionResult Category(CategoryViewModel model)
         {
             if (ModelState.IsValid)
             {
-                await _categoryRepo.UpdateAsync(cat);
+                var category = _mapper.Map<Category>(model);
+                _categoryRepository.AddCategory(category);
+                return RedirectToAction("Category");
+            }
+
+            var categories = _categoryRepository.GetAllCategories();
+            var viewModelList = _mapper.Map<List<CategoryViewModel>>(categories);
+            return View(viewModelList);
+        }
+
+        // GET: Edit form
+        [HttpGet]
+        public async Task<IActionResult> EditCategory(int id)
+        {
+            var category = await _categoryRepo.GetByIdAsync(id);
+            if (category == null) return NotFound();
+
+            var viewModel = _mapper.Map<CategoryViewModel>(category);
+            return View(viewModel);
+        }
+
+        // POST: Edit submit
+        [HttpPost]
+        public async Task<IActionResult> EditCategory(CategoryViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var category = _mapper.Map<Category>(model);
+                await _categoryRepo.UpdateAsync(category);
                 await _categoryRepo.SaveAsync();
                 return RedirectToAction("Category");
             }
-            return View(cat);
+            return View(model);
         }
 
-        public async Task<IActionResult> Delete(int id)
+        // DELETE
+        public async Task<IActionResult> DeleteCategory(int id)
         {
-            var cat = await _categoryRepo.GetByIdAsync(id);
-            if (cat != null)
+            var category = await _categoryRepo.GetByIdAsync(id);
+            if (category != null)
             {
-                await _categoryRepo.DeleteAsync(cat);
+                await _categoryRepo.DeleteAsync(category);
                 await _categoryRepo.SaveAsync();
             }
             return RedirectToAction("Category");
         }
 
+
+        // GET: Show all subcategories
         [HttpGet]
         public IActionResult Subcategories()
         {
-            var vm = new SubCategoryViewModel
+            var subCategories = _subCategoryRepository.GetSubCategoriesWithCategory();
+            var viewModel = new SubCategoryViewModel
             {
                 Categories = _categoryRepository.GetCategorySelectList(),
-                SubCategoryList = _subCategoryRepository.GetSubCategoriesWithCategory()
+                SubCategoryList = subCategories
             };
-            return View(vm);
+
+            return View(viewModel);
         }
 
+        // POST: Add a new subcategory
         [HttpPost]
-        public IActionResult Subcategories(int CategoryId, string Name)
+        public IActionResult Subcategories(SubCategoryViewModel model)
         {
-            if (!string.IsNullOrEmpty(Name) && CategoryId > 0)
+            if (!string.IsNullOrEmpty(model.SubCategoryToEdit?.Name) && model.SubCategoryToEdit.CategoryId > 0)
             {
-                var newSubCategory = new SubCategory
-                {
-                    CategoryId = CategoryId,
-                    Name = Name
-                };
-
+                var newSubCategory = _mapper.Map<SubCategory>(model.SubCategoryToEdit);
                 _subCategoryRepository.AddSubCategory(newSubCategory);
             }
 
-            var vm = new SubCategoryViewModel
+            var viewModel = new SubCategoryViewModel
             {
                 Categories = _categoryRepository.GetCategorySelectList(),
                 SubCategoryList = _subCategoryRepository.GetSubCategoriesWithCategory()
             };
 
-            return View(vm);
+            return View(viewModel);
         }
 
-
-
+        // GET: Edit subcategory
         [HttpGet]
         public async Task<IActionResult> EditSub(int id)
         {
@@ -264,31 +298,36 @@ namespace digital.Controllers
             if (subCategory == null)
                 return NotFound();
 
-            ViewBag.Categories = _context.Categories
-                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                .ToList();
+            var viewModel = new SubCategoryViewModel
+            {
+                Categories = _categoryRepository.GetCategorySelectList(),
+                SubCategoryToEdit = _mapper.Map<SubCategory>(subCategory)
+            };
 
-            return View(subCategory);
+            return View(viewModel);
         }
 
+        // POST: Edit subcategory
         [HttpPost]
-        public async Task<IActionResult> EditSub(SubCategory updatedSubCategory)
+        public async Task<IActionResult> EditSub(SubCategoryViewModel model)
         {
             if (ModelState.IsValid)
             {
-                updatedSubCategory.CreatedDate = DateTime.Now;
-                updatedSubCategory.CreatedBy = "admin";
+                var updatedSub = _mapper.Map<SubCategory>(model.SubCategoryToEdit);
+                updatedSub.CreatedDate = DateTime.Now;
+                updatedSub.CreatedBy = "admin";
 
-                await _subCategoryRepo.UpdateAsync(updatedSubCategory);
+                await _subCategoryRepo.UpdateAsync(updatedSub);
                 await _subCategoryRepo.SaveAsync();
 
                 return RedirectToAction("Subcategories");
             }
 
-            return View(updatedSubCategory);
+            model.Categories = _categoryRepository.GetCategorySelectList();
+            return View(model);
         }
 
-
+        // POST: Update directly from inline edit
         [HttpPost]
         public async Task<IActionResult> UpdateSub(int id, int CategoryId, string Name)
         {
@@ -307,7 +346,7 @@ namespace digital.Controllers
             return RedirectToAction("Subcategories");
         }
 
-
+        // GET: Delete
         [HttpGet]
         public async Task<IActionResult> DeleteSub(int id)
         {
@@ -338,30 +377,38 @@ namespace digital.Controllers
 
                 if (student != null)
                 {
-                    ViewBag.Categories = _context.Categories.ToList();
-                    ViewBag.SubCategories = _context.SubCategories.ToList();
-                }
+                    var vm = _mapper.Map<StudentViewModel>(student);
+                    vm.Categories = _context.Categories
+                        .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+                    vm.SubCategories = _context.SubCategories
+                        .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
 
-                return View(student);
+                    return View(vm);
+                }
             }
 
-            ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name");
-            ViewBag.SubCategories = new SelectList(new List<SelectListItem>());
+            var studentVM = new StudentViewModel
+            {
+                Categories = _context.Categories
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
+                SubCategories = new List<SelectListItem>(),
+                StudentList = _studentRepository.GetAllStudentsWithCategoryAndSubCategory()
+            };
 
-            ViewBag.StudentList = _studentRepository.GetAllStudentsWithCategoryAndSubCategory();
-
-            return View(new Student());
+            return View(studentVM);
         }
 
+
         [HttpPost]
-        public IActionResult Student(Student student)
+        public IActionResult Student(StudentViewModel studentVM)
         {
             if (ModelState.IsValid)
             {
+                var student = _mapper.Map<Student>(studentVM);
                 student.CreatedDate = DateTime.Now;
 
                 _context.Student.Add(student);
-                _context.SaveChanges(); 
+                _context.SaveChanges();
 
                 var user = new User
                 {
@@ -369,8 +416,9 @@ namespace digital.Controllers
                     Email = student.Email,
                     Password = student.Password,
                     Role = "Student",
-                    StudentId = student.Id 
+                    StudentId = student.Id
                 };
+
                 _context.Users.Add(user);
                 _context.SaveChanges();
 
@@ -378,13 +426,16 @@ namespace digital.Controllers
                 return RedirectToAction("Student");
             }
 
-            // Refill dropdowns etc.
-            ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name", student.CategoryId);
-            ViewBag.SubCategories = new SelectList(_context.SubCategories.Where(x => x.CategoryId == student.CategoryId).ToList(), "Id", "Name", student.SubCategoryId);
-            ViewBag.StudentList = _context.Student.ToList();
+            studentVM.Categories = _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            studentVM.SubCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == studentVM.CategoryId)
+                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
+            studentVM.StudentList = _context.Student.ToList();
 
-            return View(student);
+            return View(studentVM);
         }
+
 
 
         [HttpGet]
@@ -393,17 +444,22 @@ namespace digital.Controllers
             var student = await _studentRepo.GetByIdAsync(id);
             if (student == null) return NotFound();
 
-            ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name", student.CategoryId);
-            ViewBag.SubCategories = new SelectList(_context.SubCategories.Where(x => x.CategoryId == student.CategoryId).ToList(), "Id", "Name", student.SubCategoryId);
+            var vm = _mapper.Map<StudentViewModel>(student);
+            vm.Categories = _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            vm.SubCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == student.CategoryId)
+                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
 
-            return View("EditStudent", student);
+            return View("EditStudent", vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditStudent(Student student)
+        public async Task<IActionResult> EditStudent(StudentViewModel studentVM)
         {
             if (ModelState.IsValid)
             {
+                var student = _mapper.Map<Student>(studentVM);
                 await _studentRepo.UpdateAsync(student);
                 await _studentRepo.SaveAsync();
 
@@ -411,10 +467,15 @@ namespace digital.Controllers
                 return RedirectToAction("Student");
             }
 
-            ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name", student.CategoryId);
-            ViewBag.SubCategories = new SelectList(_context.SubCategories.Where(x => x.CategoryId == student.CategoryId).ToList(), "Id", "Name", student.SubCategoryId);
-            return View("EditStudent", student);
+            studentVM.Categories = _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            studentVM.SubCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == studentVM.CategoryId)
+                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
+
+            return View("EditStudent", studentVM);
         }
+
 
 
 
@@ -438,6 +499,7 @@ namespace digital.Controllers
                 .ToList();
             return Json(subCats);
         }
+
 
 
         [HttpGet]

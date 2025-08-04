@@ -1,228 +1,111 @@
-﻿@model digital.Models.Student
+﻿@model digital.Models.StudentViewModel
 
 @{
-    ViewData["Title"] = "Student Registration";
+    ViewData["Title"] = "Student Management";
 }
 
-@{
-    var userRole = Context.Session.GetString("UserRole");
-    var studentOnlyView = userRole == "Student";
-    ViewData["Title"] = studentOnlyView ? "Student Details" : "Student Registration";
-}
-@if (userRole == "Student")
+<h2 class="mb-4">Student Registration</h2>
+
+@if (TempData["Success"] != null)
 {
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
-        <div class="card shadow-lg" style="width: 600px;">
-            <div class="card-header text-white text-center fw-bold" style="background-color: #222;">
-                STUDENT DETAILS
-            </div>
-            <div class="card-body">
-                <dl class="row">
-                    <dt class="col-sm-3">Name</dt>
-                    <dd class="col-sm-9">@Model.Name</dd>
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
 
-                    <dt class="col-sm-3">Email</dt>
-                    <dd class="col-sm-9">@Model.Email</dd>
+<form asp-action="Student" method="post" class="mb-5">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
 
-                    <dt class="col-sm-3">Gender</dt>
-                    <dd class="col-sm-9">@Model.Gender</dd>
-
-                    <dt class="col-sm-3">DOB</dt>
-                    <dd class="col-sm-9">@Model.DOB.ToShortDateString()</dd>
-
-                    <dt class="col-sm-3">Mobile</dt>
-                    <dd class="col-sm-9">@Model.MobileNumber</dd>
-
-                    <dt class="col-sm-3">Address</dt>
-                    <dd class="col-sm-9">@Model.Address</dd>
-
-                    <dt class="col-sm-3">Standard</dt>
-                    <dd class="col-sm-9">
-                        @{
-                            var cat = ViewBag.Categories as List<Category>;
-                            var categoryName = cat?.FirstOrDefault(c => c.Id == Model.CategoryId)?.Name;
-                        }
-                        @categoryName
-                    </dd>
-
-                    <dt class="col-sm-3">Class</dt>
-                    <dd class="col-sm-9">
-                        @{
-                            var subcat = ViewBag.SubCategories as List<SubCategory>;
-                            var subCategoryName = subcat?.FirstOrDefault(sc => sc.Id == Model.SubCategoryId)?.Name;
-                        }
-                        @subCategoryName
-                    </dd>
-                </dl>
-            </div>
+        <div class="col-md-6">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
         </div>
     </div>
-}
-else
-{
-<div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
-    <div class="card shadow-lg" style="width: 600px;">
-        <div class="card-header text-white text-center fw-bold" style="background-color: #222;">
-            Student REGISTRATION FORM
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="Password" class="form-label"></label>
+            <input asp-for="Password" class="form-control" />
+            <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
-        @if (TempData["Success"] != null)
-        {
-            <div class="alert alert-success text-center m-3">@TempData["Success"]</div>
-        }
-
-        <div class="card-body p-4">
-            <form asp-action="Student" method="post">
-
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Name</label>
-                        <input asp-for="Name" class="form-control" placeholder="Full Name" required />
-                    </div>
-                </div>
-
-                <label for="CategoryId">Standard</label>
-                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
-                    <option value="">-- Select Standard --</option>
-                </select>
-
-
-                <label for="SubCategoryId">Class</label>
-                <select asp-for="SubCategoryId" class="form-control" asp-items="ViewBag.SubCategories">
-                    <option value="">-- Select Class --</option>
-                </select>
-
-
-                <div class="form-group">
-                    <label asp-for="DOB" class="control-label"></label>
-                    <input asp-for="DOB" type="date" class="form-control" />
-                    <span asp-validation-for="DOB" class="text-danger"></span>
-                </div>
-
-
-                <div class="form-group">
-                    <label>Gender</label><br />
-
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="Gender" value="Male"
-                               @(Model.Gender == "Male" ? "checked" : "") />
-                        <label class="form-check-label">Male</label>
-                    </div>
-
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="Gender" value="Female"
-                               @(Model.Gender == "Female" ? "checked" : "") />
-                        <label class="form-check-label">Female</label>
-                    </div>
-
-                    <span asp-validation-for="Gender" class="text-danger"></span>
-                </div>
-
-
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Mobile</label>
-                        <input asp-for="MobileNumber" class="form-control" placeholder="10-digit Mobile" pattern="\d{10}" title="Enter 10 digits" />
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Email  </label>
-                        <input asp-for="Email" class="form-control" placeholder="enter email id" required />
-                    </div>
-                </div>
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Password</label>
-                        <input asp-for="Password" class="form-control" placeholder="enter valid password" required />
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col">
-                        <label>Address</label>
-                        <textarea asp-for="Address" class="form-control" rows="3" placeholder="Enter your full address"></textarea>
-                    </div>
-                </div>
-
-                <div class="text-center">
-                    <button type="submit" class="btn btn-danger px-5">REGISTER</button>
-                </div>
-
-            </form>
+        <div class="col-md-6">
+            <label asp-for="CategoryId" class="form-label">Standard</label>
+            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select" id="categoryDropdown">
+                <option value="">-- Select Category --</option>
+            </select>
+            <span asp-validation-for="CategoryId" class="text-danger"></span>
         </div>
     </div>
-</div>
-@section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#CategoryId').change(function () {
-                var categoryId = $(this).val();
-                $.ajax({
-                    url: '/Home/GetSubCategories?categoryId=' + categoryId,
-                    type: 'GET',
-                    success: function (data) {
-                        var subCatDropdown = $('#SubCategoryId');
-                        subCatDropdown.empty();
-                        subCatDropdown.append('<option value="">-- Select Class --</option>');
-                        $.each(data, function (i, item) {
-                            subCatDropdown.append('<option value="' + item.id + '">' + item.name + '</option>');
-                        });
-                    }
-                });
-            });
-        });
-    </script>
-}
-<h4 class="text-center mt-4">Registered Students</h4>
 
-<div style="margin-left: 250px; margin-right: 20px; overflow-x: auto;">
-    <table class="table table-bordered table-striped table-hover w-100 mt-3">
-        <thead class="table-dark text-center">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label asp-for="SubCategoryId" class="form-label">Division</label>
+            <select asp-for="SubCategoryId" asp-items="Model.SubCategories" class="form-select" id="subCategoryDropdown">
+                <option value="">-- Select SubCategory --</option>
+            </select>
+            <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+<hr />
+
+<h3 class="mt-4">Registered Students</h3>
+
+@if (Model.StudentList != null && Model.StudentList.Any())
+{
+    <table class="table table-bordered table-striped mt-3">
+        <thead>
             <tr>
-                <th>no.</th>
                 <th>Name</th>
-                <th>Standard</th>
-                <th>Class</th>
-                <th>DOB</th>
-                <th>Gender</th>
-                <th>Mobile</th>
-                <th>Address</th>
                 <th>Email</th>
-                <th>Paaword</th>
+                <th>Standard</th>
+                <th>Division</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            @{
-                int count = 1;
-                foreach (var s in ViewBag.StudentList)
-                {
-                    <tr>
-                        <td class="text-center">@count</td>
-
-                        <td>
-                            <a asp-action="StudentDetails" asp-route-id="@s.Id">@s.Name</a>
-                        </td>
-
-                        <td>@s.CategoryName</td>
-                        <td>@s.SubCategoryName</td>
-                        <td>@Convert.ToDateTime(s.DOB).ToString("dd-MM-yyyy")</td>
-                        <td>@s.Gender</td>
-                        <td>@s.MobileNumber</td>
-                        <td>@s.Address</td>
-                        <td>@s.Email</td>
-                        <td>@s.Password</td>
-                        <td class="text-center">
-                            <a asp-action="EditStudent" asp-route-id="@s.Id" class="btn btn-sm btn-warning me-1">Edit</a>
-                            <a asp-action="DeleteStudent" asp-route-id="@s.Id" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
-                    </tr>
-                    count++;
-                }
+            @foreach (var student in Model.StudentList)
+            {
+                <tr>
+                    <td>@student.Name</td>
+                    <td>@student.Email</td>
+                    <td>@student.Category?.Name</td>
+                    <td>@student.SubCategory?.Name</td>
+                    <td>
+                        <a asp-action="EditStudent" asp-route-id="@student.Id" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="DeleteStudent" asp-route-id="@student.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
             }
         </tbody>
     </table>
-</div>
+}
+else
+{
+    <p>No students found.</p>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#categoryDropdown').on('change', function () {
+                var categoryId = $(this).val();
+                $.getJSON('/Home/GetSubCategoriesByCategory/' + categoryId, function (data) {
+                    var items = '<option value="">-- Select SubCategory --</option>';
+                    $.each(data, function (i, subCat) {
+                        items += '<option value="' + subCat.value + '">' + subCat.text + '</option>';
+                    });
+                    $('#subCategoryDropdown').html(items);
+                });
+            });
+        });
+    </script>
 }
