@@ -1,14 +1,24 @@
-﻿namespace digital.Models
+﻿using digital.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Collections.Generic;
+
+namespace digital.ViewModels
 {
     public class AttendanceViewModel
     {
-        public int StudentId { get; set; }
-        public int Day { get; set; }
-        public int Month { get; set; }
-        public int Year { get; set; }
+        public List<SelectListItem> Categories { get; set; } = new();
+        public List<SelectListItem> SubCategories { get; set; } = new();
 
-        public string Attend { get; set; }
-        public DateTime FullDate { get; set; }
+        public int? SelectedCategoryId { get; set; }
+        public int? SelectedSubCategoryId { get; set; }
+        public int? SelectedMonth { get; set; }
+        public int? SelectedYear { get; set; }
+
+        public List<Student> Students { get; set; } = new();
+        public List<Attendance> AttendanceData { get; set; } = new();
+
+        public int TotalDays { get; set; }
+
+        public bool IsStudent { get; set; } = false;
     }
-
 }

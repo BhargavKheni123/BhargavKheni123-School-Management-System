@@ -698,6 +698,26 @@ namespace digital.Controllers
         public IActionResult AttendanceForm(int? CategoryId, int? SubCategoryId, int? Month, int? Year)
         {
             string role = HttpContext.Session.GetString("UserRole");
+            var model = new AttendanceViewModel
+            {
+                SelectedCategoryId = CategoryId,
+                SelectedSubCategoryId = SubCategoryId,
+                SelectedMonth = Month,
+                SelectedYear = Year,
+                Categories = _context.Categories.Select(c => new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                }).ToList(),
+                SubCategories = CategoryId.HasValue
+                    ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId)
+                        .Select(sc => new SelectListItem
+                        {
+                            Value = sc.Id.ToString(),
+                            Text = sc.Name
+                        }).ToList()
+                    : new List<SelectListItem>()
+            };
 
             if (role == "Student")
             {
@@ -707,16 +727,10 @@ namespace digital.Controllers
                 if (student == null)
                     return RedirectToAction("Login");
 
-                var records = _attendanceRepository.GetAttendanceByStudentId(student.Id);
-                ViewBag.IsStudent = true;
-                return View(records);
+                model.IsStudent = true;
+                model.AttendanceData = _attendanceRepository.GetAttendanceByStudentId(student.Id);
+                return View(model);
             }
-
-            ViewBag.IsStudent = false;
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", CategoryId);
-            ViewBag.SubCategories = new SelectList(
-                CategoryId.HasValue ? _context.SubCategories.Where(s => s.CategoryId == CategoryId) : new List<SubCategory>(),
-                "Id", "Name", SubCategoryId);
 
             if (CategoryId.HasValue && SubCategoryId.HasValue && Month.HasValue && Year.HasValue)
             {
@@ -724,27 +738,23 @@ namespace digital.Controllers
                     .Where(s => s.CategoryId == CategoryId && s.SubCategoryId == SubCategoryId)
                     .ToList();
 
-                var ids = students.Select(s => s.Id).ToList();
-                var attendance = _attendanceRepository.GetAttendanceByFilters(ids, Month.Value, Year.Value);
-
-                ViewBag.Students = students;
-                ViewBag.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
-                ViewBag.SelectedMonth = Month;
-                ViewBag.SelectedYear = Year;
-                ViewBag.AttendanceData = attendance;
+                model.Students = students;
+                model.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
+                model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
             }
 
-            return View();
+            return View(model);
         }
 
 
+
         [HttpPost]
-        public IActionResult AttendanceForm(IFormCollection form)
+        public IActionResult AttendanceForm(AttendanceViewModel model, IFormCollection form)
         {
-            int catId = int.Parse(form["CategoryId"]);
-            int subCatId = int.Parse(form["SubCategoryId"]);
-            int month = int.Parse(form["Month"]);
-            int year = int.Parse(form["Year"]);
+            int catId = model.SelectedCategoryId ?? 0;
+            int subCatId = model.SelectedSubCategoryId ?? 0;
+            int month = model.SelectedMonth ?? 0;
+            int year = model.SelectedYear ?? 0;
 
             var students = _context.Student
                 .Where(s => s.CategoryId == catId && s.SubCategoryId == subCatId)
@@ -774,16 +784,27 @@ namespace digital.Controllers
 
             _attendanceRepository.SaveAttendance(updatedRecords);
 
-            ViewBag.Categories = new SelectList(_context.Categories.ToList(), "Id", "Name", catId);
-            ViewBag.SubCategories = new SelectList(_context.SubCategories.Where(x => x.CategoryId == catId), "Id", "Name", subCatId);
-            ViewBag.Students = students;
-            ViewBag.TotalDays = totalDays;
-            ViewBag.SelectedMonth = month;
-            ViewBag.SelectedYear = year;
-            ViewBag.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
+            model.Categories = _context.Categories.Select(c => new SelectListItem
+            {
+                Value = c.Id.ToString(),
+                Text = c.Name
+            }).ToList();
 
-            return View();
+            model.SubCategories = _context.SubCategories
+                .Where(x => x.CategoryId == catId)
+                .Select(sc => new SelectListItem
+                {
+                    Value = sc.Id.ToString(),
+                    Text = sc.Name
+                }).ToList();
+
+            model.Students = students;
+            model.TotalDays = totalDays;
+            model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
+
+            return View(model);
         }
+
 
 
         [HttpPost]
