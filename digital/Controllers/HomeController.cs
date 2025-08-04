@@ -557,56 +557,57 @@ namespace digital.Controllers
             var role = HttpContext.Session.GetString("UserRole");
             var email = HttpContext.Session.GetString("UserEmail");
 
-            ViewBag.Role = role;
-
-            ViewBag.TimeTableList = _timeTableRepository.GetAllTimeTables();
+            var viewModel = new TimeTableViewModel
+            {
+                Role = role,
+                Message = TempData["Message"] as string,
+                TimeTableList = _timeTableRepository.GetAllTimeTables(),
+                StdList = _categoryRepository.GetAllCategories()
+                                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList(),
+                ClassList = _subCategoryRepository.GetAllSubCategories()
+                                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList(),
+                Hours = Enumerable.Range(1, 24)
+                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList(),
+                Minutes = Enumerable.Range(1, 60)
+                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList()
+            };
 
             if (role == "Student")
             {
-                return View("TimeTableForm");
+                return View("TimeTableForm", viewModel);
             }
 
-            ViewBag.StdList = _categoryRepository.GetAllCategories()
-                                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
-
-            ViewBag.ClassList = _subCategoryRepository.GetAllSubCategories()
-                                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
-
-            ViewBag.Hours = Enumerable.Range(1, 24).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
-            ViewBag.Minutes = Enumerable.Range(1, 60).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
-
-            if (TempData["Message"] != null)
-                ViewBag.Message = TempData["Message"];
-
-            return View();
+            return View(viewModel);
         }
 
 
-
-
-
         [HttpPost]
-        public IActionResult TimeTableForm(TimeTable timeTable)
+        public IActionResult TimeTableForm(TimeTableViewModel model)
         {
             if (ModelState.IsValid)
             {
-                _timeTableRepository.AddTimeTable(timeTable);
+                _timeTableRepository.AddTimeTable(model.TimeTable);
                 TempData["Message"] = "Time Table Saved!";
                 return RedirectToAction("TimeTableForm");
             }
 
-            ViewBag.StdList = _categoryRepository.GetAllCategories()
+            // Refill dropdowns if model is invalid
+            model.StdList = _categoryRepository.GetAllCategories()
                                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
-            ViewBag.ClassList = _subCategoryRepository.GetAllSubCategories()
+            model.ClassList = _subCategoryRepository.GetAllSubCategories()
                                 .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
 
-            ViewBag.Hours = Enumerable.Range(1, 24).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
-            ViewBag.Minutes = Enumerable.Range(1, 60).Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
+            model.Hours = Enumerable.Range(1, 24)
+                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
-            return View();
+            model.Minutes = Enumerable.Range(1, 60)
+                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
+
+            model.TimeTableList = _timeTableRepository.GetAllTimeTables();
+
+            return View(model);
         }
-
 
 
         [HttpGet]
@@ -632,47 +633,52 @@ namespace digital.Controllers
             if (record == null)
                 return NotFound();
 
-            ViewBag.StdList = _context.Categories
+            var viewModel = _mapper.Map<TimeTableViewModel>(record);
+
+            viewModel.StdList = _context.Categories
                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
-            ViewBag.ClassList = _context.SubCategories
+            viewModel.ClassList = _context.SubCategories
                 .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
 
-            ViewBag.Hours = Enumerable.Range(1, 24)
+            viewModel.Hours = Enumerable.Range(1, 24)
                 .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
-            ViewBag.Minutes = Enumerable.Range(1, 60)
+            viewModel.Minutes = Enumerable.Range(1, 60)
                 .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
-            return View("UpdateTimeTable", record);
+            return View("UpdateTimeTable", viewModel);
         }
 
+
         [HttpPost]
-        public async Task<IActionResult> EditTimeTable(TimeTable model)
+        public async Task<IActionResult> EditTimeTable(TimeTableViewModel model)
         {
             if (ModelState.IsValid)
             {
-                await _timeTableRepo.UpdateAsync(model);
+                var entity = _mapper.Map<TimeTable>(model);
+                await _timeTableRepo.UpdateAsync(entity);
                 await _timeTableRepo.SaveAsync();
 
                 TempData["Message"] = "Record updated successfully!";
                 return RedirectToAction("TimeTableForm");
             }
 
-            ViewBag.StdList = _context.Categories
+            model.StdList = _context.Categories
                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
-            ViewBag.ClassList = _context.SubCategories
+            model.ClassList = _context.SubCategories
                 .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
 
-            ViewBag.Hours = Enumerable.Range(1, 24)
+            model.Hours = Enumerable.Range(1, 24)
                 .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
-            ViewBag.Minutes = Enumerable.Range(1, 60)
+            model.Minutes = Enumerable.Range(1, 60)
                 .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
             return View("UpdateTimeTable", model);
         }
+
 
         public async Task<IActionResult> DeleteTimeTable(int id)
         {
@@ -685,6 +691,7 @@ namespace digital.Controllers
             }
             return RedirectToAction("TimeTableForm");
         }
+
 
 
 
