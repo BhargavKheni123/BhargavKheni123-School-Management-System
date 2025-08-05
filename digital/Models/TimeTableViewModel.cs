@@ -6,24 +6,19 @@ namespace digital.ViewModels
 {
     public class TimeTableViewModel
     {
-        public TimeTableViewModel()
+        public TimeTable TimeTable { get; set; } = new TimeTable
         {
-            TimeTable = new TimeTable
-            {
-                Std = string.Empty,
-                Class = string.Empty,
-                Subject = string.Empty
-            };
-        }
-
-        public TimeTable TimeTable { get; set; }
+            Std = "",
+            Class = "",
+            Subject = ""
+        };
 
         public List<SelectListItem> StdList { get; set; } = new();
         public List<SelectListItem> ClassList { get; set; } = new();
         public List<SelectListItem> Hours { get; set; } = new();
         public List<SelectListItem> Minutes { get; set; } = new();
-        public List<TimeTable> TimeTableList { get; set; } = new();
 
+        public List<TimeTable> TimeTableList { get; set; } = new();
         public string Role { get; set; }
         public string Message { get; set; }
     }

@@ -588,37 +588,36 @@ namespace digital.Controllers
 
 
 
-
         [HttpGet]
         public IActionResult TimeTableForm()
         {
-            var role = HttpContext.Session.GetString("UserRole");
-            var email = HttpContext.Session.GetString("UserEmail");
+            string role = HttpContext.Session.GetString("UserRole");
+            string email = HttpContext.Session.GetString("UserEmail");
 
             var viewModel = new TimeTableViewModel
             {
                 Role = role,
                 Message = TempData["Message"] as string,
-                TimeTableList = _timeTableRepository.GetAllTimeTables(),
-                StdList = _categoryRepository.GetAllCategories()
-                                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList(),
-                ClassList = _subCategoryRepository.GetAllSubCategories()
-                                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList(),
-                Hours = Enumerable.Range(1, 24)
-                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList(),
-                Minutes = Enumerable.Range(1, 60)
-                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList()
-            };
 
-            if (role == "Student")
-            {
-                return View("TimeTableForm", viewModel);
-            }
+                StdList = _categoryRepository.GetAllCategories()
+                    .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList(),
+
+                ClassList = new List<SelectListItem>(),
+
+                Hours = Enumerable.Range(1, 12)
+                    .Select(h => new SelectListItem { Value = h.ToString(), Text = h.ToString() }).ToList(),
+
+                Minutes = Enumerable.Range(0, 60)
+                    .Select(m => new SelectListItem { Value = m.ToString("D2"), Text = m.ToString("D2") }).ToList(),
+
+                TimeTableList = _timeTableRepository.GetAllTimeTables()
+            };
 
             return View(viewModel);
         }
 
 
+        // ✅ POST: TimeTableForm
         [HttpPost]
         public IActionResult TimeTableForm(TimeTableViewModel model)
         {
@@ -629,25 +628,27 @@ namespace digital.Controllers
                 return RedirectToAction("TimeTableForm");
             }
 
-            // Refill dropdowns if model is invalid
+            // ❌ If model is invalid, refill dropdowns
             model.StdList = _categoryRepository.GetAllCategories()
-                                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
+                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
             model.ClassList = _subCategoryRepository.GetAllSubCategories()
-                                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
+                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
 
             model.Hours = Enumerable.Range(1, 24)
-                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
+                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
 
-            model.Minutes = Enumerable.Range(1, 60)
-                                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
+            model.Minutes = Enumerable.Range(0, 59)
+                .Select(i => new SelectListItem { Value = i.ToString("D2"), Text = i.ToString("D2") }).ToList();
 
             model.TimeTableList = _timeTableRepository.GetAllTimeTables();
 
-            return View(model);
+            return View("TimeTableForm", model);
         }
 
 
+
+        // ✅ AJAX: Get SubCategories by Standard
         [HttpGet]
         public JsonResult GetSubCategoriesByStd(string stdName)
         {
