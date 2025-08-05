@@ -213,7 +213,10 @@
         <!-- Main Footer -->
         <footer class="main-footer">
             <div class="float-right d-none d-sm-inline">
-                Anything you want
+                
+              <div style="position: fixed; top: 10px; right: 20px; z-index: 9999;">
+                <span id="token-timer" style="background: #ffebeb; padding: 5px 10px; border-radius: 5px; color: red;"></span>
+              </div>
             </div>
             <strong>&copy; 2025 AdminLTE 3.</strong> All rights reserved.
         </footer>
@@ -286,5 +289,32 @@
 
 
     @RenderSection("Scripts", required: false)
+
+   <script>
+
+    var tokenExpireTime = '@Context.Session.GetString("TokenExpireTime")';
+
+    if (tokenExpireTime) {
+         var expireTime = new Date(tokenExpireTime);
+        var timerElement = document.getElementById('token-timer');
+
+        var countdown = setInterval(function () {
+            var now = new Date();
+            var secondsLeft = Math.floor((expireTime - now) / 1000);
+
+            if (secondsLeft <= 0) {
+                clearInterval(countdown);
+                timerElement.innerText = "Token expired!";
+             
+                window.location.href = '/Home/Login'; 
+            } else {
+                timerElement.innerText = "Token expires in: " + secondsLeft + " seconds";
+            }
+        }, 1000);
+    }
+</script>
+
+
 </body>
 </html>
+

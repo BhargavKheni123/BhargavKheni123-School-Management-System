@@ -7,8 +7,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Security.Principal;
+using System.Text;
 using System.Xml;
 
 namespace digital.Controllers
@@ -31,6 +35,8 @@ namespace digital.Controllers
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IGenericRepository<TimeTable> _timeTableRepo;
         private readonly IMapper _mapper;
+        private readonly JwtTokenHelper _jwtHelper;
+        private readonly IConfiguration _configuration;
 
 
 
@@ -48,7 +54,9 @@ namespace digital.Controllers
             IGenericRepository<SubCategory> subCategoryRepo, 
             IGenericRepository<Student> studentRepo, 
             IGenericRepository<TimeTable> timeTableRepo,
-            IMapper mapper)
+            IMapper mapper,
+            JwtTokenHelper jwtHelper,
+            IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
@@ -65,6 +73,8 @@ namespace digital.Controllers
             _studentRepo = studentRepo;
             _timeTableRepo = timeTableRepo;
             _mapper = mapper;
+            _jwtHelper = jwtHelper;
+            _configuration = configuration;
         }
 
         public IActionResult Index()
@@ -88,6 +98,30 @@ namespace digital.Controllers
             return View();
         }
 
+        private string GenerateJwtToken(string email)
+        {
+            var key = _configuration["Jwt:Key"];
+            var issuer = _configuration["Jwt:Issuer"];
+            var audience = _configuration["Jwt:Audience"];
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+        new Claim(ClaimTypes.Email, email),
+    };
+
+            var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
+                claims: claims,
+                expires: DateTime.UtcNow.AddSeconds(Convert.ToDouble(_configuration["Jwt:ExpireSeconds"])),
+                signingCredentials: credentials);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
 
 
         [HttpGet]
@@ -105,6 +139,9 @@ namespace digital.Controllers
                 ViewBag.Error = "Invalid email or password.";
                 return View();
             }
+            var token = GenerateJwtToken(user.Email);
+            HttpContext.Session.SetString("JWTToken", token);
+            HttpContext.Session.SetString("TokenExpireTime", DateTime.UtcNow.AddSeconds(60).ToString("o"));
 
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
@@ -119,6 +156,7 @@ namespace digital.Controllers
 
             return RedirectToAction("Login");
         }
+
 
 
 

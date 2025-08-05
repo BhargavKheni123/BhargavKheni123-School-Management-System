@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.7">
@@ -39,6 +40,7 @@
 	  <Content Remove="wwwroot/build/config/rollup.config.js" />
 	  <Content Remove="wwwroot/build/js/AdminLTE.js" />
 	  <Content Remove="wwwroot/build/js/CardRefresh.js" />
+	  <Content Remove="wwwroot/build/js/ControlSidebar.js" />
   </ItemGroup>
 
 </Project>
