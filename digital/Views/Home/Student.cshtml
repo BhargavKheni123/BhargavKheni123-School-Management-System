@@ -125,4 +125,33 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#CategoryId').change(function () {
+                var categoryId = $(this).val();
+
+                if (categoryId !== "") {
+                    $.ajax({
+                        url: '/Home/GetSubCategories',
+                        type: 'GET',
+                        data: { categoryId: categoryId },
+                        success: function (data) {
+                            var subCategoryDropdown = $('#SubCategoryId');
+                            subCategoryDropdown.empty();
+                            subCategoryDropdown.append('<option value="">-- Select Class --</option>');
+
+                            $.each(data, function (i, subCategory) {
+                                subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
+                            });
+                        }
+                    });
+                } else {
+                    $('#SubCategoryId').empty().append('<option value="">-- Select Class --</option>');
+                }
+            });
+        });
+    </script>
 }
+

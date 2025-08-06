@@ -1,4 +1,7 @@
-﻿@{
+﻿@model digital.ViewModels.AttendanceViewModel
+
+
+@{
     ViewData["Title"] = "Attendance Form";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var selectedMonth = ViewBag.SelectedMonth ?? 0;
@@ -24,8 +27,9 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model) 
-            {
+                    @foreach (var item in Model.AttendanceData)
+
+                    {
                 <tr>
                     <td>@($"{item.Day}/{item.Month}/{item.Year}")</td>
                     <td>
@@ -87,18 +91,20 @@ else
     <form method="get" asp-action="AttendanceForm" id="attendanceForm">
 
         <div class="row">
-            <div class="col-md-3">
-                <label>Standard</label>
-                <select class="form-control" id="CategoryId" name="CategoryId" required asp-items="ViewBag.Categories">
-                    <option value="">-- Select Standard --</option>
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label>Class</label>
-                <select class="form-control" id="SubCategoryId" name="SubCategoryId" required asp-items="ViewBag.SubCategory">
-                    <option value="">-- Select Class --</option>
-                </select>
-            </div>
+                <div class="col-md-3">
+                    <label asp-for="SelectedCategoryId">Standard</label>
+                    <select class="form-control" asp-for="SelectedCategoryId" asp-items="Model.Categories" required>
+                        <option value="">-- Select Standard --</option>
+                    </select>
+                </div>
+
+                
+                <div class="col-md-3">
+                    <label asp-for="SelectedSubCategoryId">Class</label>
+                    <select class="form-control" asp-for="SelectedSubCategoryId" asp-items="Model.SubCategories" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                
             <div class="col-md-2">
                 <label>Month</label>
                 <select class="form-control" name="Month" required>
