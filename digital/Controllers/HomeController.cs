@@ -483,6 +483,15 @@ namespace digital.Controllers
             return View(studentVM);
         }
 
+        [HttpGet]
+        public JsonResult GetSubCategories(int categoryId)
+        {
+            var subCats = _context.SubCategories
+                .Where(x => x.CategoryId == categoryId)
+                .Select(x => new { x.Id, x.Name })
+                .ToList();
+            return Json(subCats);
+        }
 
 
         [HttpGet]
@@ -537,15 +546,7 @@ namespace digital.Controllers
             return RedirectToAction("Student");
         }
 
-        [HttpGet]
-        public JsonResult GetSubCategories(int categoryId)
-        {
-            var subCats = _context.SubCategories
-                .Where(x => x.CategoryId == categoryId)
-                .Select(x => new { x.Id, x.Name })
-                .ToList();
-            return Json(subCats);
-        }
+       
 
 
         [HttpGet]
@@ -761,10 +762,12 @@ namespace digital.Controllers
 
 
 
-
+        [HttpGet]
         public IActionResult AttendanceForm(int? CategoryId, int? SubCategoryId, int? Month, int? Year)
         {
             string role = HttpContext.Session.GetString("UserRole");
+            string email = HttpContext.Session.GetString("UserEmail");
+
             var model = new AttendanceViewModel
             {
                 SelectedCategoryId = CategoryId,
@@ -777,43 +780,44 @@ namespace digital.Controllers
                     Text = c.Name
                 }).ToList(),
                 SubCategories = CategoryId.HasValue
-                    ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId)
+                    ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId.Value)
                         .Select(sc => new SelectListItem
                         {
                             Value = sc.Id.ToString(),
                             Text = sc.Name
                         }).ToList()
-                    : new List<SelectListItem>()
+                    : new List<SelectListItem>(),
+                IsStudent = role == "Student"
             };
 
             if (role == "Student")
             {
-                string email = HttpContext.Session.GetString("UserEmail");
                 var student = _context.Student.FirstOrDefault(s => s.Email == email);
 
                 if (student == null)
                     return RedirectToAction("Login");
 
-                model.IsStudent = true;
+                model.Students = new List<Student> { student };
+                model.TotalDays = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month); // current month/year
                 model.AttendanceData = _attendanceRepository.GetAttendanceByStudentId(student.Id);
+
                 return View(model);
             }
 
             if (CategoryId.HasValue && SubCategoryId.HasValue && Month.HasValue && Year.HasValue)
             {
                 var students = _context.Student
-                    .Where(s => s.CategoryId == CategoryId && s.SubCategoryId == SubCategoryId)
+                    .Where(s => s.CategoryId == CategoryId.Value && s.SubCategoryId == SubCategoryId.Value)
                     .ToList();
 
                 model.Students = students;
                 model.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
-                model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
+                model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(
+                    students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
             }
 
             return View(model);
         }
-
-
 
         [HttpPost]
         public IActionResult AttendanceForm(AttendanceViewModel model, IFormCollection form)
@@ -851,6 +855,7 @@ namespace digital.Controllers
 
             _attendanceRepository.SaveAttendance(updatedRecords);
 
+            // Rebuild the ViewModel for return
             model.Categories = _context.Categories.Select(c => new SelectListItem
             {
                 Value = c.Id.ToString(),
@@ -868,10 +873,10 @@ namespace digital.Controllers
             model.Students = students;
             model.TotalDays = totalDays;
             model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
+            model.IsStudent = false;
 
             return View(model);
         }
-
 
 
         [HttpPost]
