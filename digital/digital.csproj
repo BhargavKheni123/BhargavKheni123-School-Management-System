@@ -40,7 +40,7 @@
 	  <Content Remove="wwwroot/build/config/rollup.config.js" />
 	  <Content Remove="wwwroot/build/js/AdminLTE.js" />
 	  <Content Remove="wwwroot/build/js/CardRefresh.js" />
-	  <Content Remove="wwwroot/build/js/ControlSidebar.js" />
+	  <Content Remove="wwwroot/build/js/CardWidget.js" />
   </ItemGroup>
 
 </Project>
