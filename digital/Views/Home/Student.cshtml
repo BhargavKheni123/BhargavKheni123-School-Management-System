@@ -1,18 +1,18 @@
 ﻿@model digital.Models.StudentViewModel
-
 @{
-    ViewData["Title"] = "Student Management";
+    ViewData["Title"] = "Student Registration";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2 class="mb-4">Student Registration</h2>
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Student Registration</h2>
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success">@TempData["Success"]</div>
-}
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
 
-<form asp-action="Student" method="post" class="mb-5">
-    <div class="row mb-3">
+    <form asp-action="Student" method="post" class="row g-3">
         <div class="col-md-6">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" />
@@ -24,9 +24,7 @@
             <input asp-for="Email" class="form-control" />
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
-    </div>
 
-    <div class="row mb-3">
         <div class="col-md-6">
             <label asp-for="Password" class="form-label"></label>
             <input asp-for="Password" class="form-control" />
@@ -34,41 +32,68 @@
         </div>
 
         <div class="col-md-6">
-            <label asp-for="CategoryId" class="form-label">Standard</label>
-            <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select" id="categoryDropdown">
-                <option value="">-- Select Category --</option>
+            <label asp-for="CategoryId" class="form-label"></label>
+            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
+                <option value="">-- Select Standard --</option>
             </select>
             <span asp-validation-for="CategoryId" class="text-danger"></span>
         </div>
-    </div>
 
-    <div class="row mb-3">
         <div class="col-md-6">
-            <label asp-for="SubCategoryId" class="form-label">Division</label>
-            <select asp-for="SubCategoryId" asp-items="Model.SubCategories" class="form-select" id="subCategoryDropdown">
-                <option value="">-- Select SubCategory --</option>
+            <label asp-for="SubCategoryId" class="form-label"></label>
+            <select asp-for="SubCategoryId" class="form-select" asp-items="Model.SubCategories">
+                <option value="">-- Select Class --</option>
             </select>
             <span asp-validation-for="SubCategoryId" class="text-danger"></span>
         </div>
-    </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
-</form>
+        <div class="col-md-6">
+            <label asp-for="DOB" class="form-label"></label>
+            <input asp-for="DOB" class="form-control" />
+            <span asp-validation-for="DOB" class="text-danger"></span>
+        </div>
 
-<hr />
+        <div class="col-md-6">
+            <label asp-for="Gender" class="form-label"></label>
+            <select asp-for="Gender" class="form-select">
+                <option value="">-- Select Gender --</option>
+                <option>Male</option>
+                <option>Female</option>
+            </select>
+            <span asp-validation-for="Gender" class="text-danger"></span>
+        </div>
 
-<h3 class="mt-4">Registered Students</h3>
+        <div class="col-md-6">
+            <label asp-for="MobileNumber" class="form-label"></label>
+            <input asp-for="MobileNumber" class="form-control" />
+            <span asp-validation-for="MobileNumber" class="text-danger"></span>
+        </div>
 
-@if (Model.StudentList != null && Model.StudentList.Any())
-{
-    <table class="table table-bordered table-striped mt-3">
+        <div class="col-12">
+            <label asp-for="Address" class="form-label"></label>
+            <textarea asp-for="Address" class="form-control"></textarea>
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+    </form>
+
+    <hr class="my-4" />
+
+    <h4 class="mb-3">Registered Students</h4>
+    <table class="table table-bordered table-striped">
         <thead>
             <tr>
                 <th>Name</th>
                 <th>Email</th>
                 <th>Standard</th>
-                <th>Division</th>
-                <th>Actions</th>
+                <th>Class</th>
+                <th>DOB</th>
+                <th>Gender</th>
+                <th>Mobile</th>
+                <th>Address</th>
             </tr>
         </thead>
         <tbody>
@@ -79,33 +104,16 @@
                     <td>@student.Email</td>
                     <td>@student.Category?.Name</td>
                     <td>@student.SubCategory?.Name</td>
-                    <td>
-                        <a asp-action="EditStudent" asp-route-id="@student.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <a asp-action="DeleteStudent" asp-route-id="@student.Id" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
-                    </td>
+                    <td>@student.DOB.ToString("dd-MM-yyyy")</td>
+                    <td>@student.Gender</td>
+                    <td>@student.MobileNumber</td>
+                    <td>@student.Address</td>
                 </tr>
             }
         </tbody>
     </table>
-}
-else
-{
-    <p>No students found.</p>
-}
+</div>
 
 @section Scripts {
-    <script>
-        $(document).ready(function () {
-            $('#categoryDropdown').on('change', function () {
-                var categoryId = $(this).val();
-                $.getJSON('/Home/GetSubCategoriesByCategory/' + categoryId, function (data) {
-                    var items = '<option value="">-- Select SubCategory --</option>';
-                    $.each(data, function (i, subCat) {
-                        items += '<option value="' + subCat.value + '">' + subCat.text + '</option>';
-                    });
-                    $('#subCategoryDropdown').html(items);
-                });
-            });
-        });
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 }

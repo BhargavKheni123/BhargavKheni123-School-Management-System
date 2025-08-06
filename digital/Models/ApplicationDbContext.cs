@@ -14,7 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<TimeTable> TimeTables { get; set; }
     public DbSet<Student> Student { get; set; }
     public DbSet<Attendance> Attendance { get; set; }
-    public DbSet<Subject> Subject { get; set; }
+    public DbSet<Subject> Subjects { get; set; }
     public DbSet<TeacherMaster> TeacherMaster { get; set; }
 
 }

@@ -889,7 +889,7 @@ namespace digital.Controllers
         public IActionResult TeacherMasterPage()
         {
             ViewBag.Categories = _context.Categories.ToList();
-            ViewBag.Subjects = _context.Subject.ToList();
+            ViewBag.Subjects = _context.Subjects.ToList();
             ViewBag.Teachers = _userRepository.GetTeachers();
 
             var data = _teacherMasterRepository.GetAllWithRelations();
@@ -950,7 +950,7 @@ namespace digital.Controllers
                 return NotFound();
 
             ViewBag.Categories = _context.Categories.ToList();
-            ViewBag.Subjects = _context.Subject.ToList();
+            ViewBag.Subjects = _context.Subjects.ToList();
             ViewBag.Teachers = _context.Users.Where(u => u.Role == "Teacher").ToList();
             ViewBag.SubCategories = _context.SubCategories
                 .Where(s => s.CategoryId == item.CategoryId)
