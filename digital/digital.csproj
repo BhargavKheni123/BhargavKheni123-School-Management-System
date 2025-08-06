@@ -44,6 +44,7 @@
 	  <Content Remove="wwwroot/build/js/CardWidget.js" />
 	  <Content Remove="wwwroot/build/js/DirectChat.js" />
 	  <Content Remove="wwwroot/build/js/DropDown.js" />
+	  <Content Remove="wwwroot/build/js/Fullscreen.js" />
 	  <Content Remove="wwwroot/build/js/ExpandableTable.js" />
   </ItemGroup>
 

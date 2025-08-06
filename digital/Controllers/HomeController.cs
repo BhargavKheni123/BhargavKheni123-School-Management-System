@@ -151,7 +151,7 @@ namespace digital.Controllers
             }
             var token = GenerateJwtToken(user);
             HttpContext.Session.SetString("JWTToken", token);
-            HttpContext.Session.SetString("TokenExpireTime", DateTime.UtcNow.AddSeconds(60).ToString("o"));
+            HttpContext.Session.SetString("TokenExpireTime", DateTime.UtcNow.AddMinutes(15).ToString("o"));
 
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
