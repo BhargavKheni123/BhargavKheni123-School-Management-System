@@ -4,7 +4,15 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
+<style>
+    .student-content {
+        margin-left: 250px; 
+        padding: 20px;
+        min-height: 100vh;
+    }
+</style>
+
+<div class="student-content">
     <h2 class="text-center mb-4">Student Registration</h2>
 
     @if (TempData["Success"] != null)
@@ -13,25 +21,25 @@
     }
 
     <form asp-action="Student" method="post" class="row g-3">
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="Name" class="form-label"></label>
             <input asp-for="Name" class="form-control" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="Email" class="form-label"></label>
             <input asp-for="Email" class="form-control" />
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="Password" class="form-label"></label>
             <input asp-for="Password" class="form-control" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="CategoryId" class="form-label"></label>
             <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
                 <option value="">-- Select Standard --</option>
@@ -39,7 +47,7 @@
             <span asp-validation-for="CategoryId" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="SubCategoryId" class="form-label"></label>
             <select asp-for="SubCategoryId" class="form-select" asp-items="Model.SubCategories">
                 <option value="">-- Select Class --</option>
@@ -47,13 +55,13 @@
             <span asp-validation-for="SubCategoryId" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="DOB" class="form-label"></label>
             <input asp-for="DOB" class="form-control" />
             <span asp-validation-for="DOB" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="Gender" class="form-label"></label>
             <select asp-for="Gender" class="form-select">
                 <option value="">-- Select Gender --</option>
@@ -63,7 +71,7 @@
             <span asp-validation-for="Gender" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12">
             <label asp-for="MobileNumber" class="form-label"></label>
             <input asp-for="MobileNumber" class="form-control" />
             <span asp-validation-for="MobileNumber" class="text-danger"></span>
@@ -79,6 +87,7 @@
             <button type="submit" class="btn btn-primary">Register</button>
         </div>
     </form>
+
 
     <hr class="my-4" />
 

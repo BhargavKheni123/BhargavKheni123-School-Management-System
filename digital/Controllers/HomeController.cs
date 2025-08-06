@@ -150,7 +150,7 @@ namespace digital.Controllers
             if (user.Role == "Student" && user.StudentId.HasValue)
                 HttpContext.Session.SetInt32("StudentId", user.StudentId.Value);
 
-            if (user.Role == "Student") return RedirectToAction("Student", "Home");
+            if (user.Role == "Student") return RedirectToAction("StudentDetails", "Home");
             if (user.Role == "Admin") return RedirectToAction("Index", "Home");
             if (user.Role == "Teacher") return RedirectToAction("TimeTableForm", "Home");
 
@@ -541,14 +541,30 @@ namespace digital.Controllers
 
 
         [HttpGet]
-        public IActionResult StudentDetails(int id)
+        public IActionResult StudentDetails()
         {
-            var student = _context.Student.FirstOrDefault(s => s.Id == id);
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+            if (studentId == null)
+                return RedirectToAction("Login", "Account");
+
+            var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
             if (student == null)
                 return NotFound();
 
-            ViewBag.StudentId = student.Id;
-
+            StudentViewModel vm = new StudentViewModel
+            {
+                Id = student.Id,
+                Name = student.Name,
+                Email = student.Email,
+                Password = student.Password,
+                CategoryId = student.CategoryId,
+                SubCategoryId = student.SubCategoryId,
+                DOB = student.DOB,
+                Gender = student.Gender,
+                MobileNumber = student.MobileNumber,
+                Address = student.Address,
+                CreatedDate = student.CreatedDate
+            };
 
             ViewBag.Years = Enumerable.Range(2025, 26).ToList();
             ViewBag.Months = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthNames
@@ -556,8 +572,9 @@ namespace digital.Controllers
                                 .Select((name, index) => new { Name = name, Value = index + 1 })
                                 .ToList();
 
-            return View(student);
+            return View(vm);
         }
+
 
         [HttpGet]
         public IActionResult GetStudentAttendance(int studentId, int month, int year)
