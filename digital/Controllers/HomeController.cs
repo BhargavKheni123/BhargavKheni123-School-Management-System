@@ -98,7 +98,7 @@ namespace digital.Controllers
             return View();
         }
 
-        private string GenerateJwtToken(string email)
+        private string GenerateJwtToken(User user)
         {
             var key = _configuration["Jwt:Key"];
             var issuer = _configuration["Jwt:Issuer"];
@@ -107,10 +107,17 @@ namespace digital.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
-            {
-        new Claim(ClaimTypes.Email, email),
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Email, user.Email),
+        new Claim(ClaimTypes.Name, user.Name),
+        new Claim(ClaimTypes.Role, user.Role)
     };
+
+            if (user.StudentId.HasValue)
+            {
+                claims.Add(new Claim("StudentId", user.StudentId.Value.ToString()));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
@@ -121,6 +128,9 @@ namespace digital.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+
+
 
 
 
@@ -139,7 +149,7 @@ namespace digital.Controllers
                 ViewBag.Error = "Invalid email or password.";
                 return View();
             }
-            var token = GenerateJwtToken(user.Email);
+            var token = GenerateJwtToken(user);
             HttpContext.Session.SetString("JWTToken", token);
             HttpContext.Session.SetString("TokenExpireTime", DateTime.UtcNow.AddSeconds(60).ToString("o"));
 
@@ -156,7 +166,6 @@ namespace digital.Controllers
 
             return RedirectToAction("Login");
         }
-
 
 
 
@@ -539,18 +548,18 @@ namespace digital.Controllers
         }
 
 
-
         [HttpGet]
         public IActionResult StudentDetails()
         {
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null)
-                return RedirectToAction("Login", "Account");
+                return RedirectToAction("StudentDetails", "Home");
 
             var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
             if (student == null)
                 return NotFound();
 
+            // Optional: You can pass ViewModel instead if needed
             StudentViewModel vm = new StudentViewModel
             {
                 Id = student.Id,
@@ -574,6 +583,8 @@ namespace digital.Controllers
 
             return View(vm);
         }
+
+
 
 
         [HttpGet]
@@ -1008,7 +1019,7 @@ namespace digital.Controllers
             return RedirectToAction("TeacherMasterPage");
         }
 
-
+        
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
