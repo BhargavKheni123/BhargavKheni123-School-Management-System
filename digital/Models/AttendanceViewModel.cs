@@ -14,7 +14,7 @@ namespace digital.ViewModels
         public int? SelectedMonth { get; set; }
         public int? SelectedYear { get; set; }
 
-        public List<Student> Students { get; set; } = new();
+        public List<Student> Student { get; set; } = new List<Student>();
         public List<Attendance> AttendanceData { get; set; } = new();
 
         public int TotalDays { get; set; }
