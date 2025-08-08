@@ -1,9 +1,14 @@
 ﻿@model digital.ViewModels.AttendanceViewModel
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-warning">@ViewBag.Error</div>
+}
 
 
 @{
     ViewData["Title"] = "Attendance Form";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
     var selectedMonth = ViewBag.SelectedMonth ?? 0;
     var selectedYear = ViewBag.SelectedYear ?? 0;
     var isStudent = ViewBag.IsStudent != null && (bool)ViewBag.IsStudent;

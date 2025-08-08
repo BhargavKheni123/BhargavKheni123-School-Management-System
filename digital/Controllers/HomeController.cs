@@ -763,7 +763,7 @@ namespace digital.Controllers
 
 
         [HttpGet]
-        public IActionResult AttendanceForm(int? CategoryId, int? SubCategoryId, int? Month, int? Year)
+        public IActionResult AttendanceForm(int? CategoryId, int?SubCategoryId, int? Month, int? Year)
         {
             string role = HttpContext.Session.GetString("UserRole");
             string email = HttpContext.Session.GetString("UserEmail");
@@ -793,14 +793,12 @@ namespace digital.Controllers
             if (role == "Student")
             {
                 var student = _context.Student.FirstOrDefault(s => s.Email == email);
-
                 if (student == null)
                     return RedirectToAction("Login");
 
-                model.Students = new List<Student> { student };
-                model.TotalDays = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month); // current month/year
+                model.Student = new List<Student> { student };
+                model.TotalDays = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
                 model.AttendanceData = _attendanceRepository.GetAttendanceByStudentId(student.Id);
-
                 return View(model);
             }
 
@@ -818,6 +816,10 @@ namespace digital.Controllers
 
             return View(model);
         }
+
+
+
+
 
         [HttpPost]
         public IActionResult AttendanceForm(AttendanceViewModel model, IFormCollection form)
@@ -870,7 +872,7 @@ namespace digital.Controllers
                     Text = sc.Name
                 }).ToList();
 
-            model.Students = students;
+            model.Student = students;
             model.TotalDays = totalDays;
             model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
             model.IsStudent = false;
