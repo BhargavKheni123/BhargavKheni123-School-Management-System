@@ -34,8 +34,7 @@ namespace digital.Repositories
                     a.StudentId == record.StudentId &&
                     a.Day == record.Day &&
                     a.Month == record.Month &&
-                    a.Year == record.Year
-                );
+                    a.Year == record.Year);
 
                 if (existing != null)
                 {
@@ -51,4 +50,5 @@ namespace digital.Repositories
             _context.SaveChanges();
         }
     }
+
 }
