@@ -813,7 +813,7 @@ namespace digital.Controllers
                 model.Students = students;
                 model.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
                 model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(
-                students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
+                    students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
             }
 
             return View(model);

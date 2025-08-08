@@ -1,5 +1,6 @@
 ﻿@model digital.ViewModels.AttendanceViewModel
 
+
 @{
     ViewData["Title"] = "Attendance Form";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -8,239 +9,264 @@
     var isStudent = ViewBag.IsStudent != null && (bool)ViewBag.IsStudent;
     var role = Context.Session.GetString("Role");
 }
-
-@if (isStudent)
+ 
+@if (ViewBag.IsStudent == true)
 {
     <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
         <div class="card shadow-lg" style="width: 600px;">
             <div class="card-header text-white text-center fw-bold" style="background-color: #222;">
                 STUDENT DETAILS
             </div>
-            <div class="card-body">
-                <h4 class="text-center mb-3">Your Attendance Records</h4>
+    <h4>Your Attendance Records</h4>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+                    @foreach (var item in Model.AttendanceData)
+
+                    {
+                <tr>
+                    <td>@($"{item.Day}/{item.Month}/{item.Year}")</td>
+                    <td>
+                        @if (item.Attend == "Yes")
+                        {
+                            <span style="color: green;">✔️ Present</span>
+                        }
+                        else
+                        {
+                            <span style="color: red;">✖️ Absent</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    </div>
+    </div>
+    
+}
+
+else
+{
+   
+
+
+@section Styles {
+    <style>
+        .attendance-wrapper {
+            padding: 20px;
+            margin-left: 250px;
+        }
+
+        .table thead th {
+            text-align: center;
+            background-color: #343a40;
+            color: white;
+        }
+
+        .table tbody td {
+            text-align: center;
+        }
+
+        .form-control, .btn {
+            margin-bottom: 10px;
+        }
+    </style>
+}
+
+@if (role != "Student")
+{
+    <td><a href="/Attendance/Edit/1">Edit</a></td>
+    <td><a href="/Attendance/Delete/1">Delete</a></td>
+}
+
+<div class="content-wrapper attendance-wrapper">
+    <h2 class="mb-4">Student Attendance Form</h2>
+
+    <form method="get" asp-action="AttendanceForm" id="attendanceForm">
+
+        <div class="row">
+                <div class="col-md-3">
+                    <label asp-for="SelectedCategoryId">Standard</label>
+                    <select class="form-control" asp-for="SelectedCategoryId" asp-items="Model.Categories" required>
+                        <option value="">-- Select Standard --</option>
+                    </select>
+                </div>
+
+                
+                <div class="col-md-3">
+                    <label asp-for="SelectedSubCategoryId">Class</label>
+                    <select class="form-control" asp-for="SelectedSubCategoryId" asp-items="Model.SubCategories" required>
+                        <option value="">-- Select Class --</option>
+                    </select>
+                
+            <div class="col-md-2">
+                <label>Month</label>
+                <select class="form-control" name="Month" required>
+                    <option value="">-- Month --</option>
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        var monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m);
+                        <text>
+                            @if (m == selectedMonth)
+                            {
+                                @:
+                            <option value="@m" selected>@monthName</option>
+                        }
+                        else
+                        {
+                            @:
+                            <option value="@m">@monthName</option>
+                        }
+                        </text>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label>Year</label>
+                <select class="form-control" name="Year" required>
+                    <option value="">-- Year --</option>
+                    @for (int y = 2025; y <= 2050; y++)
+                    {
+                        <text>
+                            @if (y == selectedYear)
+                            {
+                                @:
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            @:
+                            <option value="@y">@y</option>
+                        }
+                        </text>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-danger w-100"> Generate Sheet </button>
+            </div>
+        </div>
+
+        @if (ViewBag.Students != null && ViewBag.TotalDays > 0)
+        {
+            <div class="table-responsive">
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Date</th>
-                            <th>Status</th>
+                            <th>Student Name</th>
+                            @for (int d = 1; d <= ViewBag.TotalDays; d++)
+                            {
+                                <th>@d</th>
+                            }
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.AttendanceData)
+                        @foreach (var student in ViewBag.Students)
                         {
                             <tr>
-                                <td>@($"{item.Day}/{item.Month}/{item.Year}")</td>
-                                <td>
-                                    @if (item.Attend == "Yes")
-                                    {
-                                        <span style="color: green;">✔️ Present</span>
-                                    }
-                                    else
-                                    {
-                                        <span style="color: red;">✖️ Absent</span>
-                                    }
-                                </td>
+                                <td>@student.Name</td>
+                                @for (int d = 1; d <= ViewBag.TotalDays; d++)
+                                {
+                                    bool isChecked = (ViewBag.AttendanceData as List<digital.Models.Attendance>)?.Any(att =>
+                                    att.StudentId == student.Id &&
+                                    att.Day == d &&
+                                    att.Month == selectedMonth &&
+                                    att.Year == selectedYear &&
+                                    att.Attend == "Yes"
+                                    ) ?? false;
+
+
+                                    <td>
+                                        <input type="hidden" name="attend_@(student.Id)_@(d)" value="No" />
+                                        <input type="checkbox"
+                                               name="attend_@(student.Id)_@(d)"
+                                               class="attendance-checkbox"
+                                               data-studentid="@student.Id"
+                                               data-day="@d"
+                                               data-month="@ViewBag.SelectedMonth"
+                                               data-year="@ViewBag.SelectedYear"
+                                               @(isChecked ? "checked" : "") />
+
+                                    </td>
+                                }
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-}
-else
-{
-    <div class="content-wrapper attendance-wrapper">
-        <h2 class="mb-4">Student Attendance Form</h2>
-
-        <form method="get" asp-action="AttendanceForm" id="attendanceForm">
-            <div class="row">
-                <div class="col-md-3">
-                    <label asp-for="SelectedCategoryId">Standard</label>
-                    <select class="form-control" asp-for="SelectedCategoryId" asp-items="Model.Categories" required id="CategoryId">
-                        <option value="">-- Select Standard --</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label asp-for="SelectedSubCategoryId">Class</label>
-                    <select class="form-control" asp-for="SelectedSubCategoryId" asp-items="Model.SubCategories" required id="SubCategoryId">
-                        <option value="">-- Select Class --</option>
-                    </select>
-                </div>
-
-                <div class="col-md-2">
-    <label>Month</label>
-    <select class="form-control" name="Month" required>
-        <option value="">-- Month --</option>
-        @for (int m = 1; m <= 12; m++)
-        {
-            var monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m);
-            if (m == selectedMonth)
-            {
-                <option value="@m" selected>@monthName</option>
-            }
-            else
-            {
-                <option value="@m">@monthName</option>
-            }
+            <div class="col-md-2 d-flex align-items-center">
+                <button type="submit" class="btn btn-dark w-100"> Save </button>
+            </div>
         }
-    </select>
+    </form>
+    
 </div>
 
+@section Scripts {
+    <script>
+        $(document).ready(function () {
 
-               <div class="col-md-2">
-    <label>Year</label>
-    <select class="form-control" name="Year" required>
-        <option value="">-- Year --</option>
-        @for (int y = 2025; y <= 2050; y++)
-        {
-            if (y == selectedYear)
-            {
-                <option value="@y" selected>@y</option>
-            }
-            else
-            {
-                <option value="@y">@y</option>
-            }
-        }
-    </select>
-</div>
-
-
-            @if (ViewBag.Students != null && ViewBag.TotalDays > 0)
-            {
-                <div class="table-responsive mt-4">
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                @for (int d = 1; d <= ViewBag.TotalDays; d++)
-                                {
-                                    <th>@d</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var student in ViewBag.Students)
-                            {
-                                <tr>
-                                    <td>@student.Name</td>
-                                    @for (int d = 1; d <= ViewBag.TotalDays; d++)
-                                    {
-                                        bool isChecked = (ViewBag.AttendanceData as List<digital.Models.Attendance>)?.Any(att =>
-                                            att.StudentId == student.Id &&
-                                            att.Day == d &&
-                                            att.Month == selectedMonth &&
-                                            att.Year == selectedYear &&
-                                            att.Attend == "Yes") ?? false;
-
-                                        <td>
-                                            <input type="hidden" name="attend_@(student.Id)_@(d)" value="No" />
-                                            <input type="checkbox"
-                                                   name="attend_@(student.Id)_@(d)"
-                                                   class="attendance-checkbox"
-                                                   data-studentid="@student.Id"
-                                                   data-day="@d"
-                                                   data-month="@selectedMonth"
-                                                   data-year="@selectedYear"
-                                                   @(isChecked ? "checked" : "") />
-                                        </td>
-                                    }
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="mt-3 col-md-2 d-flex align-items-center">
-                    <button type="submit" class="btn btn-dark w-100">Save</button>
-                </div>
-            }
-        </form>
-    </div>
-
-    @section Styles {
-        <style>
-            .attendance-wrapper {
-                padding: 20px;
-                margin-left: 250px;
-            }
-
-            .table thead th {
-                text-align: center;
-                background-color: #343a40;
-                color: white;
-            }
-
-            .table tbody td {
-                text-align: center;
-            }
-
-            .form-control, .btn {
-                margin-bottom: 10px;
-            }
-        </style>
-    }
-
-    @section Scripts {
-        <script>
-            $(document).ready(function () {
-                $('#CategoryId').change(function () {
-                    var categoryId = $(this).val();
-                    $.ajax({
-                        url: '/Home/GetSubCategories?categoryId=' + categoryId,
-                        type: 'GET',
-                        success: function (data) {
-                            var subDropdown = $('#SubCategoryId');
-                            subDropdown.empty();
-                            subDropdown.append('<option value="">-- Select Class --</option>');
-                            $.each(data, function (i, item) {
-                                subDropdown.append('<option value="' + item.id + '">' + item.name + '</option>');
-                            });
-                        }
-                    });
-                });
-
-                $('select[name="Year"]').change(function () {
-                    var std = $('#CategoryId').val();
-                    var cls = $('#SubCategoryId').val();
-                    var month = $('select[name="Month"]').val();
-                    var year = $(this).val();
-
-                    if (std && cls && month && year) {
-                        $('#attendanceForm').submit();
+            $('#CategoryId').change(function () {
+                var categoryId = $(this).val();
+                $.ajax({
+                    url: '/Home/GetSubCategories?categoryId=' + categoryId,
+                    type: 'GET',
+                    success: function (data) {
+                        var subDropdown = $('#SubCategoryId');
+                        subDropdown.empty();
+                        subDropdown.append('<option value="">-- Select Class --</option>');
+                        $.each(data, function (i, item) {
+                            subDropdown.append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
                     }
                 });
+            });
 
-                $('.attendance-checkbox').on('change', function () {
-                    var checkbox = $(this);
-                    var studentId = checkbox.data('studentid');
-                    var day = checkbox.data('day');
-                    var month = checkbox.data('month');
-                    var year = checkbox.data('year');
-                    var isChecked = checkbox.is(':checked');
+            $('select[name="Year"]').change(function () {
+                var std = $('#CategoryId').val();
+                var cls = $('#SubCategoryId').val();
+                var month = $('select[name="Month"]').val();
+                var year = $(this).val();
 
-                    $.ajax({
-                        url: '/Home/SaveAttendanceAjax',
-                        method: 'POST',
-                        data: {
-                            studentId: studentId,
-                            day: day,
-                            month: month,
-                            year: year,
-                            status: isChecked ? 'Yes' : 'No'
-                        },
-                        success: function (response) {
-                            console.log("Attendance saved for student " + studentId + " on day " + day);
-                        },
-                        error: function (xhr) {
-                            console.error("Error saving attendance:", xhr.responseText);
-                            alert("Saving failed!");
-                        }
-                    });
+                if (std && cls && month && year) {
+                    $('#attendanceForm').submit();
+                }
+            });
+
+            $('.attendance-checkbox').on('change', function () {
+                var checkbox = $(this);
+                var studentId = checkbox.data('studentid');
+                var day = checkbox.data('day');
+                var month = checkbox.data('month');
+                var year = checkbox.data('year');
+                var isChecked = checkbox.is(':checked');
+
+                $.ajax({
+                    url: '/Home/SaveAttendanceAjax',
+                    method: 'POST',
+                    data: {
+                        studentId: studentId,
+                        day: day,
+                        month: month,
+                        year: year,
+                        status: isChecked ? 'Yes' : 'No'
+                    },
+                    success: function (response) {
+                        console.log("Attendance saved for student " + studentId + " on day " + day);
+                    },
+                    error: function (xhr) {
+                        console.error("Error saving attendance:", xhr.responseText);
+                        alert("Saving failed!");
+                    }
                 });
             });
-        </script>
-    }
+        });
+    </script>
+}
 }
