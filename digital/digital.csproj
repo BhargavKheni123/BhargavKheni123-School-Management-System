@@ -35,8 +35,8 @@
 	  <None Update="wwwroot/build/config/postcss.config.js">
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
-	  <StaticWebAsset Remove="wwwroot/build/config/postcss.config.js" />
-	  <Content Remove="wwwroot/build/config/postcss.config.js" />
+	  <!--<StaticWebAsset Remove="wwwroot/build/config/postcss.config.js" />-->
+	  <!--<Content Remove="wwwroot/build/config/postcss.config.js" />
 	  <Content Remove="wwwroot/build/config/rollup.config.js" />
 	  <Content Remove="wwwroot/build/js/AdminLTE.js" />
 	  <Content Remove="wwwroot/build/js/CardRefresh.js" />
@@ -47,8 +47,7 @@
 	  <Content Remove="wwwroot/build/js/Fullscreen.js" />
 	  <Content Remove="wwwroot/build/js/ExpandableTable.js" />
 	  <Content Remove="wwwroot/build/js/IFrame.js" />
-	  <Content Remove="wwwroot/build/js/NavbarSearch.js" />
-	  <Content Remove="wwwroot/build/js/Layout.js" />
+	  <Content Remove="wwwroot/build/js/NavbarSerch.js" />
   </ItemGroup>
 
 </Project>
