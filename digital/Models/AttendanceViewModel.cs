@@ -21,5 +21,4 @@ namespace digital.ViewModels
 
         public bool IsStudent { get; set; } = false;
     }
-
 }

@@ -21,8 +21,6 @@ namespace digital.Models
         public string Attend { get; set; }
 
         public Student Student { get; set; }
-        public bool IsPresent { get; set; }
-
-
+    
     }
 }
