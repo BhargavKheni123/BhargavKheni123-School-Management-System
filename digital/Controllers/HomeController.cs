@@ -617,79 +617,87 @@ namespace digital.Controllers
 
 
 
+        // GET
         [HttpGet]
         public IActionResult TimeTableForm()
         {
             string role = HttpContext.Session.GetString("UserRole");
             string email = HttpContext.Session.GetString("UserEmail");
 
-            var viewModel = new TimeTableViewModel
+            var vm = new TimeTableViewModel
             {
                 Role = role,
-                Message = TempData["Message"] as string,
-
-                StdList = _categoryRepository.GetAllCategories()
-                    .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList(),
-
-                ClassList = new List<SelectListItem>(),
-
-                Hours = Enumerable.Range(1, 12)
-                    .Select(h => new SelectListItem { Value = h.ToString(), Text = h.ToString() }).ToList(),
-
-                Minutes = Enumerable.Range(0, 60)
-                    .Select(m => new SelectListItem { Value = m.ToString("D2"), Text = m.ToString("D2") }).ToList(),
-
-                TimeTableList = _timeTableRepository.GetAllTimeTables()
+                Message = TempData["Message"] as string ?? ""
             };
 
-            return View(viewModel);
+            PopulateTimeTableViewModel(vm);
+
+            return View(vm);
         }
 
+        private void PopulateTimeTableViewModel(TimeTableViewModel vm)
+        {
+            vm.StdList = _categoryRepository.GetAllCategories()
+                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
-        // ✅ POST: TimeTableForm
+            vm.ClassList = new List<SelectListItem>(); // loaded by AJAX based on Std
+
+            vm.Hours = Enumerable.Range(1, 24)
+                .Select(h => new SelectListItem { Value = h.ToString(), Text = h.ToString() }).ToList();
+
+            vm.Minutes = Enumerable.Range(0, 60)
+                .Select(m => new SelectListItem { Value = m.ToString("D2"), Text = m.ToString("D2") }).ToList();
+
+            vm.TeacherList = _context.Users
+                .Where(u => u.Role == "Teacher")
+                .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
+                .ToList();
+
+            vm.TimeTableList = _timeTableRepository.GetAllTimeTables();
+        }
+
+        // POST
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult TimeTableForm(TimeTableViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
+            {
+                // collect errors for debugging
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                TempData["FormErrors"] = string.Join(" | ", errors);
+
+                PopulateTimeTableViewModel(model);
+                return View(model);
+            }
+
+            try
             {
                 _timeTableRepository.AddTimeTable(model.TimeTable);
                 TempData["Message"] = "Time Table Saved!";
-                return RedirectToAction("TimeTableForm");
+                return RedirectToAction(nameof(TimeTableForm));
             }
-
-            // ❌ If model is invalid, refill dropdowns
-            model.StdList = _categoryRepository.GetAllCategories()
-                .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
-
-            model.ClassList = _subCategoryRepository.GetAllSubCategories()
-                .Select(sc => new SelectListItem { Value = sc.Name, Text = sc.Name }).ToList();
-
-            model.Hours = Enumerable.Range(1, 24)
-                .Select(i => new SelectListItem { Value = i.ToString(), Text = i.ToString() }).ToList();
-
-            model.Minutes = Enumerable.Range(0, 59)
-                .Select(i => new SelectListItem { Value = i.ToString("D2"), Text = i.ToString("D2") }).ToList();
-
-            model.TimeTableList = _timeTableRepository.GetAllTimeTables();
-
-            return View("TimeTableForm", model);
+            catch (Exception ex)
+            {
+                // show friendly error and keep fields
+                ModelState.AddModelError("", "Save failed: " + ex.Message);
+                PopulateTimeTableViewModel(model);
+                return View(model);
+            }
         }
 
-
-
-        // ✅ AJAX: Get SubCategories by Standard
+        // existing AJAX endpoint (no change)
         [HttpGet]
         public JsonResult GetSubCategoriesByStd(string stdName)
         {
             var subcategories = _context.SubCategories
                 .Where(sc => sc.Category.Name == stdName)
-                .Select(sc => new
-                {
-                    name = sc.Name
-                }).ToList();
+                .Select(sc => new { name = sc.Name })
+                .ToList();
 
             return Json(subcategories);
         }
+
 
 
 
@@ -808,7 +816,7 @@ namespace digital.Controllers
                     .Where(s => s.CategoryId == CategoryId.Value && s.SubCategoryId == SubCategoryId.Value)
                     .ToList();
 
-                model.Students = students;
+                model.Student = students;
                 model.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
                 model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(
                     students.Select(s => s.Id).ToList(), Month.Value, Year.Value);
