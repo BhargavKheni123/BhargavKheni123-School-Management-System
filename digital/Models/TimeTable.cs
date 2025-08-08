@@ -8,13 +8,13 @@ namespace digital.Models
         public int Id { get; set; }
 
         [Required]
-        public required string Std { get; set; } // Now string
+        public string Std { get; set; } = "";
 
         [Required]
-        public required string Class { get; set; } // Now string
+        public string Class { get; set; } = "";
 
         [Required]
-        public required string Subject { get; set; }
+        public string Subject { get; set; } = "";
 
         [Required]
         public int StartHour { get; set; }
@@ -28,8 +28,10 @@ namespace digital.Models
         [Required]
         public int EndMinute { get; set; }
 
+        // NEW: optional teacher assignment
+        public int? TeacherId { get; set; }
 
-
+        [ForeignKey("TeacherId")]
+        public User? Teacher { get; set; }
     }
-
 }

@@ -6,209 +6,290 @@
     var role = Context.Session.GetString("UserRole");
 }
 
-@if (role == "Student")
-{
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
-        <div class="card shadow-lg" style="width: 600px;">
-            <div class="card-header text-white text-center fw-bold" style="background-color: #222;">
-                Student Timetable
-            </div>
-            <table class="table table-bordered mb-0">
-                <thead>
-                    <tr class="text-center">
-                        <th>Subject</th>
-                        <th>Start Hour</th>
-                        <th>End Hour</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model.TimeTableList)
-                    {
-                        <tr class="text-center">
-                            <td>@item.Subject</td>
-                            <td>@item.StartHour</td>
-                            <td>@item.EndHour</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </div>
-}
-else
-{
-    <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
-        <div class="card shadow" style="width: 650px;">
-            <div class="card-header bg-dark text-white text-center">
-                <h4 class="mb-0">TIME TABLE</h4>
-            </div>
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
 
-            <div class="card-body p-4">
-                @if (ViewBag.Message != null)
-                {
-                    <div class="alert alert-success text-center">@ViewBag.Message</div>
-                }
+    .card-header {
+        background: #3a3a3a;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
 
-                <form asp-action="TimeTableForm" method="post">
-                    <div class="row mb-3">
-                        <select id="Std" name="TimeTable.Std" class="form-select" required>
-                            <option value="">-- Select Standard --</option>
-                            @foreach (var item in Model.StdList)
-                            {
-                                <option value="@item.Text">@item.Text</option>
-                            }
-                        </select>
+    .form-select, .form-control {
+        border-radius: 6px;
+        padding: 8px 10px;
+        border: 1px solid #bbb;
+        box-shadow: none;
+        transition: border-color 0.2s ease;
+    }
 
+        .form-select:focus, .form-control:focus {
+            border-color: #3a3a3a;
+            outline: none;
+        }
 
-                        <div class="col-md-6">
-                            <label>Class</label>
-                            <select id="Class" name="TimeTable.Class" class="form-select" required>
-                                <option value="">-- Select Class --</option>
-                            </select>
-                        </div>
-                    </div>
+    .btn-primary {
+        background-color: #3a3a3a;
+        border: none;
+    }
 
-                    <div class="mb-3">
-                        <label>Subject</label>
-                        <input asp-for="TimeTable.Subject" class="form-control" placeholder="Enter subject name" required />
-                    </div>
+        .btn-primary:hover {
+            background-color: #555;
+        }
+</style>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label>Start Hour</label>
-                            <select asp-for="TimeTable.StartHour" asp-items="Model.Hours" class="form-select" id="StartHour" required>
-                                <option value="">-- Hour --</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label>Start Minute</label>
-                            <select asp-for="TimeTable.StartMinute" asp-items="Model.Minutes" class="form-select" id="StartMinute" required>
-                                <option value="">-- Minute --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label>End Hour</label>
-                            <select asp-for="TimeTable.EndHour" asp-items="Model.Hours" class="form-select" id="EndHour" required>
-                                <option value="">-- Hour --</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label>End Minute</label>
-                            <select asp-for="TimeTable.EndMinute" asp-items="Model.Minutes" class="form-select" id="EndMinute" required>
-                                <option value="">-- Minute --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-danger px-5">SUBMIT</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="content-wrapper p-3">
+<div class="content-wrapper">
+    <section class="content">
         <div class="container-fluid">
-            <div class="card">
-                <div class="card-body">
-                    <hr class="my-4" />
-                    <h4 class="mb-3">Time Table Entries</h4>
 
-                    <table class="table table-bordered table-striped">
-                        <thead class="thead-dark">
-                            <tr class="text-center">
-                                <th>Standard</th>
-                                <th>Class</th>
-                                <th>Subject</th>
-                                <th>Start Hour</th>
-                                <th>End Hour</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.TimeTableList != null && Model.TimeTableList.Count > 0)
-                            {
-                                foreach (var item in Model.TimeTableList)
-                                {
-                                    <tr class="text-center align-middle">
-                                        <td>@item.Std</td>
-                                        <td>@item.Class</td>
-                                        <td>@item.Subject</td>
-                                        <td>@item.StartHour</td>
-                                        <td>@item.EndHour</td>
-                                        <td>
-                                            <a href="/Home/EditTimeTable/@item.Id" class="btn btn-warning btn-sm">Edit</a>
-                                            <a href="/Home/DeleteTimeTable/@item.Id" class="btn btn-danger btn-sm">Delete</a>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">No entries found.</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+            @if (role == "Student")
+            {
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-10">
+                        <div class="card shadow-sm">
+                            <div class="card-header text-center">Student Timetable</div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="text-center">
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Start Hour</th>
+                                            <th>End Hour</th>
+                                            <th>Teacher</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.TimeTableList)
+                                        {
+                                            <tr class="text-center">
+                                                <td>@item.Subject</td>
+                                                <td>@item.StartHour:@item.StartMinute.ToString("D2")</td>
+                                                <td>@item.EndHour:@item.EndMinute.ToString("D2")</td>
+                                                <td>@item.Teacher?.Name</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-10">
+                        <div class="card shadow-sm">
+                            <div class="card-header text-center">Time Table - Assign Lectures</div>
+                            <div class="card-body">
+
+                                @if (ViewBag.Message != null || !string.IsNullOrEmpty(Model.Message))
+                                {
+                                    <div class="alert alert-success text-center">
+                                        @(!string.IsNullOrEmpty(Model.Message) ? Model.Message : ViewBag.Message)
+                                    </div>
+                                }
+
+                                @if (TempData["FormErrors"] != null)
+                                {
+                                    <div class="alert alert-danger">@TempData["FormErrors"]</div>
+                                }
+
+                                @if (TempData["Message"] != null)
+                                {
+                                    <div class="alert alert-success">@TempData["Message"]</div>
+                                }
+
+                                <form asp-action="TimeTableForm" method="post" id="ttForm">
+                                    @Html.AntiForgeryToken()
+                                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                                    <!-- Row 1 -->
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Teacher</label>
+                                            <select asp-for="TimeTable.TeacherId" asp-items="Model.TeacherList" class="form-select shadow-sm">
+                                                <option value="">-- Select Teacher --</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Standard</label>
+                                            <select id="Std" name="TimeTable.Std" class="form-select shadow-sm" required>
+                                                <option value="">-- Select Standard --</option>
+                                                @foreach (var item in Model.StdList)
+                                                {
+                                                    <option value="@item.Value">@item.Text</option>
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Class</label>
+                                            <select id="Class" name="TimeTable.Class" class="form-select shadow-sm" required>
+                                                <option value="">-- Select Class --</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Subject</label>
+                                            <select asp-for="TimeTable.Subject" class="form-select shadow-sm" required>
+                                                <option value="">-- Select Subject --</option>
+                                                <option>English</option>
+                                                <option>Mathematics</option>
+                                                <option>Science</option>
+                                                <option>History</option>
+                                                <option>Computer</option>
+                                                <option>Hindi</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Row 2 -->
+                                    <div class="row g-3 align-items-end mt-1">
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Start Hour</label>
+                                            <select asp-for="TimeTable.StartHour" asp-items="Model.Hours" class="form-select shadow-sm" id="StartHour" required>
+                                                <option value="">-- Hour --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">Start Minute</label>
+                                            <select asp-for="TimeTable.StartMinute" asp-items="Model.Minutes" class="form-select shadow-sm" id="StartMinute" required>
+                                                <option value="">-- Minute --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">End Hour</label>
+                                            <select asp-for="TimeTable.EndHour" asp-items="Model.Hours" class="form-select shadow-sm" id="EndHour" required>
+                                                <option value="">-- Hour --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-semibold">End Minute</label>
+                                            <select asp-for="TimeTable.EndMinute" asp-items="Model.Minutes" class="form-select shadow-sm" id="EndMinute" required>
+                                                <option value="">-- Minute --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit -->
+                                    <div class="text-center mt-4">
+                                        <button id="submitBtn" type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm">
+                                            Submit
+                                        </button>
+                                    </div>
+                                </form>
+
+
+                                <!-- Table -->
+                                <div class="card mt-5 shadow-sm border-0">
+                                    <div class="card-header">Time Table Entries</div>
+                                    <div class="card-body table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="text-center">
+                                                <tr>
+                                                    <th>Standard</th>
+                                                    <th>Class</th>
+                                                    <th>Subject</th>
+                                                    <th>Teacher</th>
+                                                    <th>Start</th>
+                                                    <th>End</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (Model.TimeTableList != null && Model.TimeTableList.Count > 0)
+                                                {
+                                                    foreach (var item in Model.TimeTableList)
+                                                    {
+                                                        <tr class="text-center">
+                                                            <td>@item.Std</td>
+                                                            <td>@item.Class</td>
+                                                            <td>@item.Subject</td>
+                                                            <td>@item.Teacher?.Name</td>
+                                                            <td>@item.StartHour:@item.StartMinute.ToString("D2")</td>
+                                                            <td>@item.EndHour:@item.EndMinute.ToString("D2")</td>
+                                                            <td>
+                                                                <a href="/Home/EditTimeTable/@item.Id" class="btn btn-warning btn-sm">Edit</a>
+                                                                <a href="/Home/DeleteTimeTable/@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <tr>
+                                                        <td colspan="7" class="text-center text-muted">No entries found.</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
         </div>
-    </div>
-}
+    </section>
+</div>
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            $('#Std').change(function () {
+        $(function () {
+            $('#Std').on('change', function () {
                 var stdName = $(this).val();
-                $('#Class').empty().append('<option>Loading...</option>');
+                $('#Class').empty().append('<option value="">Loading...</option>');
                 $.get('/Home/GetSubCategoriesByStd', { stdName: stdName }, function (data) {
                     $('#Class').empty().append('<option value="">-- Select Class --</option>');
                     $.each(data, function (i, item) {
                         $('#Class').append('<option value="' + item.name + '">' + item.name + '</option>');
                     });
+                }).fail(function () {
+                    $('#Class').empty().append('<option value="">-- Error loading --</option>');
                 });
             });
 
-            function filterEndTimes() {
-                const startHour = parseInt($('#StartHour').val());
-                const startMinute = parseInt($('#StartMinute').val());
+            $('#StartHour, #StartMinute').on('change', function () {
+                var startHour = parseInt($('#StartHour').val() || '0', 10);
+                var startMinute = parseInt($('#StartMinute').val() || '0', 10);
 
-                let allHours = [...Array(24).keys()].map(i => i + 1);
-                let allMinutes = [...Array(60).keys()].map(i => i + 1);
-
-                const filteredHours = allHours.filter(h => h >= startHour);
                 $('#EndHour').empty().append('<option value="">-- Hour --</option>');
-                filteredHours.forEach(h => {
-                    $('#EndHour').append(`<option value="${h}">${h}</option>`);
-                });
-
-                $('#EndHour').change(function () {
-                    const endHour = parseInt($(this).val());
-                    $('#EndMinute').empty().append('<option value="">-- Minute --</option>');
-
-                    if (endHour === startHour) {
-                        const filteredMinutes = allMinutes.filter(m => m > startMinute);
-                        filteredMinutes.forEach(m => {
-                            $('#EndMinute').append(`<option value="${m}">${m}</option>`);
-                        });
-                    } else {
-                        allMinutes.forEach(m => {
-                            $('#EndMinute').append(`<option value="${m}">${m}</option>`);
-                        });
+                $('#StartHour option').each(function () {
+                    var v = $(this).val();
+                    if (!v) return;
+                    var hv = parseInt(v, 10);
+                    if (hv >= startHour) {
+                        $('#EndHour').append($(this).clone());
                     }
                 });
-            }
 
-            $('#StartHour, #StartMinute').change(function () {
-                filterEndTimes();
+                $('#EndHour').on('change', function () {
+                    var endHour = parseInt($(this).val() || '0', 10);
+                    $('#EndMinute').empty().append('<option value="">-- Minute --</option>');
+                    $('#StartMinute option').each(function () {
+                        var mval = $(this).val();
+                        if (mval === '') return;
+                        var mv = parseInt(mval, 10);
+                        if (endHour === startHour) {
+                            if (mv > startMinute) $('#EndMinute').append($(this).clone());
+                        } else {
+                            $('#EndMinute').append($(this).clone());
+                        }
+                    });
+                });
+            });
+
+            $('#ttForm').on('submit', function () {
+                $('#submitBtn').prop('disabled', true).text('Saving...');
             });
         });
     </script>
