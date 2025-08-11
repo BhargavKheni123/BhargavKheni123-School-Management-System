@@ -9,7 +9,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddDistributedMemoryCache(); 
+
+// ====== SERVICES ======
+
+// Session & Memory cache (add only once)
+builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -17,6 +21,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
+// JWT Authentication
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -35,23 +40,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddSession();
-builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+// Database context
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddDistributedMemoryCache();
-builder.Services.AddSession(options =>
-{
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
-});
+// AutoMapper
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
 
-builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-builder.Services.AddControllersWithViews();
-builder.Services.AddAutoMapper(typeof(digital.Mapping.AutoMapperProfile).Assembly);
+// HTTP Context Accessor
+builder.Services.AddHttpContextAccessor();
+
+// Repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ITeacherMasterRepository, TeacherMasterRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
@@ -60,29 +59,39 @@ builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 builder.Services.AddScoped<ITimeTableRepository, TimeTableRepository>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
+builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+
+// Singleton helpers
 builder.Services.AddSingleton<JwtTokenHelper>();
+
+// Controllers + Views
+builder.Services.AddControllersWithViews();
+
 var app = builder.Build();
 
+// ====== MIDDLEWARE PIPELINE ======
 
-
-
+// Exception handling
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseRouting();
+
+// ** Order matters **
 app.UseSession();
+
+app.UseAuthentication();
+app.UseMiddleware<JwtMiddleware>();  // Your custom middleware here
 app.UseAuthorization();
 
-app.UseMiddleware<JwtMiddleware>();
-
+// Routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Login}/{id?}");

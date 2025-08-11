@@ -1,0 +1,79 @@
+﻿@model digital.ViewModels.ExamViewModel
+
+@{
+    ViewData["Title"] = "Create Exam";
+}
+
+
+<div class="content-wrapper">
+    
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Create Exam</h1>
+                </div>
+                <div class="col-sm-6">
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="content">
+        <div class="container-fluid">
+            <form asp-action="CreateExam" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="form-group">
+                    <label asp-for="ExamTitle"></label>
+                    <input asp-for="ExamTitle" class="form-control" />
+                    <span asp-validation-for="ExamTitle" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Description"></label>
+                    <textarea asp-for="Description" class="form-control"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="ExamType"></label>
+                    <select asp-for="ExamType" asp-items="Model.ExamTypes" class="form-control"></select>
+                    <span asp-validation-for="ExamType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="CategoryId"></label>
+                    <select asp-for="CategoryId" asp-items="Model.Classes" class="form-control"></select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SubCategoryId"></label>
+                    <select asp-for="SubCategoryId" asp-items="Model.Divisions" class="form-control"></select>
+                    <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="SubjectId"></label>
+                    <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-control"></select>
+                    <span asp-validation-for="SubjectId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Teachers</label>
+                    <select asp-for="SelectedTeacherIds" asp-items="Model.Teachers" class="form-control" multiple="multiple"></select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+    </section>
+    
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

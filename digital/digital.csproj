@@ -52,6 +52,12 @@
 	  <Content Remove="wwwroot\build\js\PushMenu.js" />
 	  <Content Remove="wwwroot\build\js\SidebarSearch.js" />
 	  <Content Remove="wwwroot\build\js\Toasts.js" />
+	  <Content Remove="wwwroot\build\js\TodoList.js" />
+	  <Content Remove="wwwroot\build\js\TreeView.js" />
+	  <Content Remove="wwwroot\build\npm\.eslintrc.json" />
+	  <Content Remove="wwwroot\build\npm\DocsPlugins.js" />
+	  <Content Remove="wwwroot\build\npm\DocsPublish.js" />
+	  
   </ItemGroup>
 
 </Project>

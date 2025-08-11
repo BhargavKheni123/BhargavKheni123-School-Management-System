@@ -2,7 +2,7 @@
 
 namespace digital.Models
 {
-    [Table("Subject")] // 👈 FIX this line (was "Subjects")
+    [Table("Subject")] 
     public class Subject
 
     {

@@ -12,7 +12,7 @@ public class JwtMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var token = context.Session.GetString("JWTToken"); // or use cookies if needed
+        var token = context.Session.GetString("JWTToken"); 
 
         if (!string.IsNullOrEmpty(token))
         {

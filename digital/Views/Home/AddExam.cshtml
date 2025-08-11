@@ -1,0 +1,103 @@
+﻿@model digital.ViewModels.ExamViewModel
+
+@{
+    ViewData["Title"] = Model.ExamId > 0 ? "Edit Exam" : "Create Exam";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>@ViewData["Title"]</h1>
+    </section>
+
+    <section class="content">
+        <div class="card card-primary">
+            <div class="card-body">
+                <form asp-action="@(Model.ExamId > 0 ? "EditExam" : "CreateExam")" method="post">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.ExamId)
+
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="ExamTitle"></label>
+                        <input asp-for="ExamTitle" class="form-control" />
+                        <span asp-validation-for="ExamTitle" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Description"></label>
+                        <textarea asp-for="Description" class="form-control"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="ExamType"></label>
+                        <select asp-for="ExamType" asp-items="Model.ExamTypes" class="form-control">
+                            <option value="">-- Select Exam Type --</option>
+                        </select>
+                        <span asp-validation-for="ExamType" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="CategoryId">Class</label>
+                        <select asp-for="CategoryId" asp-items="Model.Classes" class="form-control" id="CategoryId">
+                            <option value="">-- Select Class --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SubCategoryId">Division</label>
+                        <select asp-for="SubCategoryId" asp-items="Model.Divisions" class="form-control" id="SubCategoryId">
+                            <option value="">-- Select Division --</option>
+                        </select>
+                        <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SubjectId">Subject</label>
+                        <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-control" id="SubjectId">
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                        <span asp-validation-for="SubjectId" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="SelectedTeacherIds">Assigned Teacher(s)</label>
+                        <select asp-for="SelectedTeacherIds" asp-items="Model.Teachers" class="form-control" multiple size="5" id="SelectedTeacherIds">
+                        </select>
+                        <span asp-validation-for="SelectedTeacherIds" class="text-danger"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <a asp-action="ExamList" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            $("#CategoryId").change(function () {
+                var classId = $(this).val();
+                $("#SubCategoryId").empty();
+                $("#SubCategoryId").append($('<option>').val("").text("-- Select Division --"));
+                if (classId) {
+                    $.getJSON('/Home/GetDivisionsByClass', { classId: classId }, function (data) {
+                        $.each(data, function (i, division) {
+                            $("#SubCategoryId").append($('<option>').val(division.id).text(division.name));
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+}

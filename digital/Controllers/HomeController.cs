@@ -14,6 +14,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 using System.Xml;
+using digital.Models;
 
 namespace digital.Controllers
 {
@@ -37,6 +38,9 @@ namespace digital.Controllers
         private readonly IMapper _mapper;
         private readonly JwtTokenHelper _jwtHelper;
         private readonly IConfiguration _configuration;
+        private readonly IExamRepository _examRepository;
+
+
 
 
 
@@ -54,6 +58,7 @@ namespace digital.Controllers
             IGenericRepository<SubCategory> subCategoryRepo, 
             IGenericRepository<Student> studentRepo, 
             IGenericRepository<TimeTable> timeTableRepo,
+            IExamRepository examRepository,
             IMapper mapper,
             JwtTokenHelper jwtHelper,
             IConfiguration configuration)
@@ -75,6 +80,8 @@ namespace digital.Controllers
             _mapper = mapper;
             _jwtHelper = jwtHelper;
             _configuration = configuration;
+            _examRepository = examRepository;
+
         }
 
         public IActionResult Index()
@@ -1114,7 +1121,253 @@ namespace digital.Controllers
             return RedirectToAction("TeacherMasterPage");
         }
 
-        
+
+
+
+
+
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> ExamList()
+        {
+            var exams = await _context.Exams
+                .OrderByDescending(e => e.CreatedDate)
+                .Select(e => new
+                {
+                    e.ExamId,
+                    e.ExamTitle,
+                    e.Description,
+                    e.ExamType,
+                    CategoryName = _context.Categories.Where(c => c.Id == e.CategoryId).Select(c => c.Name).FirstOrDefault(),
+                    SubCategoryName = _context.SubCategories.Where(sc => sc.Id == e.SubCategoryId).Select(sc => sc.Name).FirstOrDefault(),
+                    e.Subject,
+                    TeacherNames = _context.ExamTeachers
+                        .Where(et => et.ExamId == e.ExamId)
+                        .Select(et => _context.TeacherMaster
+                            .Where(tm => tm.Id == et.TeacherId)
+                            .Select(tm => tm.Teacher != null ? tm.Teacher.Name : "")
+                            .FirstOrDefault()
+                        ).ToList()
+                })
+                .ToListAsync();
+
+            return View(exams);
+        }
+
+        [HttpGet]
+        public IActionResult CreateExam()
+        {
+            var vm = new ExamViewModel();
+            PopulateDropdowns(vm);
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateExam(ExamViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                PopulateDropdowns(vm);
+                return View(vm);
+            }
+
+            var exam = new Exam
+            {
+                ExamTitle = vm.ExamTitle,
+                Description = vm.Description,
+                ExamType = vm.ExamType,
+                CategoryId = vm.CategoryId,
+                SubCategoryId = vm.SubCategoryId,
+                Subject = await _context.Subjects.Where(s => s.Id == vm.SubjectId).Select(s => s.Name).FirstOrDefaultAsync(),
+                CreatedDate = DateTime.Now
+            };
+
+            var userIdStr = HttpContext.Session.GetString("UserId");
+            exam.CreatedBy = int.TryParse(userIdStr, out var uid) ? uid : 1;
+
+            if (vm.SelectedTeacherIds != null && vm.SelectedTeacherIds.Any())
+                exam.AssignedTeacherId = vm.SelectedTeacherIds.First();
+
+            _context.Exams.Add(exam);
+            await _context.SaveChangesAsync();
+
+            if (vm.SelectedTeacherIds != null && vm.SelectedTeacherIds.Any())
+            {
+                foreach (var tId in vm.SelectedTeacherIds.Distinct())
+                {
+                    _context.ExamTeachers.Add(new ExamTeacher
+                    {
+                        ExamId = exam.ExamId,
+                        TeacherId = tId,
+                        AssignedDate = DateTime.Now
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            TempData["SuccessMessage"] = "Exam created successfully.";
+            return RedirectToAction(nameof(ExamList));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditExam(int id)
+        {
+            var exam = await _context.Exams
+                .Include(e => e.ExamTeachers)
+                .FirstOrDefaultAsync(e => e.ExamId == id);
+
+            if (exam == null) return NotFound();
+
+            var vm = new ExamViewModel
+            {
+                ExamId = exam.ExamId,
+                ExamTitle = exam.ExamTitle,
+                Description = exam.Description,
+                ExamType = exam.ExamType,
+                CategoryId = exam.CategoryId,
+                SubCategoryId = exam.SubCategoryId,
+                SubjectId = await _context.Subjects.Where(s => s.Name == exam.Subject).Select(s => s.Id).FirstOrDefaultAsync(),
+                SelectedTeacherIds = exam.ExamTeachers?.Select(et => et.TeacherId).ToList() ?? new System.Collections.Generic.List<int>()
+            };
+
+            PopulateDropdowns(vm);
+            return View("CreateExam", vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditExam(ExamViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                PopulateDropdowns(vm);
+                return View("CreateExam", vm);
+            }
+
+            var exam = await _context.Exams.Include(e => e.ExamTeachers).FirstOrDefaultAsync(e => e.ExamId == vm.ExamId);
+            if (exam == null) return NotFound();
+
+            exam.ExamTitle = vm.ExamTitle;
+            exam.Description = vm.Description;
+            exam.ExamType = vm.ExamType;
+            exam.CategoryId = vm.CategoryId;
+            exam.SubCategoryId = vm.SubCategoryId;
+            exam.Subject = await _context.Subjects.Where(s => s.Id == vm.SubjectId).Select(s => s.Name).FirstOrDefaultAsync();
+
+            if (vm.SelectedTeacherIds != null && vm.SelectedTeacherIds.Any())
+                exam.AssignedTeacherId = vm.SelectedTeacherIds.First();
+            else
+                exam.AssignedTeacherId = 0;
+
+            var old = exam.ExamTeachers.ToList();
+            if (old.Any()) _context.ExamTeachers.RemoveRange(old);
+
+            if (vm.SelectedTeacherIds != null && vm.SelectedTeacherIds.Any())
+            {
+                foreach (var tId in vm.SelectedTeacherIds.Distinct())
+                {
+                    _context.ExamTeachers.Add(new ExamTeacher
+                    {
+                        ExamId = exam.ExamId,
+                        TeacherId = tId,
+                        AssignedDate = DateTime.Now
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Exam updated successfully.";
+            return RedirectToAction(nameof(ExamList));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteExam(int id)
+        {
+            var exam = await _context.Exams.FirstOrDefaultAsync(e => e.ExamId == id);
+            if (exam == null)
+            {
+                TempData["ErrorMessage"] = "Exam not found.";
+                return RedirectToAction(nameof(ExamList));
+            }
+
+            var mappings = _context.ExamTeachers.Where(et => et.ExamId == id);
+            if (mappings.Any()) _context.ExamTeachers.RemoveRange(mappings);
+
+            _context.Exams.Remove(exam);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Exam deleted successfully.";
+            return RedirectToAction(nameof(ExamList));
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetDivisionsByClass(int classId)
+        {
+            var divisions = await _context.SubCategories
+                .Where(s => s.CategoryId == classId)
+                .Select(s => new { id = s.Id, name = s.Name })
+                .ToListAsync();
+
+            return Json(divisions);
+        }
+
+        private void PopulateDropdowns(ExamViewModel vm)
+        {
+            vm.Classes = _context.Categories
+                .OrderBy(c => c.Name)
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                .ToList();
+
+            if (vm.CategoryId > 0)
+            {
+                vm.Divisions = _context.SubCategories
+                    .Where(sc => sc.CategoryId == vm.CategoryId)
+                    .OrderBy(sc => sc.Name)
+                    .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
+                    .ToList();
+            }
+            else
+            {
+                vm.Divisions = _context.SubCategories
+                    .OrderBy(sc => sc.Name)
+                    .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
+                    .ToList();
+            }
+
+            vm.Subjects = _context.Subjects
+                .OrderBy(s => s.Name)
+                .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
+                .ToList();
+
+            vm.Teachers = _context.TeacherMaster
+                .Include(tm => tm.Teacher)
+                .OrderBy(tm => tm.Teacher != null ? tm.Teacher.Name : "")
+                .Select(tm => new SelectListItem
+                {
+                    Value = tm.Id.ToString(),
+                    Text = tm.Teacher != null ? tm.Teacher.Name : ("Teacher #" + tm.Id)
+                })
+                .ToList();
+
+            vm.ExamTypes = new System.Collections.Generic.List<SelectListItem>
+            {
+                new SelectListItem { Value = "Unit Test", Text = "Unit Test" },
+                new SelectListItem { Value = "Midterm", Text = "Midterm" },
+                new SelectListItem { Value = "Final", Text = "Final" },
+                new SelectListItem { Value = "Practical", Text = "Practical" },
+                new SelectListItem { Value = "Viva", Text = "Viva" },
+                new SelectListItem { Value = "Assignment", Text = "Assignment" }
+            };
+        }
+
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
