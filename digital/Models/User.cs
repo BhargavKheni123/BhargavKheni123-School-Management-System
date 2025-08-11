@@ -16,5 +16,8 @@ namespace digital.Models
 
         [ForeignKey("StudentId")]
         public Student Student { get; set; }
+        public int? TeacherId { get; set; }
+        [ForeignKey("TeacherId")]
+        public TeacherMaster Teacher { get; set; }
     }
 }

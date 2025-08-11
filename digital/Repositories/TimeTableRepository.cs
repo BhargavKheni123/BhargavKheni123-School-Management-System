@@ -20,7 +20,7 @@ namespace digital.Repositories
             _context.TimeTables.Add(tt);
             _context.SaveChanges(); // <<< must be present
         }
-
+        
         public void UpdateTimeTable(TimeTable tt)
         {
             _context.TimeTables.Update(tt);

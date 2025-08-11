@@ -79,6 +79,42 @@
                     </div>
                 </div>
             }
+            @if (role == "Teacher")
+            {
+                <div class="row justify-content-center mt-4">
+                    <div class="col-lg-10">
+                        <div class="card shadow-sm">
+                            <div class="card-header text-center">Timetable</div>
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0 align-middle">
+                                    <thead class="text-center">
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Standard</th>
+                                            <th>Class</th>
+                                            <th>Start Hour</th>
+                                            <th>End Hour</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.TimeTableList)
+                                        {
+                                            <tr class="text-center">
+                                                <td>@item.Subject</td>
+                                                <td>@item.Std</td>
+                                                <td>@item.Class</td>
+                                                <td>@item.StartHour:@item.StartMinute.ToString("D2")</td>
+                                                <td>@item.EndHour:@item.EndMinute.ToString("D2")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
             else
             {
                 <div class="row justify-content-center mt-4">
@@ -97,11 +133,6 @@
                                 @if (TempData["FormErrors"] != null)
                                 {
                                     <div class="alert alert-danger">@TempData["FormErrors"]</div>
-                                }
-
-                                @if (TempData["Message"] != null)
-                                {
-                                    <div class="alert alert-success">@TempData["Message"]</div>
                                 }
 
                                 <form asp-action="TimeTableForm" method="post" id="ttForm">

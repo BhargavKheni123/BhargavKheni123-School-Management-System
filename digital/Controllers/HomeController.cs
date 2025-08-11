@@ -95,7 +95,12 @@ namespace digital.Controllers
             }
 
             ViewBag.UserName = $"? Welcome, {user.Name}";
-            return View();
+
+            var timetable = _context.TimeTables
+        .Where(t => t.TeacherId == user.Id)  
+        .ToList();
+
+            return View(timetable);
         }
 
         private string GenerateJwtToken(User user)
@@ -159,6 +164,9 @@ namespace digital.Controllers
 
             if (user.Role == "Student" && user.StudentId.HasValue)
                 HttpContext.Session.SetInt32("StudentId", user.StudentId.Value);
+            if (user.Role == "Teacher")
+                HttpContext.Session.SetInt32("TeacherId", user.Id);
+
 
             if (user.Role == "Student") return RedirectToAction("StudentDetails", "Home");
             if (user.Role == "Admin") return RedirectToAction("Index", "Home");
@@ -640,7 +648,7 @@ namespace digital.Controllers
             vm.StdList = _categoryRepository.GetAllCategories()
                 .Select(c => new SelectListItem { Value = c.Name, Text = c.Name }).ToList();
 
-            vm.ClassList = new List<SelectListItem>(); // loaded by AJAX based on Std
+            vm.ClassList = new List<SelectListItem>(); 
 
             vm.Hours = Enumerable.Range(1, 24)
                 .Select(h => new SelectListItem { Value = h.ToString(), Text = h.ToString() }).ToList();
@@ -653,8 +661,21 @@ namespace digital.Controllers
                 .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
                 .ToList();
 
-            vm.TimeTableList = _timeTableRepository.GetAllTimeTables();
+            var role = HttpContext.Session.GetString("UserRole");
+
+            if (role == "Teacher")
+            {
+                var teacherId = HttpContext.Session.GetInt32("TeacherId");
+                vm.TimeTableList = _timeTableRepository.GetAllTimeTables()
+                                   .Where(t => t.TeacherId == teacherId)
+                                   .ToList();
+            }
+            else
+            {
+                vm.TimeTableList = _timeTableRepository.GetAllTimeTables();
+            }
         }
+
 
         // POST
         [HttpPost]
@@ -816,7 +837,7 @@ namespace digital.Controllers
                     .Where(s => s.CategoryId == CategoryId.Value && s.SubCategoryId == SubCategoryId.Value)
                     .ToList();
 
-                model.Students = students;
+                model.Student = students;
                 model.TotalDays = DateTime.DaysInMonth(Year.Value, Month.Value);
                 model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(
                     students.Select(s => s.Id).ToList(), Month.Value, Year.Value);

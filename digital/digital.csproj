@@ -47,7 +47,10 @@
 	  <Content Remove="wwwroot/build/js/Fullscreen.js" />
 	  <Content Remove="wwwroot/build/js/ExpandableTable.js" />
 	  <Content Remove="wwwroot/build/js/IFrame.js" />
-	  <Content Remove="wwwroot/build/js/NavbarSerch.js" />
+	  <Content Remove="wwwroot\build\js\NavbarSearch.js" />
+	  <Content Remove="wwwroot\build\js\Layout.js" />
+	  <Content Remove="wwwroot\build\js\PushMenu.js" />
+	  <Content Remove="wwwroot\build\js\SidebarSearch.js" />
   </ItemGroup>
 
 </Project>
