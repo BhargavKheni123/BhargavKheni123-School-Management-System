@@ -677,17 +677,70 @@ namespace digital.Controllers
         }
 
 
-        // POST
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult TimeTableForm(TimeTableViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                // collect errors for debugging
-                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
                 TempData["FormErrors"] = string.Join(" | ", errors);
 
+                PopulateTimeTableViewModel(model);
+                return View(model);
+            }
+
+            
+            int newStart = (model.TimeTable.StartHour * 60) + model.TimeTable.StartMinute;
+            int newEnd = (model.TimeTable.EndHour * 60) + model.TimeTable.EndMinute;
+
+            
+            var existingRecords = _timeTableRepository.GetAllTimeTables();
+
+            
+            if (model.TimeTable.TeacherId.HasValue)
+            {
+                bool teacherConflict = existingRecords.Any(t =>
+                    t.TeacherId == model.TimeTable.TeacherId &&
+                    TimesOverlap(newStart, newEnd, (t.StartHour * 60) + t.StartMinute, (t.EndHour * 60) + t.EndMinute)
+                );
+
+                if (teacherConflict)
+                {
+                    ModelState.AddModelError("", "This teacher is already assigned to another lecture during this time.");
+                    PopulateTimeTableViewModel(model);
+                    return View(model);
+                }
+            }
+
+            
+            bool stdClassConflict = existingRecords.Any(t =>
+                t.Std == model.TimeTable.Std &&
+                t.Class == model.TimeTable.Class &&
+                TimesOverlap(newStart, newEnd, (t.StartHour * 60) + t.StartMinute, (t.EndHour * 60) + t.EndMinute)
+            );
+
+            if (stdClassConflict)
+            {
+                ModelState.AddModelError("", "This Standard/Class already has another lecture during this time.");
+                PopulateTimeTableViewModel(model);
+                return View(model);
+            }
+
+            
+            bool subjectConflict = existingRecords.Any(t =>
+                t.Std == model.TimeTable.Std &&
+                t.Class == model.TimeTable.Class &&
+                t.Subject != model.TimeTable.Subject &&
+                TimesOverlap(newStart, newEnd, (t.StartHour * 60) + t.StartMinute, (t.EndHour * 60) + t.EndMinute)
+            );
+
+            if (subjectConflict)
+            {
+                ModelState.AddModelError("", "This Standard/Class already has a different subject during this time.");
                 PopulateTimeTableViewModel(model);
                 return View(model);
             }
@@ -700,12 +753,18 @@ namespace digital.Controllers
             }
             catch (Exception ex)
             {
-                // show friendly error and keep fields
                 ModelState.AddModelError("", "Save failed: " + ex.Message);
                 PopulateTimeTableViewModel(model);
                 return View(model);
             }
         }
+
+        
+        private bool TimesOverlap(int start1, int end1, int start2, int end2)
+        {
+            return start1 < end2 && start2 < end1; 
+        }
+
 
         // existing AJAX endpoint (no change)
         [HttpGet]
