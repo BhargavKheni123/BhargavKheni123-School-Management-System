@@ -66,6 +66,10 @@
 	  <Content Remove="wwwroot\build\scss\_bootstrap-variables.scss" />
 	  <Content Remove="wwwroot\build\scss\_brand.scss" />
 	  <Content Remove="wwwroot\build\scss\_buttons.scss" />
+	  <Content Remove="wwwroot\build\scss\_cards.scss" />
+	  <Content Remove="wwwroot\build\scss\_callout.scss" />
+	  <Content Remove="wwwroot\build\scss\_carousel.scss" />
+	  <Content Remove="wwwroot\build\scss\_close.scss" />
   </ItemGroup>
 
 </Project>

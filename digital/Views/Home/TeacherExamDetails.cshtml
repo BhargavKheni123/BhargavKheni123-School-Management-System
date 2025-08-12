@@ -1,0 +1,41 @@
+﻿@model digital.ViewModels.ExamViewModel
+
+@{
+    ViewData["Title"] = "My Exams";
+}
+
+<div class="container mt-4" style="margin-left: 250px; margin-right: 20px;">
+    <h3>My Exam Details</h3>
+
+    @if (Model.ExamList == null || !Model.ExamList.Any())
+    {
+        <p>No exams assigned to you yet.</p>
+    }
+    else
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Exam Title</th>
+                    <th>Type</th>
+                    <th>Class</th>
+                    <th>Division</th>
+                    <th>Subject</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var exam in Model.ExamList)
+                {
+                    <tr>
+                        <td>@exam.ExamTitle</td>
+                        <td>@exam.ExamType</td>
+                        <td>@exam.ClassName</td>
+                        <td>@exam.DivisionName</td>
+                        <td>@exam.SubjectName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

@@ -1,0 +1,36 @@
+﻿
+@model digital.ViewModels.ExamViewModel
+
+<div class="container" style="margin-top:20px;">
+    <h3 class="text-center mb-4">Exam List</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Exam Title</th>
+                    <th>Exam Type</th>
+                    <th>Class</th>
+                    <th>Division</th>
+                    <th>Subject</th>
+                    <th>Teacher</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var exam in Model.ExamList)
+                {
+                    <tr>
+                        <td>@exam.ExamTitle</td>
+                        <td>@exam.ExamType</td>
+                        <td>@exam.ClassName</td>
+                        <td>@exam.DivisionName</td>
+                        <td>@exam.SubjectName</td>
+                        <td>@exam.TeacherName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+

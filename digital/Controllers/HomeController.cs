@@ -5,6 +5,9 @@ using digital.Models;
 using digital.Repositories;
 using digital.Repository;
 using digital.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -182,8 +185,6 @@ namespace digital.Controllers
 
             return RedirectToAction("Login");
         }
-
-
 
 
 
@@ -1124,10 +1125,16 @@ namespace digital.Controllers
 
 
 
-
         [HttpGet]
         public IActionResult CreateExam()
         {
+            var loggedInUserEmail = User.Identity.Name;
+
+            var loggedInUserId = _context.Users
+                .Where(u => u.Email == loggedInUserEmail)
+                .Select(u => u.Id)
+                .FirstOrDefault();
+
             var model = new ExamViewModel
             {
                 Categories = _context.Categories
@@ -1155,13 +1162,35 @@ namespace digital.Controllers
                         Value = t.Id.ToString(),
                         Text = t.Name
                     })
-                    .ToList(),
-
-                    ExamList = GetExamList()
+                    .ToList()
             };
+
+            var examQuery = _context.Exams
+                .Select(e => new ExamListItem
+                {
+                    ExamId = e.ExamId,
+                    ExamTitle = e.ExamTitle,
+                    ExamType = e.ExamType,
+                    ClassName = e.Category.Name,
+                    DivisionName = e.SubCategory.Name,
+                    SubjectName = e.Subject.Name,
+                    TeacherName = e.AssignedTeacher.Name,
+                    AssignedTeacherId = e.AssignedTeacherId
+                });
+
+            if (User.IsInRole("Teacher"))
+            {
+                // Filter exams for logged in teacher only
+                examQuery = examQuery.Where(e => e.AssignedTeacherId == loggedInUserId);
+            }
+
+            model.ExamList = examQuery.ToList();
 
             return View(model);
         }
+
+
+
 
         [HttpPost]
         public IActionResult CreateExam(ExamViewModel model)
@@ -1288,9 +1317,9 @@ namespace digital.Controllers
             return RedirectToAction("CreateExam");
         }
 
-        private List<ExamListItem> GetExamList()
+        private List<ExamListItem> GetExamList(int? teacherId = null)
         {
-            return _context.Exams
+            var query = _context.Exams
                 .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
                 .Join(_context.SubCategories, ec => ec.e.SubCategoryId, sc => sc.Id, (ec, sc) => new { ec.e, ec.c, sc })
                 .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, ecs.sc, s })
@@ -1303,9 +1332,109 @@ namespace digital.Controllers
                     DivisionName = ecss.sc.Name,
                     SubjectName = ecss.s.Name,
                     TeacherName = u.Name
+                });
+
+            if (teacherId.HasValue)
+            {
+                query = query.Where(e => e.AssignedTeacherId == teacherId.Value);
+            }
+
+            return query.ToList();
+        }
+
+
+
+
+        [HttpGet]
+        public IActionResult StudentExamList()
+        {
+            var studentEmail = User.Identity.Name;
+
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+            if (studentId == null)
+                return RedirectToAction("StudentDetails", "Home");
+
+            var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
+            if (student == null)
+                return NotFound();
+
+            var exams = _context.Exams
+                .Where(e => e.CategoryId == student.CategoryId && e.SubCategoryId == student.SubCategoryId)
+                .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
+                .Join(_context.SubCategories, ec => ec.e.SubCategoryId, sc => sc.Id, (ec, sc) => new { ec.e, ec.c, sc })
+                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, ecs.sc, s })
+                .Join(_context.Users, ecss => ecss.e.AssignedTeacherId, u => u.Id, (ecss, u) => new ExamListItem
+                {
+                    ExamId = ecss.e.ExamId,
+                    ExamTitle = ecss.e.ExamTitle,
+                    ExamType = ecss.e.ExamType,
+                    ClassName = ecss.c.Name,
+                    DivisionName = ecss.sc.Name,
+                    SubjectName = ecss.s.Name,
+                    TeacherName = u.Name,
+                    AssignedTeacherId = ecss.e.AssignedTeacherId
                 })
                 .ToList();
+
+            // Prepare view model with exam list
+            var model = new ExamViewModel
+            {
+                ExamList = exams
+            };
+
+            return View(model);
         }
+
+
+
+
+
+
+        [HttpGet]
+        public IActionResult TeacherExamList()
+        {
+            var studentEmail = User.Identity.Name;
+
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+            if (studentId == null)
+                return RedirectToAction("StudentDetails", "Home");
+
+            var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
+            if (student == null)
+                return NotFound();
+
+            var teacherId = _context.Users
+                            .Where(u => u.Email == studentEmail && u.Role == "Teacher")
+                            .Select(u => u.Id)
+                            .FirstOrDefault();
+
+            if (teacherId == 0)
+            {
+                return RedirectToAction("Login", "Home");
+            }
+
+            var exams = _context.Exams
+                .Where(e => e.AssignedTeacherId == teacherId)
+                .Select(e => new ExamListItem
+                {
+                    ExamId = e.ExamId,
+                    ExamTitle = e.ExamTitle,
+                    ExamType = e.ExamType,
+                    ClassName = e.Category.Name,
+                    DivisionName = e.SubCategory.Name,
+                    SubjectName = e.Subject.Name,
+                    TeacherName = e.AssignedTeacher.Name
+                })
+                .ToList();
+
+            return View(exams);
+        }
+
+
+
+
+
+
         [HttpGet]
         public JsonResult GetSubCategories(int categoryId)
         {

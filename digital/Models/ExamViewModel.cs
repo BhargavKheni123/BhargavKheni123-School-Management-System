@@ -45,6 +45,8 @@ namespace digital.ViewModels
         public string DivisionName { get; set; }
         public string SubjectName { get; set; }
         public string TeacherName { get; set; }
+        public int AssignedTeacherId { get; set; }
     }
+
 }
 

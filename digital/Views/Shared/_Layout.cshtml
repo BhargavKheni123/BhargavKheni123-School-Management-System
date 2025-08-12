@@ -82,6 +82,9 @@
                             <i class="fas fa-clock"></i> Timetable
                         </a>
                     </li>
+                    <li class="nav-item">
+        <a class="nav-link" asp-controller="Home" asp-action="StudentExamList">My Exams</a>
+    </li>
                 }
                 else if (Role == "Admin")
                 {
@@ -200,6 +203,9 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/Home/AttendanceForm">Attendance details</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Home/TeacherExamDetails">Exam details</a>
                     </li>
                 }
             </ul>
