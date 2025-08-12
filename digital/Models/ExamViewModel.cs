@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace digital.ViewModels
 {
@@ -25,19 +25,26 @@ namespace digital.ViewModels
         [Required(ErrorMessage = "Subject is required")]
         public int SubjectId { get; set; }
 
-        [Required(ErrorMessage = "Please select a teacher")]
-        public int AssignedTeacherId { get; set; } 
+        [Required(ErrorMessage = "Assigned Teacher is required")]
+        public int AssignedTeacherId { get; set; }
 
-        public List<int> SelectedTeacherIds { get; set; } = new List<int>();
+        // Dropdown lists
+        public IEnumerable<SelectListItem> Categories { get; set; }
+        public IEnumerable<SelectListItem> SubCategories { get; set; }
+        public IEnumerable<SelectListItem> Subjects { get; set; }
+        public IEnumerable<SelectListItem> Teachers { get; set; }
+        public List<ExamListItem> ExamList { get; set; }
+    }
 
-        public List<SelectListItem> Classes { get; set; } = new List<SelectListItem>();
-
-        public List<SelectListItem> Divisions { get; set; } = new List<SelectListItem>();
-
-        public List<SelectListItem> Subjects { get; set; } = new List<SelectListItem>();
-
-        public List<SelectListItem> Teachers { get; set; } = new List<SelectListItem>();
-
-        public List<SelectListItem> ExamTypes { get; set; } = new List<SelectListItem>();
+    public class ExamListItem
+    {
+        public int ExamId { get; set; }
+        public string ExamTitle { get; set; }
+        public string ExamType { get; set; }
+        public string ClassName { get; set; }
+        public string DivisionName { get; set; }
+        public string SubjectName { get; set; }
+        public string TeacherName { get; set; }
     }
 }
+

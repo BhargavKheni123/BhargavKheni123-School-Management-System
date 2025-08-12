@@ -4,112 +4,164 @@
     ViewData["Title"] = "Create Exam";
 }
 
-
 <div class="content-wrapper">
-    
+    <!-- Page Header -->
     <section class="content-header">
         <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1>Create Exam</h1>
+            <h1 class="text-center mb-4">Exam</h1>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid d-flex justify-content-center">
+            <div class="col-md-8">
+
+                <!-- Form Card -->
+                <div class="card card-primary mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Create Exam</h3>
+                    </div>
+                    <form asp-action="CreateExam" asp-controller="Home" method="post">
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Exam Title</label>
+                                <input asp-for="ExamTitle" class="form-control" />
+                                <span asp-validation-for="ExamTitle" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description / Instructions</label>
+                                <textarea asp-for="Description" class="form-control"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Exam Type</label>
+                                <select asp-for="ExamType" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    <option>Unit Test</option>
+                                    <option>Midterm</option>
+                                    <option>Final</option>
+                                    <option>Practical</option>
+                                    <option>Viva</option>
+                                    <option>Assignment</option>
+                                </select>
+                                <span asp-validation-for="ExamType" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Class</label>
+                                <select asp-for="CategoryId" class="form-control" id="CategoryDropdown">
+                                    <option value="">-- Select Class --</option>
+                                    @foreach (var item in Model.Categories)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Division</label>
+                                <select asp-for="SubCategoryId" class="form-control" id="SubCategoryDropdown">
+                                    <option value="">-- Select Division --</option>
+                                    @foreach (var item in Model.SubCategories)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select asp-for="SubjectId" class="form-control">
+                                    <option value="">-- Select Subject --</option>
+                                    @foreach (var item in Model.Subjects)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SubjectId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Assigned Teacher</label>
+                                <select asp-for="AssignedTeacherId" class="form-control">
+                                    <option value="">-- Select Teacher --</option>
+                                    @foreach (var item in Model.Teachers)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AssignedTeacherId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                        </div>
+                    </form>
                 </div>
-                <div class="col-sm-6">
-                    
+
+                <!-- List Card -->
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">Exam List</h3>
+                    </div>
+                    <div class="card-body table-responsive p-0">
+                        <table class="table table-bordered table-striped text-center">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Class</th>
+                                    <th>Division</th>
+                                    <th>Subject</th>
+                                    <th>Teacher</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.ExamList)
+                                {
+                                    <tr>
+                                        <td>@item.ExamTitle</td>
+                                        <td>@item.ExamType</td>
+                                        <td>@item.ClassName</td>
+                                        <td>@item.DivisionName</td>
+                                        <td>@item.SubjectName</td>
+                                        <td>@item.TeacherName</td>
+                                        <td>
+                                            <a asp-action="EditExam" asp-route-id="@item.ExamId" class="btn btn-sm btn-warning">Edit</a>
+                                            <a asp-action="DeleteExam" asp-route-id="@item.ExamId" class="btn btn-sm btn-danger"
+                                               onclick="return confirm('Are you sure you want to delete this exam?')">Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
             </div>
         </div>
     </section>
-
-    
-    <section class="content">
-        <div class="container-fluid">
-            <form asp-action="CreateExam" method="post">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-                <div class="form-group">
-                    <label asp-for="ExamTitle"></label>
-                    <input asp-for="ExamTitle" class="form-control" />
-                    <span asp-validation-for="ExamTitle" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="Description"></label>
-                    <textarea asp-for="Description" class="form-control"></textarea>
-                    <span asp-validation-for="Description" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="ExamType"></label>
-                    <select asp-for="ExamType" asp-items="Model.ExamTypes" class="form-control"></select>
-                    <span asp-validation-for="ExamType" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="CategoryId"></label>
-                    <select asp-for="CategoryId" asp-items="Model.Classes" class="form-control"></select>
-                    <span asp-validation-for="CategoryId" class="text-danger"></span>
-                </div>
-
-                <div class="form-group">
-                    <label asp-for="SubCategoryId" class="form-label"></label>
-                    <select asp-for="SubCategoryId" class="form-control" asp-items="Model.Divisions">
-                        <option value="">-- Select Class --</option>
-                    </select>
-                    <span asp-validation-for="SubCategoryId" class="text-danger"></span>
-                </div>
-
-
-                <div class="form-group">
-                    <label asp-for="SubjectId"></label>
-                    <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-control"></select>
-                    <span asp-validation-for="SubjectId" class="text-danger"></span>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label fw-semibold">Teacher</label>
-                    <select asp-for="SelectedTeacherIds" asp-items="Model.Teachers" class="form-select shadow-sm">
-                        <option value="">-- Select Teacher --</option>
-                    </select>
-                </div>
-
-
-                <button type="submit" class="btn btn-primary">Save</button>
-            </form>
-        </div>
-        
-    </section>
-
-    
 </div>
 
 @section Scripts {
-    @await Html.PartialAsync("_ValidationScriptsPartial")
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#CategoryId').change(function () {
-                var categoryId = $(this).val();
+        $("#CategoryDropdown").change(function () {
+            var categoryId = $(this).val();
+            $("#SubCategoryDropdown").empty().append('<option value="">-- Select Division --</option>');
 
-                if (categoryId !== "") {
-                    $.ajax({
-                        url: '/Home/GetSubCategories',
-                        type: 'GET',
-                        data: { categoryId: categoryId },
-                        success: function (data) {
-                            var subCategoryDropdown = $('#SubCategoryId');
-                            subCategoryDropdown.empty();
-                            subCategoryDropdown.append('<option value="">-- Select Class --</option>');
-
-                            $.each(data, function (i, subCategory) {
-                                subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
-                            });
-                        }
+            if (categoryId) {
+                $.getJSON('@Url.Action("GetSubCategories", "Home")', { categoryId: categoryId }, function (data) {
+                    $.each(data, function (i, item) {
+                        $("#SubCategoryDropdown").append('<option value="' + item.id + '">' + item.name + '</option>');
                     });
-                } else {
-                    $('#SubCategoryId').empty().append('<option value="">-- Select Class --</option>');
-                }
-            });
+                });
+            }
         });
     </script>
 }
-

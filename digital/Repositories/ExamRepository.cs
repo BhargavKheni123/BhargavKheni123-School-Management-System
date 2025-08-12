@@ -1,60 +1,46 @@
-﻿using digital.Interfaces;
-using digital.Models;
-using digital.ViewModels;
-using Microsoft.EntityFrameworkCore;
+﻿using digital.Models;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using digital.Models;
+using System.Linq;
 
-namespace digital.Repositories
+namespace digital.Repository
 {
     public class ExamRepository : IExamRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly   ApplicationDbContext _context;
 
         public ExamRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<List<Exam>> GetAllAsync()
+        public IEnumerable<Category> GetCategories()
         {
-            return await _context.Exams
-                .Include(e => e.Category)
-                .Include(e => e.SubCategory)
-                .Include(e => e.ExamTeachers)
-                    .ThenInclude(et => et.Teacher)
-                .ToListAsync();
+            return _context.Categories.ToList();
         }
 
-        public async Task<Exam> GetByIdAsync(int id)
+        public IEnumerable<SubCategory> GetSubCategoriesByCategory(int categoryId)
         {
-            return await _context.Exams
-                .Include(e => e.Category)
-                .Include(e => e.SubCategory)
-                .Include(e => e.ExamTeachers)
-                    .ThenInclude(et => et.Teacher)
-                .FirstOrDefaultAsync(e => e.ExamId == id);
+            return _context.SubCategories
+                           .Where(s => s.CategoryId == categoryId)
+                           .ToList();
         }
 
-        public async Task AddAsync(ExamViewModel vm, int createdBy)
+        public IEnumerable<Subject> GetSubjects()
         {
-            
+            return _context.Subjects.ToList();
         }
 
-        public async Task UpdateAsync(ExamViewModel vm)
+        public IEnumerable<User> GetTeachers()
         {
-            
+            return _context.Users
+                           .Where(u => u.Role == "Teacher")
+                           .ToList();
         }
 
-        public async Task DeleteAsync(int id)
+        public void AddExam(Exam exam)
         {
-            var exam = await _context.Exams.FindAsync(id);
-            if (exam != null)
-            {
-                _context.Exams.Remove(exam);
-                await _context.SaveChangesAsync();
-            }
+            _context.Exams.Add(exam);
+            _context.SaveChanges();
         }
     }
 }

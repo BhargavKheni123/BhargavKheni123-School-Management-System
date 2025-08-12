@@ -61,6 +61,11 @@
 	  <Content Remove="wwwroot\build\npm\Publish.js" />
 	  <Content Remove="wwwroot\build\npm\vnu-jar.js" />
 	  <Content Remove="wwwroot\build\scss\_adminlte.raw.scss" />
+	  <Content Remove="wwwroot\build\scss\_animation-effects.scss" />
+	  <Content Remove="wwwroot\build\scss\_alerts.scss" />
+	  <Content Remove="wwwroot\build\scss\_bootstrap-variables.scss" />
+	  <Content Remove="wwwroot\build\scss\_brand.scss" />
+	  <Content Remove="wwwroot\build\scss\_buttons.scss" />
   </ItemGroup>
 
 </Project>

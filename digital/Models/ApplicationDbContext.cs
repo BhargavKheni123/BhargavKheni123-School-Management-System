@@ -20,21 +20,6 @@ public class ApplicationDbContext : DbContext
 
     
     public DbSet<Exam> Exams { get; set; }
-    public DbSet<ExamTeacher> ExamTeachers { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
 
-        
-        modelBuilder.Entity<Exam>()
-            .HasMany(e => e.ExamTeachers)
-            .WithOne(et => et.Exam)
-            .HasForeignKey(et => et.ExamId);
-
-        modelBuilder.Entity<ExamTeacher>()
-            .HasOne(et => et.Teacher)
-            .WithMany() 
-            .HasForeignKey(et => et.TeacherId);
-    }
 }

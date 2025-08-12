@@ -2,6 +2,7 @@ using digital.Interfaces;
 using digital.Mapping;
 using digital.Models;
 using digital.Repositories;
+using digital.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

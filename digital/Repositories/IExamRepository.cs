@@ -1,17 +1,14 @@
 ﻿using digital.Models;
-using digital.ViewModels;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using digital.Models;
 
-namespace digital.Interfaces
+namespace digital.Repository
 {
     public interface IExamRepository
     {
-        Task<List<Exam>> GetAllAsync();
-        Task<Exam> GetByIdAsync(int id);
-        Task AddAsync(ExamViewModel vm, int createdBy);
-        Task UpdateAsync(ExamViewModel vm);
-        Task DeleteAsync(int id);
+        IEnumerable<Category> GetCategories();
+        IEnumerable<SubCategory> GetSubCategoriesByCategory(int categoryId);
+        IEnumerable<Subject> GetSubjects();
+        IEnumerable<User> GetTeachers();
+        void AddExam(Exam exam);
     }
 }

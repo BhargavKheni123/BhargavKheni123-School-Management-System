@@ -1,49 +1,52 @@
-﻿using digital.Models;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace digital.Models
 {
+    [Table("Exams")]
     public class Exam
     {
         [Key]
         public int ExamId { get; set; }
 
-        [Required, StringLength(200)]
+        [Required]
+        [StringLength(200)]
         public string ExamTitle { get; set; }
 
         public string Description { get; set; }
 
-        [Required, StringLength(50)]
-        public string ExamType { get; set; } 
+        [Required]
+        [StringLength(100)]
+        public string ExamType { get; set; }
 
         [Required]
-        public int CategoryId { get; set; } 
+        public int CategoryId { get; set; }   // Class
 
         [Required]
-        public int SubCategoryId { get; set; } 
-
-        [Required, StringLength(100)]
-        public string Subject { get; set; }
+        public int SubCategoryId { get; set; }  // Division
 
         [Required]
-        public int AssignedTeacherId { get; set; } 
+        public int SubjectId { get; set; }
 
-        public int CreatedBy { get; set; }
+        [Required]
+        public int AssignedTeacherId { get; set; }
+
+        public int? CreatedBy { get; set; }
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        
+        // Navigation properties (optional, for EF relationships)
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
 
         [ForeignKey("SubCategoryId")]
         public virtual SubCategory SubCategory { get; set; }
 
-        [ForeignKey("AssignedTeacherId")]
-        public virtual TeacherMaster AssignedTeacher { get; set; }
+        [ForeignKey("SubjectId")]
+        public virtual Subject Subject { get; set; }
 
-        public virtual ICollection<ExamTeacher> ExamTeachers { get; set; }
+        [ForeignKey("AssignedTeacherId")]
+        public virtual User AssignedTeacher { get; set; }
     }
 }
