@@ -1157,6 +1157,8 @@ namespace digital.Controllers
             return View(exams);
         }
 
+        
+
         [HttpGet]
         public IActionResult CreateExam()
         {
@@ -1356,17 +1358,15 @@ namespace digital.Controllers
                 .ToList();
 
             vm.ExamTypes = new System.Collections.Generic.List<SelectListItem>
-            {
-                new SelectListItem { Value = "Unit Test", Text = "Unit Test" },
-                new SelectListItem { Value = "Midterm", Text = "Midterm" },
-                new SelectListItem { Value = "Final", Text = "Final" },
-                new SelectListItem { Value = "Practical", Text = "Practical" },
-                new SelectListItem { Value = "Viva", Text = "Viva" },
-                new SelectListItem { Value = "Assignment", Text = "Assignment" }
-            };
+      {
+          new SelectListItem { Value = "Unit Test", Text = "Unit Test" },
+          new SelectListItem { Value = "Midterm", Text = "Midterm" },
+          new SelectListItem { Value = "Final", Text = "Final" },
+          new SelectListItem { Value = "Practical", Text = "Practical" },
+          new SelectListItem { Value = "Viva", Text = "Viva" },
+          new SelectListItem { Value = "Assignment", Text = "Assignment" }
+      };
         }
-
-
 
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

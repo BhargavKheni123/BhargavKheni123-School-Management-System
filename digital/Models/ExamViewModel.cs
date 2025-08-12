@@ -25,6 +25,9 @@ namespace digital.ViewModels
         [Required(ErrorMessage = "Subject is required")]
         public int SubjectId { get; set; }
 
+        [Required(ErrorMessage = "Please select a teacher")]
+        public int AssignedTeacherId { get; set; } 
+
         public List<int> SelectedTeacherIds { get; set; } = new List<int>();
 
         public List<SelectListItem> Classes { get; set; } = new List<SelectListItem>();

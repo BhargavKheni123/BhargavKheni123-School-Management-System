@@ -57,7 +57,10 @@
 	  <Content Remove="wwwroot\build\npm\.eslintrc.json" />
 	  <Content Remove="wwwroot\build\npm\DocsPlugins.js" />
 	  <Content Remove="wwwroot\build\npm\DocsPublish.js" />
-	  
+	  <Content Remove="wwwroot\build\npm\Plugins.js" />
+	  <Content Remove="wwwroot\build\npm\Publish.js" />
+	  <Content Remove="wwwroot\build\npm\vnu-jar.js" />
+	  <Content Remove="wwwroot\build\scss\_adminlte.raw.scss" />
   </ItemGroup>
 
 </Project>
