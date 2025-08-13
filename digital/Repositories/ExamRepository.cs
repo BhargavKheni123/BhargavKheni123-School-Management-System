@@ -6,7 +6,7 @@ namespace digital.Repository
 {
     public class ExamRepository : IExamRepository
     {
-        private readonly   ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         public ExamRepository(ApplicationDbContext context)
         {
@@ -18,7 +18,7 @@ namespace digital.Repository
             return _context.Categories.ToList();
         }
 
-      
+
 
         public IEnumerable<Subject> GetSubjects()
         {

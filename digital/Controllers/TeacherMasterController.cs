@@ -52,7 +52,7 @@ namespace digital.Controllers
 
             return Json(subCategories);
         }
-       
+
         [HttpPost]
         public IActionResult SaveTeacherAssignment(int CategoryId, int SubCategoryId, int SubjectId, int TeacherId)
         {
