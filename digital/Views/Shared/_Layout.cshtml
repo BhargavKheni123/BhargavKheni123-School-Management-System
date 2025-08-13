@@ -68,23 +68,26 @@
                 @if (Role == "Student")
                 {
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/StudentDetails">
+                        <a class="nav-link" href="/Student/StudentDetails">
                             <i class="fas fa-user"></i> Student Details
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/AttendanceForm">
+                        <a class="nav-link" href="/Attendance/AttendanceForm">
                             <i class="fas fa-calendar-check"></i> Attendance
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/TimeTableForm">
+                        <a class="nav-link" href="/TimeTable/TimeTableForm">
                             <i class="fas fa-clock"></i> Timetable
                         </a>
                     </li>
                     <li class="nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="StudentExamList">My Exams</a>
-    </li>
+                        <a class="nav-link" href="/Exam/ExamList">
+                            <i class="fas fa-accent"></i> ExamList
+                        </a>
+                    </li>
+                    
                 }
                 else if (Role == "Admin")
                 {
@@ -93,7 +96,7 @@
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
-                 
+                   
             <ul class="nav nav-pills nav-sidebar flex-column"
                 data-widget="treeview"
                 role="menu"
@@ -201,16 +204,16 @@
                 else if (Role == "Teacher")
                 {
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/Student">Student details</a>
+                        <a class="nav-link" href="/Student/Student">Student details</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/TimeTableForm">Timetable details</a>
+                        <a class="nav-link" href="/TimeTable/TimeTableForm">Timetable details</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/AttendanceForm">Attendance details</a>
+                        <a class="nav-link" href="/Attendance/AttendanceForm">Attendance details</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/TeacherExamDetails">Exam details</a>
+                        <a class="nav-link" href="/Exam/TeacherExamDetails">Exam details</a>
                     </li>
                 }
             </ul>
