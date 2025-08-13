@@ -18,15 +18,15 @@ namespace digital.Controllers
         }
 
         [HttpGet]
-        public IActionResult AttendanceForm(int? CategoryId, int? SubCategoryId, int? Month, int? Year)
+        public IActionResult AttendanceForm(int? SelectedCategoryId, int? SelectedSubCategoryId, int? Month, int? Year)
         {
             string role = HttpContext.Session.GetString("UserRole");
             string email = HttpContext.Session.GetString("UserEmail");
 
             var model = new AttendanceViewModel
             {
-                SelectedCategoryId = CategoryId,
-                SelectedSubCategoryId = SubCategoryId,
+                SelectedCategoryId = SelectedCategoryId,
+                SelectedSubCategoryId = SelectedSubCategoryId,
                 SelectedMonth = Month,
                 SelectedYear = Year,
                 Categories = _context.Categories.Select(c => new SelectListItem
@@ -34,8 +34,8 @@ namespace digital.Controllers
                     Value = c.Id.ToString(),
                     Text = c.Name
                 }).ToList(),
-                SubCategories = CategoryId.HasValue
-                    ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId.Value)
+                SubCategories = SelectedCategoryId.HasValue
+                    ? _context.SubCategories.Where(sc => sc.CategoryId == SelectedCategoryId.Value)
                         .Select(sc => new SelectListItem
                         {
                             Value = sc.Id.ToString(),
@@ -44,6 +44,11 @@ namespace digital.Controllers
                     : new List<SelectListItem>(),
                 IsStudent = role == "Student"
             };
+
+            
+            ViewBag.IsStudent = model.IsStudent;
+            ViewBag.SelectedMonth = model.SelectedMonth ?? 0;
+            ViewBag.SelectedYear = model.SelectedYear ?? 0;
 
             if (role == "Student")
             {
@@ -57,10 +62,10 @@ namespace digital.Controllers
                 return View(model);
             }
 
-            if (CategoryId.HasValue && SubCategoryId.HasValue && Month.HasValue && Year.HasValue)
+            if (SelectedCategoryId.HasValue && SelectedSubCategoryId.HasValue && Month.HasValue && Year.HasValue)
             {
                 var students = _context.Student
-                    .Where(s => s.CategoryId == CategoryId.Value && s.SubCategoryId == SubCategoryId.Value)
+                    .Where(s => s.CategoryId == SelectedCategoryId.Value && s.SubCategoryId == SelectedSubCategoryId.Value)
                     .ToList();
 
                 model.Student = students;
@@ -127,6 +132,11 @@ namespace digital.Controllers
             model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
             model.IsStudent = false;
 
+            
+            ViewBag.IsStudent = model.IsStudent;
+            ViewBag.SelectedMonth = model.SelectedMonth ?? 0;
+            ViewBag.SelectedYear = model.SelectedYear ?? 0;
+
             return View(model);
         }
 
@@ -172,6 +182,5 @@ namespace digital.Controllers
                 .ToList();
             return Json(subCategories);
         }
-
     }
 }

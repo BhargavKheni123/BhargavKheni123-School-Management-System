@@ -71,50 +71,47 @@
                 </form>
             </div>
 
-            <div class="mt-5">
-                <h3 class="mb-3">Assigned Teachers List</h3>
-                <table class="table table-bordered table-striped">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>Standard</th>
-                            <th>Class</th>
-                            <th>Subject</th>
-                            <th>Teacher</th>
-                            <th>Assigned Date</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model != null && Model.Any())
-                        {
-                            foreach (var item in Model)
-                            {
-                                <tr>
-                                    <td>@item.Category?.Name</td>
-                                    <td>@item.SubCategory?.Name</td>
-                                    <td>@item.Subject?.Name</td>
-                                    <td>@item.Teacher?.Name</td>
-                                    <td>@item.CreatedDate.ToString("dd-MM-yyyy")</td>
-                                    <td>
-                                        <a asp-action="EditTeacherMaster" asp-route-id="@item.Id" class="btn btn-sm btn-primary">Edit</a>
-                                        <a asp-action="DeleteTeacherMaster" asp-route-id="@item.Id" class="btn btn-sm btn-danger"
-                                           onclick="return confirm('Are you sure you want to delete this assignment?');">
-                                            Delete
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="6" class="text-center">No records found</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+            <div class="card mt-4">
 
+                <div class="card-body p-0">
+                    <table class="table table-bordered table-hover mb-0">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th style="width:5%;">#</th>
+                                <th style="width:20%;">Standard</th>
+                                <th style="width:15%;">Class</th>
+                                <th style="width:25%;">Subject</th>
+                                <th style="width:25%;">Teacher</th>
+                                <th style="width:10%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model != null && Model.Count > 0)
+                            {
+                                var sn = 1;
+                                foreach (var item in Model)
+                                
+{
+                                    <tr>
+                                        <td>@sn</td>
+                                        <td>@item.Category?.Name</td>
+                                        <td>@item.SubCategory?.Name</td>
+                                        <td>@item.Subject?.Name</td>
+                                        <td>@item.Teacher.Name</td>
+                                        <td>
+                                            <a asp-action="EditTeacherMaster" asp-route-id="@item.Id" class="btn btn-warning btn-sm mr-1">Edit</a>
+                                            <a asp-action="DeleteTeacherMaster" asp-route-id="@item.Id" class="btn btn-danger btn-sm">Delete</a>
+                                        </td>
+                                    </tr>
+                                    sn++;
+                                }
+                            }
+                            else
+                            {
+                                <tr><td colspan="6" class="text-center">No records found.</td></tr>
+                            }
+                        </tbody>
+                    </table>
 
         </div>
     </section>

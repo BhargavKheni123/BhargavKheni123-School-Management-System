@@ -83,7 +83,7 @@
 	  <Content Remove="wwwroot\build\scss\_miscellaneous.scss" />
 	  <Content Remove="wwwroot\build\scss\_mixins.scss" />
 	  <Content Remove="wwwroot\build\scss\_modals.scss" />
-	  <Content Remove="wwwroot\build\scss\_pagination.scss" />
+	  <Content Remove="wwwroot\build\scss\_navs.scss" />
   </ItemGroup>
 
 </Project>

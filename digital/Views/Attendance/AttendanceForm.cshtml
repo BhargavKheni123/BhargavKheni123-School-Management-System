@@ -8,8 +8,9 @@
     ViewData["Title"] = "Attendance Form";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var selectedMonth = ViewBag.SelectedMonth ?? 0;
-    var selectedYear = ViewBag.SelectedYear ?? 0;
+   
+    var selectedMonth = Model.SelectedMonth ?? 0;
+    var selectedYear = Model.SelectedYear ?? 0;
     var isStudent = ViewBag.IsStudent != null && (bool)ViewBag.IsStudent;
     var role = Context.Session.GetString("Role");
 }
@@ -236,7 +237,7 @@ else
                     var isChecked = checkbox.is(':checked');
 
                     $.ajax({
-                        url: '/Home/SaveAttendanceAjax',
+                        url: '/Attendance/SaveAttendanceAjax', 
                         method: 'POST',
                         data: {
                             studentId: studentId,
