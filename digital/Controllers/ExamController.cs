@@ -20,9 +20,9 @@ namespace digital.Controllers
         public IActionResult CreateExam()
         {
             var loggedInUserEmail = User.Identity?.Name ?? HttpContext.Session.GetString("UserEmail");
-            var loggedInUserId = _context.Users
+            var loggedInTeacherId = _context.Teachers
                 .Where(u => u.Email == loggedInUserEmail)
-                .Select(u => u.Id)
+                .Select(u => u.TeacherId)
                 .FirstOrDefault();
 
             var model = new ExamViewModel
@@ -54,7 +54,7 @@ namespace digital.Controllers
 
             if (User.IsInRole("Teacher"))
             {
-                examQuery = examQuery.Where(e => e.AssignedTeacherId == loggedInUserId);
+                examQuery = examQuery.Where(e => e.AssignedTeacherId == loggedInTeacherId);
             }
 
             model.ExamList = examQuery.ToList();
@@ -225,17 +225,31 @@ namespace digital.Controllers
         [HttpGet]
         public IActionResult TeacherExamList()
         {
-            var teacherId = HttpContext.Session.GetInt32("TeacherId");
-            if (teacherId == null)
-                return RedirectToAction("Login", "Account");
+            var loggedInUserEmail = User.Identity?.Name ?? HttpContext.Session.GetString("UserEmail");
+
+            var loggedInTeacherId = _context.Teachers
+                .Where(t => t.Email == loggedInUserEmail)
+                .Select(t => t.TeacherId)
+                .FirstOrDefault();
+
+
+            if (loggedInTeacherId == 0)
+            {
+                ViewBag.Message = "No exams found for this teacher.";
+                return View(new ExamViewModel { ExamList = new List<ExamListItem>() });
+            }
 
             var exams = _context.Exams
-                .Where(e => e.AssignedTeacherId == teacherId.Value)
+                .Include(e => e.Category)
+                .Include(e => e.Subject)
+                .Include(e => e.AssignedTeacher)
+                .Where(e => e.AssignedTeacherId == loggedInTeacherId)
                 .Select(e => new ExamListItem
                 {
                     ExamId = e.ExamId,
                     ExamTitle = e.ExamTitle,
                     ExamType = e.ExamType,
+                    Description = e.Description,
                     ClassName = e.Category.Name,
                     SubjectName = e.Subject.Name,
                     TeacherName = e.AssignedTeacher.Name,
@@ -243,7 +257,17 @@ namespace digital.Controllers
                 })
                 .ToList();
 
-            return View(exams);
+            var model = new ExamViewModel
+            {
+                ExamList = exams
+            };
+
+            return View(model);
+
         }
+
+
+
+
     }
 }

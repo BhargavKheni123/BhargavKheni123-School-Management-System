@@ -49,6 +49,7 @@ namespace digital.ViewModels
         public string TeacherName { get; set; }
         public int AssignedTeacherId { get; set; }
         public DateTime ExamDate { get; set; }
+        public string Description { get; internal set; }
     }
 
 }

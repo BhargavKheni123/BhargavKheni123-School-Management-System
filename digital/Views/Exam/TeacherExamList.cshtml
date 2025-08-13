@@ -1,0 +1,29 @@
+﻿@model digital.ViewModels.ExamViewModel
+
+<h2 class="text-center">My Assigned Exams</h2>
+
+<table class="table table-bordered table-striped text-center">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Class</th>
+            <th>Subject</th>
+            <th>Exam Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.ExamList)
+        {
+            <tr>
+                <td>@item.ExamTitle</td>
+                <td>@item.ExamType</td>
+                <td>@item.Description</td>
+                <td>@item.ClassName</td>
+                <td>@item.SubjectName</td>
+                <td>@item.ExamDate.ToString("yyyy-MM-dd")</td>
+            </tr>
+        }
+    </tbody>
+</table>
