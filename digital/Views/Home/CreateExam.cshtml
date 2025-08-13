@@ -62,16 +62,11 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Division</label>
-                                <select asp-for="SubCategoryId" class="form-control" id="SubCategoryDropdown">
-                                    <option value="">-- Select Division --</option>
-                                    @foreach (var item in Model.SubCategories)
-                                    {
-                                        <option value="@item.Value">@item.Text</option>
-                                    }
-                                </select>
-                                <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+                                <label>Exam Date</label>
+                                <input asp-for="ExamDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExamDate" class="text-danger"></span>
                             </div>
+
 
                             <div class="form-group">
                                 <label>Subject</label>
@@ -115,7 +110,7 @@
                                     <th>Title</th>
                                     <th>Type</th>
                                     <th>Class</th>
-                                    <th>Division</th>
+                                    <th>ExamDate</th>
                                     <th>Subject</th>
                                     <th>Teacher</th>
                                     <th>Actions</th>
@@ -128,7 +123,7 @@
                                         <td>@item.ExamTitle</td>
                                         <td>@item.ExamType</td>
                                         <td>@item.ClassName</td>
-                                        <td>@item.DivisionName</td>
+                                        <td>@item.ExamDate.ToString("yyyy-MM-dd")</td>
                                         <td>@item.SubjectName</td>
                                         <td>@item.TeacherName</td>
                                         <td>

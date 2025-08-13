@@ -176,7 +176,7 @@ namespace digital.Controllers
             if (user.Role == "Student" && user.StudentId.HasValue)
                 HttpContext.Session.SetInt32("StudentId", user.StudentId.Value);
             if (user.Role == "Teacher")
-                HttpContext.Session.SetInt32("TeacherId", user.Id);
+                HttpContext.Session.SetInt32("TeacherId", user.TeacherId.Value);
 
 
             if (user.Role == "Student") return RedirectToAction("StudentDetails", "Home");
@@ -553,7 +553,17 @@ namespace digital.Controllers
             return RedirectToAction("Student");
         }
 
-       
+        [HttpGet]
+        public JsonResult GetSubCategories(int categoryId)
+        {
+            var subCats = _context.SubCategories
+                .Where(x => x.CategoryId == categoryId)
+                .Select(x => new { id = x.Id, name = x.Name })
+                .ToList();
+
+            return Json(subCats);
+        }
+
 
 
         [HttpGet]
@@ -852,32 +862,33 @@ namespace digital.Controllers
         [HttpGet]
         public IActionResult AttendanceForm(int? CategoryId, int?SubCategoryId, int? Month, int? Year)
         {
-            string role = HttpContext.Session.GetString("UserRole");
-            string email = HttpContext.Session.GetString("UserEmail");
+            
+                string role = HttpContext.Session.GetString("UserRole");
+                string email = HttpContext.Session.GetString("UserEmail");
 
-            var model = new AttendanceViewModel
-            {
-                SelectedCategoryId = CategoryId,
-                SelectedSubCategoryId = SubCategoryId,
-                SelectedMonth = Month,
-                SelectedYear = Year,
-                Categories = _context.Categories.Select(c => new SelectListItem
+                var model = new AttendanceViewModel
                 {
-                    Value = c.Id.ToString(),
-                    Text = c.Name
-                }).ToList(),
-                SubCategories = CategoryId.HasValue
-                    ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId.Value)
-                        .Select(sc => new SelectListItem
-                        {
-                            Value = sc.Id.ToString(),
-                            Text = sc.Name
-                        }).ToList()
-                    : new List<SelectListItem>(),
-                IsStudent = role == "Student"
-            };
+                    SelectedCategoryId = CategoryId,
+                    SelectedSubCategoryId = SubCategoryId,
+                    SelectedMonth = Month,
+                    SelectedYear = Year,
+                    Categories = _context.Categories.Select(c => new SelectListItem
+                    {
+                        Value = c.Id.ToString(),
+                        Text = c.Name
+                    }).ToList(),
+                    SubCategories = CategoryId.HasValue
+                        ? _context.SubCategories.Where(sc => sc.CategoryId == CategoryId.Value)
+                            .Select(sc => new SelectListItem
+                            {
+                                Value = sc.Id.ToString(),
+                                Text = sc.Name
+                            }).ToList()
+                        : new List<SelectListItem>(),
+                    IsStudent = role == "Student"
+                };
 
-            if (role == "Student")
+                if (role == "Student")
             {
                 var student = _context.Student.FirstOrDefault(s => s.Email == email);
                 if (student == null)
@@ -952,13 +963,13 @@ namespace digital.Controllers
             }).ToList();
 
             model.SubCategories = _context.SubCategories
-                .Where(x => x.CategoryId == catId)
+                .Where(SC => SC.CategoryId == model.SelectedCategoryId)
                 .Select(sc => new SelectListItem
                 {
                     Value = sc.Id.ToString(),
                     Text = sc.Name
                 }).ToList();
-
+           
             model.Student = students;
             model.TotalDays = totalDays;
             model.AttendanceData = _attendanceRepository.GetAttendanceByFilters(students.Select(s => s.Id).ToList(), month, year);
@@ -1145,7 +1156,6 @@ namespace digital.Controllers
                     })
                     .ToList(),
 
-                SubCategories = new List<SelectListItem>(),
 
                 Subjects = _context.Subjects
                     .Select(s => new SelectListItem
@@ -1172,10 +1182,11 @@ namespace digital.Controllers
                     ExamTitle = e.ExamTitle,
                     ExamType = e.ExamType,
                     ClassName = e.Category.Name,
-                    DivisionName = e.SubCategory.Name,
                     SubjectName = e.Subject.Name,
                     TeacherName = e.AssignedTeacher.Name,
-                    AssignedTeacherId = e.AssignedTeacherId
+                    AssignedTeacherId = e.AssignedTeacherId,
+                    ExamDate = e.ExamDate
+
                 });
 
             if (User.IsInRole("Teacher"))
@@ -1202,9 +1213,9 @@ namespace digital.Controllers
                 Description = model.Description,
                 ExamType = model.ExamType,
                 CategoryId = model.CategoryId,
-                SubCategoryId = model.SubCategoryId,
                 SubjectId = model.SubjectId,
                 AssignedTeacherId = model.AssignedTeacherId,
+                ExamDate = model.ExamDate,
                 CreatedBy = 1,
                 CreatedDate = DateTime.Now
             };
@@ -1233,17 +1244,12 @@ namespace digital.Controllers
                 Description = exam.Description,
                 ExamType = exam.ExamType,
                 CategoryId = exam.CategoryId,
-                SubCategoryId = exam.SubCategoryId,
                 SubjectId = exam.SubjectId,
                 AssignedTeacherId = exam.AssignedTeacherId,
+                ExamDate = exam.ExamDate,
 
                 Categories = _context.Categories
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList(),
-
-                SubCategories = _context.SubCategories
-                    .Where(sc => sc.CategoryId == exam.CategoryId)
-                    .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
                     .ToList(),
 
                 Subjects = _context.Subjects
@@ -1270,11 +1276,7 @@ namespace digital.Controllers
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                     .ToList();
 
-                model.SubCategories = _context.SubCategories
-                    .Where(sc => sc.CategoryId == model.CategoryId)
-                    .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
-                    .ToList();
-
+             
                 model.Subjects = _context.Subjects
                     .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
                     .ToList();
@@ -1295,9 +1297,9 @@ namespace digital.Controllers
                 exam.Description = model.Description;
                 exam.ExamType = model.ExamType;
                 exam.CategoryId = model.CategoryId;
-                exam.SubCategoryId = model.SubCategoryId;
                 exam.SubjectId = model.SubjectId;
                 exam.AssignedTeacherId = model.AssignedTeacherId;
+                exam.ExamDate = model.ExamDate;
             }
 
             _context.SaveChanges();
@@ -1321,17 +1323,16 @@ namespace digital.Controllers
         {
             var query = _context.Exams
                 .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
-                .Join(_context.SubCategories, ec => ec.e.SubCategoryId, sc => sc.Id, (ec, sc) => new { ec.e, ec.c, sc })
-                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, ecs.sc, s })
+                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, s })
                 .Join(_context.Users, ecss => ecss.e.AssignedTeacherId, u => u.Id, (ecss, u) => new ExamListItem
                 {
                     ExamId = ecss.e.ExamId,
                     ExamTitle = ecss.e.ExamTitle,
                     ExamType = ecss.e.ExamType,
                     ClassName = ecss.c.Name,
-                    DivisionName = ecss.sc.Name,
                     SubjectName = ecss.s.Name,
-                    TeacherName = u.Name
+                    TeacherName = u.Name,
+                    ExamDate = ecss.e.ExamDate
                 });
 
             if (teacherId.HasValue)
@@ -1350,29 +1351,28 @@ namespace digital.Controllers
         {
             var studentEmail = User.Identity.Name;
 
-            var studentId = HttpContext.Session.GetInt32("StudentId");
-            if (studentId == null)
+            var teacherId = HttpContext.Session.GetInt32("teacherId");
+            if (teacherId == null)
                 return RedirectToAction("StudentDetails", "Home");
 
-            var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
+            var student = _context.Student.FirstOrDefault(s => s.Id == teacherId.Value);
             if (student == null)
                 return NotFound();
 
             var exams = _context.Exams
-                .Where(e => e.CategoryId == student.CategoryId && e.SubCategoryId == student.SubCategoryId)
+                .Where(e => e.CategoryId == student.CategoryId )
                 .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
-                .Join(_context.SubCategories, ec => ec.e.SubCategoryId, sc => sc.Id, (ec, sc) => new { ec.e, ec.c, sc })
-                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, ecs.sc, s })
+                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, s })
                 .Join(_context.Users, ecss => ecss.e.AssignedTeacherId, u => u.Id, (ecss, u) => new ExamListItem
                 {
                     ExamId = ecss.e.ExamId,
                     ExamTitle = ecss.e.ExamTitle,
                     ExamType = ecss.e.ExamType,
                     ClassName = ecss.c.Name,
-                    DivisionName = ecss.sc.Name,
                     SubjectName = ecss.s.Name,
                     TeacherName = u.Name,
-                    AssignedTeacherId = ecss.e.AssignedTeacherId
+                    AssignedTeacherId = ecss.e.AssignedTeacherId,
+                    ExamDate = ecss.e.ExamDate
                 })
                 .ToList();
 
@@ -1421,9 +1421,9 @@ namespace digital.Controllers
                     ExamTitle = e.ExamTitle,
                     ExamType = e.ExamType,
                     ClassName = e.Category.Name,
-                    DivisionName = e.SubCategory.Name,
                     SubjectName = e.Subject.Name,
-                    TeacherName = e.AssignedTeacher.Name
+                    TeacherName = e.AssignedTeacher.Name,
+                     ExamDate = e.ExamDate
                 })
                 .ToList();
 
@@ -1435,17 +1435,7 @@ namespace digital.Controllers
 
 
 
-        [HttpGet]
-        public JsonResult GetSubCategories(int categoryId)
-        {
-            var subCats = _context.SubCategories
-                .Where(x => x.CategoryId == categoryId)
-                .Select(x => new { id = x.Id, name = x.Name })
-                .ToList();
-
-            return Json(subCats);
-        }
-
+        
 
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

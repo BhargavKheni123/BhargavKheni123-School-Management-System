@@ -23,11 +23,10 @@ namespace digital.Models
         [Required]
         public int CategoryId { get; set; }   // Class
 
-        [Required]
-        public int SubCategoryId { get; set; }  // Division
-
+       
         [Required]
         public int SubjectId { get; set; }
+
 
         [Required]
         public int AssignedTeacherId { get; set; }
@@ -40,11 +39,13 @@ namespace digital.Models
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
 
-        [ForeignKey("SubCategoryId")]
-        public virtual SubCategory SubCategory { get; set; }
+        [Required]
+        public DateTime ExamDate { get; set; }
+
 
         [ForeignKey("SubjectId")]
         public virtual Subject Subject { get; set; }
+
 
         [ForeignKey("AssignedTeacherId")]
         public virtual User AssignedTeacher { get; set; }

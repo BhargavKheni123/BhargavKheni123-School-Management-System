@@ -61,34 +61,36 @@ else
    
 
 
-@section Styles {
-    <style>
-        .attendance-wrapper {
-            padding: 20px;
-            margin-left: 250px;
-        }
-
-        .table thead th {
-            text-align: center;
-            background-color: #343a40;
-            color: white;
-        }
-
-        .table tbody td {
-            text-align: center;
-        }
-
-        .form-control, .btn {
-            margin-bottom: 10px;
-        }
-    </style>
-}
-
 @if (role != "Student")
 {
     <td><a href="/Attendance/Edit/1">Edit</a></td>
     <td><a href="/Attendance/Delete/1">Delete</a></td>
 }
+
+
+    @section Styles {
+        <style>
+            .attendance-wrapper {
+                padding: 20px;
+                margin-left: 250px;
+                background-color: #fff;
+            }
+
+            .form-label {
+                font-weight: 600;
+                margin-bottom: 5px;
+            }
+
+            .form-control, .btn {
+                font-size: 1rem;
+                height: 38px;
+            }
+
+            .btn {
+                padding: 0.375rem 0.75rem;
+            }
+        </style>
+    }
 
 <div class="content-wrapper attendance-wrapper">
     <h2 class="mb-4">Student Attendance Form</h2>
@@ -109,6 +111,7 @@ else
                     <select class="form-control" asp-for="SelectedSubCategoryId" asp-items="Model.SubCategories" required>
                         <option value="">-- Select Class --</option>
                     </select>
+                </div>
                 
             <div class="col-md-2">
                 <label>Month</label>
@@ -215,34 +218,31 @@ else
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+                         $(document).ready(function () {
+                $('#SelectedCategoryId').change(function () {
+                    var categoryId = $(this).val();
 
-            $('#CategoryId').change(function () {
-                var categoryId = $(this).val();
-                $.ajax({
-                    url: '/Home/GetSubCategories?categoryId=' + categoryId,
-                    type: 'GET',
-                    success: function (data) {
-                        var subDropdown = $('#SubCategoryId');
-                        subDropdown.empty();
-                        subDropdown.append('<option value="">-- Select Class --</option>');
-                        $.each(data, function (i, item) {
-                            subDropdown.append('<option value="' + item.id + '">' + item.name + '</option>');
+                    if (categoryId !== "") {
+                        $.ajax({
+                            url: '/Home/GetSubCategories',
+                            type: 'GET',
+                            data: { categoryId: categoryId },
+                            success: function (data) {
+                                var subCategoryDropdown = $('#SelectedSubCategoryId');
+                                subCategoryDropdown.empty();
+                                subCategoryDropdown.append('<option value="">-- Select Class --</option>');
+
+                                $.each(data, function (i, subCategory) {
+                                    subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
+                                });
+                            }
                         });
+                    } else {
+                        $('#SelectedSubCategoryId').empty().append('<option value="">-- Select Class --</option>');
                     }
                 });
             });
 
-            $('select[name="Year"]').change(function () {
-                var std = $('#CategoryId').val();
-                var cls = $('#SubCategoryId').val();
-                var month = $('select[name="Month"]').val();
-                var year = $(this).val();
-
-                if (std && cls && month && year) {
-                    $('#attendanceForm').submit();
-                }
-            });
 
             $('.attendance-checkbox').on('change', function () {
                 var checkbox = $(this);

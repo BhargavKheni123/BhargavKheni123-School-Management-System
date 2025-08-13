@@ -18,12 +18,7 @@ namespace digital.Repository
             return _context.Categories.ToList();
         }
 
-        public IEnumerable<SubCategory> GetSubCategoriesByCategory(int categoryId)
-        {
-            return _context.SubCategories
-                           .Where(s => s.CategoryId == categoryId)
-                           .ToList();
-        }
+      
 
         public IEnumerable<Subject> GetSubjects()
         {
