@@ -10,6 +10,6 @@ namespace digital.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
-        public ICollection<TeacherMaster> TeacherMasters { get; set; }
+        public ICollection<TeacherMaster> TeacherMaster { get; set; }
     }
 }

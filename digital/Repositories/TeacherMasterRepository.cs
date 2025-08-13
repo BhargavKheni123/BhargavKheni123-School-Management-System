@@ -21,6 +21,7 @@ namespace digital.Repositories
                 .Include(tm => tm.Teacher)
                 .ToList();
         }
+        
     }
 
 }

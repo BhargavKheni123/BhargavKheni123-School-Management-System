@@ -5,6 +5,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var categories = ViewBag.Categories as List<digital.Models.Category>;
+    var subCategories = ViewBag.SubCategories as List<digital.Models.SubCategory>;
     var subjects = ViewBag.Subjects as List<digital.Models.Subject>;
     var teachers = ViewBag.Teachers as List<digital.Models.User>;
 }
@@ -36,8 +37,10 @@
                             <label>Class</label>
                             <select class="form-control" name="SubCategoryId" id="SubCategoryId" required>
                                 <option value="">-- Select Class --</option>
+                               
                             </select>
                         </div>
+
 
                         <div class="form-group col-md-3">
                             <label>Subject</label>
@@ -110,8 +113,6 @@
                         </tbody>
                     </table>
 
-                </div>
-            </div>
         </div>
     </section>
 </div>
@@ -121,17 +122,27 @@
         $(document).ready(function () {
             $('#CategoryId').change(function () {
                 var categoryId = $(this).val();
-                $('#SubCategoryId').empty().append('<option value="">Loading...</option>');
 
-                $.get('/Home/GetSubCategoriesbyteacher?categoryId=' + categoryId, function (data) {
-                    var subCategoryDropdown = $('#SubCategoryId');
-                    subCategoryDropdown.empty();
-                    subCategoryDropdown.append('<option value="">-- Select Class --</option>');
-                    $.each(data, function (i, item) {
-                        subCategoryDropdown.append('<option value="' + item.id + '">' + item.name + '</option>');
+                if (categoryId !== "") {
+                    $.ajax({
+                        url: '/TeacherMaster/GetSubCategories', 
+                        type: 'GET',
+                        data: { categoryId: categoryId },
+                        success: function (data) {
+                            var subCategoryDropdown = $('#SubCategoryId');
+                            subCategoryDropdown.empty();
+                            subCategoryDropdown.append('<option value="">-- Select Class --</option>');
+
+                            $.each(data, function (i, subCategory) {
+                                subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
+                            });
+                        }
                     });
-                });
+                } else {
+                    $('#SubCategoryId').empty().append('<option value="">-- Select Class --</option>');
+                }
             });
         });
     </script>
 }
+

@@ -22,7 +22,7 @@ namespace digital.Controllers
             _teacherMasterRepository = teacherMasterRepository;
         }
 
-        public IActionResult TeacherMasterPage()
+        public IActionResult TeacherMaster()
         {
             ViewBag.Categories = _context.Categories.ToList();
             ViewBag.Subjects = _context.Subjects.ToList();
@@ -30,6 +30,16 @@ namespace digital.Controllers
 
             var data = _teacherMasterRepository.GetAllWithRelations();
             return View("TeacherMaster", data);
+        }
+        [HttpGet]
+        public IActionResult GetSubCategories(int categoryId)
+        {
+            var subCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == categoryId)
+                .Select(sc => new { sc.Id, sc.Name })
+                .ToList();
+
+            return Json(subCategories);
         }
 
         [HttpGet]
@@ -42,7 +52,7 @@ namespace digital.Controllers
 
             return Json(subCategories);
         }
-
+       
         [HttpPost]
         public IActionResult SaveTeacherAssignment(int CategoryId, int SubCategoryId, int SubjectId, int TeacherId)
         {
@@ -67,7 +77,7 @@ namespace digital.Controllers
                 _context.SaveChanges();
             }
 
-            return RedirectToAction("TeacherMasterPage");
+            return RedirectToAction("TeacherMaster");
         }
 
         public IActionResult EditTeacherMaster(int id)
@@ -105,7 +115,7 @@ namespace digital.Controllers
             existing.TeacherId = model.TeacherId;
 
             _context.SaveChanges();
-            return RedirectToAction("TeacherMasterPage");
+            return RedirectToAction("TeacherMaster");
         }
 
         public IActionResult DeleteTeacherMaster(int id)
@@ -116,7 +126,7 @@ namespace digital.Controllers
                 _context.TeacherMaster.Remove(item);
                 _context.SaveChanges();
             }
-            return RedirectToAction("TeacherMasterPage");
+            return RedirectToAction("TeacherMaster");
         }
     }
 }
