@@ -72,6 +72,11 @@
 	  <Content Remove="wwwroot\build\scss\_colors.scss" />
 	  <Content Remove="wwwroot\build\scss\_close.scss" />
 	  <Content Remove="wwwroot\build\scss\_control-sidebar.scss" />
+	  <Content Remove="wwwroot\build\scss\_direct-chat.scss" />
+	  <Content Remove="wwwroot\build\scss\_dropdown.scss" />
+	  <Content Remove="wwwroot\build\scss\_elevation.scss" />
+	  <Content Remove="wwwroot\build\scss\_forms.scss" />
+	  <Content Remove="wwwroot\build\scss\_info-box.scss" />
   </ItemGroup>
 
 </Project>
