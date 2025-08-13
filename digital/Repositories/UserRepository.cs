@@ -27,5 +27,9 @@ namespace digital.Repositories
             _context.Users.Add(user);
             _context.SaveChanges();
         }
+        public IEnumerable<User> GetAllUsers()
+        {
+            return _context.Users.ToList();
+        }
     }
 }

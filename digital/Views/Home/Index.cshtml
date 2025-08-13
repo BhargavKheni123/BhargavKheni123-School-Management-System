@@ -242,6 +242,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a asp-controller="Teacher" asp-action="TeacherRegister" class="nav-link @(currentController == "Teacher" && (currentAction == "TeacherRegister" || currentAction == "TeacherRegister") ? "active" : "")">
+                        <p>TeacherRegister</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a asp-controller="Home" asp-action="TeacherMasterPage" class="nav-link @(currentAction == "TeacherMasterPage" ? "active" : "")">
                         <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Teacher</p>
                     </a>

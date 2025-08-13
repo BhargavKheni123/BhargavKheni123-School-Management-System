@@ -18,7 +18,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<TeacherMaster> TeacherMaster { get; set; }
 
-    
+    public DbSet<Teacher> Teachers { get; set; }
+
     public DbSet<Exam> Exams { get; set; }
 
 

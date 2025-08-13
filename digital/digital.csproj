@@ -77,10 +77,11 @@
 	  <Content Remove="wwwroot\build\scss\_elevation.scss" />
 	  <Content Remove="wwwroot\build\scss\_forms.scss" />
 	  <Content Remove="wwwroot\build\scss\_info-box.scss" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\Account\" />
+	  <Content Remove="wwwroot\build\scss\_layout.scss" />
+	  <Content Remove="wwwroot\build\scss\_main-header.scss" />
+	  <Content Remove="wwwroot\build\scss\_main-sidebar.scss" />
+	  <Content Remove="wwwroot\build\scss\_miscellaneous.scss" />
+	  <Content Remove="wwwroot\build\scss\_mixins.scss" />
   </ItemGroup>
 
 </Project>
