@@ -131,20 +131,20 @@
                     </a>
                     <ul class="nav nav-treeview">
                         <li class="nav-item">
-                            <a asp-controller="Home" asp-action="Category" class="nav-link @(currentAction == "Category" && currentController == "Home" ? "active" : "")">
+                            <a asp-controller="Category" asp-action="Category" class="nav-link @(currentAction == "Category" && currentController == "Category" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Standard</p>
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a asp-controller="Home" asp-action="Subcategories" class="nav-link @(currentAction == "Subcategories" && currentController == "Home" ? "active" : "")">
+                            <a asp-controller="Subcategory" asp-action="Subcategories" class="nav-link @(currentAction == "Subcategories" && currentController == "Subcategory" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>Class</p>
                             </a>
                         </li>
 
                         <li class="nav-item">
-                            <a asp-controller="Home" asp-action="TimeTableForm" class="nav-link @(currentAction == "TimeTableForm" && currentController == "Home" ? "active" : "")">
+                            <a asp-controller="TimeTable" asp-action="TimeTableForm" class="nav-link @(currentAction == "TimeTableForm" && currentController == "TimeTable" ? "active" : "")">
                                 <i class="far fa-circle nav-icon"></i>
                                 <p>TimeTableForm</p>
                             </a>
@@ -156,17 +156,17 @@
                 </li>
 
                 <li class="nav-item">
-                    <a asp-controller="Home" asp-action="Student" class="nav-link @(currentController == "Home" && (currentAction == "Student" || currentAction == "Student") ? "active" : "")">
+                    <a asp-controller="Student" asp-action="Student" class="nav-link @(currentController == "Student" && (currentAction == "Student" || currentAction == "Student") ? "active" : "")">
                         <p>Student</p>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a asp-controller="Home" asp-action="AttendanceForm" class="nav-link @(currentController == "Home" && (currentAction == "AttendanceForm" || currentAction == "AtttendanceForm") ? "active" : "")">
+                    <a asp-controller="Attendance" asp-action="AttendanceForm" class="nav-link @(currentController == "Attendance" && (currentAction == "AttendanceForm" || currentAction == "AtttendanceForm") ? "active" : "")">
                         <p>Attendance Form</p>
                     </a>
                 </li>
-                 <li class="nav-item">
+                <li class="nav-item">
                     <a asp-controller="Home" asp-action="Register" class="nav-link @(currentController == "Home" && (currentAction == "Register" || currentAction == "Register") ? "active" : "")">
                         <p>Register</p>
                     </a>
@@ -176,18 +176,18 @@
                         <p>TeacherRegister</p>
                     </a>
                 </li>
-                            
-                   <li class="nav-item">
-                    <a asp-controller="Home" asp-action="TeacherMasterPage" class="nav-link @(currentAction == "TeacherMasterPage" ? "active" : "")">
+                <li class="nav-item">
+                    <a asp-controller="TeacherMaster" asp-action="TeacherMasterPage" class="nav-link @(currentAction == "TeacherMasterPage" ? "active" : "")">
                         <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Teacher</p>
-                   </a>
-                   </li>
-                   <li class="nav-item">
-                    <a asp-controller="Home" asp-action="CreateExam" class="nav-link @(currentAction == "CreateExam" ? "active" : "")">
+                    </a>
+                </li>
+               
+                <li class="nav-item">
+                    <a asp-controller="Exam" asp-action="CreateExam" class="nav-link @(currentAction == "CreateExam" ? "active" : "")">
                         <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Exam Page</p>
-                   </a>
-                   </li>
-   
+                    </a>
+                </li>
+
 
 
             </ul>

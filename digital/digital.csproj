@@ -82,6 +82,7 @@
 	  <Content Remove="wwwroot\build\scss\_main-sidebar.scss" />
 	  <Content Remove="wwwroot\build\scss\_miscellaneous.scss" />
 	  <Content Remove="wwwroot\build\scss\_mixins.scss" />
+	  <Content Remove="wwwroot\build\scss\_modals.scss" />
   </ItemGroup>
 
 </Project>
