@@ -162,5 +162,16 @@ namespace digital.Controllers
             _context.SaveChanges();
             return Json(new { success = true });
         }
+
+        [HttpGet]
+        public IActionResult GetSubCategories(int categoryId)
+        {
+            var subCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == categoryId)
+                .Select(sc => new { id = sc.Id, name = sc.Name })
+                .ToList();
+            return Json(subCategories);
+        }
+
     }
 }
