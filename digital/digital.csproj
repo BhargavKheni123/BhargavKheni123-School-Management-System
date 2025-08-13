@@ -79,4 +79,8 @@
 	  <Content Remove="wwwroot\build\scss\_info-box.scss" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\Account\" />
+  </ItemGroup>
+
 </Project>
