@@ -1,4 +1,6 @@
-﻿namespace digital.Models
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace digital.Models
 {
     public class TeacherMasterViewModel
     {
