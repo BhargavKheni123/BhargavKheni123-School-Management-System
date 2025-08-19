@@ -78,12 +78,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/TimetTable/TimeTableForm">
+                        <a class="nav-link" href="/TimeTable/TimeTableForm">
                             <i class="fas fa-clock"></i> Timetable
                         </a>
                     </li>
                     <li class="nav-item">
-        <a class="nav-link" asp-controller="Home" asp-action="StudentExamList">My Exams</a>
+        <a class="nav-link" asp-controller="Exam" asp-action="StudentExamList">My Exams</a>
     </li>
                 }
                 else if (Role == "Admin")
@@ -99,27 +99,6 @@
                 role="menu"
                 data-accordion="false">
 
-
-
-
-                <li class="nav-item @(currentController == "Dashboard" ? "menu-open" : "")">
-                    <a href="#" class="nav-link @(currentController == "Dashboard" ? "active" : "")">
-                        <i class="nav-icon fas fa-home"></i>
-                        <p>
-                            Dashboard
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a asp-controller="Home" asp-action="Index" class="nav-link @(currentAction == "Index" && currentController == "Home" ? "active" : "")">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Dashboard v1</p>
-                            </a>
-                        </li>
-                     </ul>
-
-                </li>
                 <!-- Master Menu -->
                 <li class="nav-item @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "menu-open" : "")">
                     <a href="#" class="nav-link @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "active" : "")">
@@ -187,6 +166,12 @@
                         <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Exam Page</p>
                     </a>
                 </li>
+               <li class="nav-item">
+                    <a asp-controller="QuestionMaster" asp-action="Create" class="nav-link @(currentController == "QuestionMaster" && (currentAction == "Create" || currentAction == "Create") ? "active" : "")">
+                        <p>Register</p>
+                    </a>
+                </li>
+
 
 
 
@@ -210,7 +195,7 @@
                         <a class="nav-link" href="/Attendance/AttendanceForm">Attendance details</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/Home/TeacherExamDetails">Exam details</a>
+                        <a class="nav-link" href="/Exam/TeacherExamList">Exam details</a>
                     </li>
                 }
             </ul>

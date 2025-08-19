@@ -10,6 +10,7 @@ namespace digital.Repository
         IEnumerable<Subject> GetSubjects();
         IEnumerable<User> GetTeachers();
         void AddExam(Exam exam);
+
     }
 }
 

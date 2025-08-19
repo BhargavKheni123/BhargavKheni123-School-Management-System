@@ -84,6 +84,20 @@
 	  <Content Remove="wwwroot\build\scss\_mixins.scss" />
 	  <Content Remove="wwwroot\build\scss\_modals.scss" />
 	  <Content Remove="wwwroot\build\scss\_navs.scss" />
+  <Content Remove="wwwroot\build\scss\_close.scss" />
+  <Content Remove="wwwroot\build\scss\_pagination.scss" /> 
+  <Content Remove="wwwroot\build\scss\_print.scss" />
+   <Content Remove="wwwroot\build\scss\_products.scss" />
+  <Content Remove="wwwroot\build\scss\_preloader.scss" />
+  <Content Remove="wwwroot\build\scss\_progress-bars.scss" />
+   <Content Remove="wwwroot\build\scss\_sidebar-mini.scss" />
+  <Content Remove="wwwroot\build\scss\_root.scss" />
+  <Content Remove="wwwroot\build\scss\_small-box.scss" />
+  <Content Remove="wwwroot\build\scss\_social-widgets.scss" />
+	  <Content Remove="wwwroot\build\scss\_table.scss" />
+	  <Content Remove="wwwroot\build\scss\_text.scss" />
+	  <Content Remove="wwwroot\build\scss\_timeline.scss" />
+	  <content remove ="wwroot\build\scss\-timeline.scss"/>
   </ItemGroup>
 
 </Project>

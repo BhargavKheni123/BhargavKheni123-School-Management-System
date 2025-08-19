@@ -21,6 +21,19 @@ public class ApplicationDbContext : DbContext
     public DbSet<Teacher> Teachers { get; set; }
 
     public DbSet<Exam> Exams { get; set; }
+    public DbSet<QuestionMaster> QuestionMaster { get; set; }
+    public DbSet<AnswerOptions> AnswerOptions { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<AnswerOptions>()
+            .HasOne(a => a.Question)
+            .WithMany(q => q.AnswerOptions)
+            .HasForeignKey(a => a.QuestionId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 
 
 }

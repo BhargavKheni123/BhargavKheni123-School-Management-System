@@ -1,0 +1,91 @@
+﻿@model digital.Models.QuestionMaster
+@{
+    ViewData["Title"] = "Edit Question";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var optionsList = Model.AnswerOptions?.ToList() ?? new List<digital.Models.AnswerOptions>();
+}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <h1 class="mb-4">Edit Question</h1>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card p-4 shadow-lg">
+                <form asp-action="Edit" method="post">
+                    @Html.HiddenFor(m => m.Id)
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label>Standard</label>
+                            <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.CategoryList">
+                                <option value="">-- Select Standard --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Subject</label>
+                            <select asp-for="SubjectId" class="form-control" asp-items="ViewBag.SubjectList">
+                                <option value="">-- Select Subject --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Exam Type</label>
+                            <select asp-for="ExamType" class="form-control">
+                                <option value="">-- Select --</option>
+                                <option>Unit Test</option>
+                                <option>Midterm</option>
+                                <option>Final</option>
+                                <option>Practical</option>
+                                <option>Viva</option>
+                                <option>Assignment</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label>Question</label>
+                        <textarea asp-for="QuestionText" class="form-control"></textarea>
+                    </div>
+
+                    <h5 class="mt-4">Answer Options</h5>
+                    @for (int i = 0; i < optionsList.Count; i++)
+                    {
+                        var optionValues = new List<string> { "Option 1", "Option 2", "Option 3", "Option 4" };
+                        <div class="row mb-2">
+                            <div class="col-md-8">
+                                <select name="answerOptions[@i]" class="form-control">
+                                    <option value="">-- Select Option --</option>
+                                    @foreach (var opt in optionValues)
+                                    {
+                                        if (optionsList[i].OptionText == opt)
+                                        {
+                                            <option value="@opt" selected>@opt</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@opt">@opt</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="checkbox" name="isCorrect[@i]" value="true"
+                                       @(optionsList[i].IsCorrect ? "checked" : "") /> Correct
+                                <input type="hidden" name="isCorrect[@i]" value="false" />
+                            </div>
+                        </div>
+                    }
+
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">Update Question</button>
+                        <a asp-action="Create" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+</div>
