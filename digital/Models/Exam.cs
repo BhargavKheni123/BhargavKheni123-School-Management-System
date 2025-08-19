@@ -10,42 +10,34 @@ namespace digital.Models
         [Key]
         public int ExamId { get; set; }
 
-        [Required]
-        [StringLength(200)]
+        [Required, StringLength(200)]
         public string ExamTitle { get; set; }
 
         public string Description { get; set; }
 
-        [Required]
-        [StringLength(100)]
+        [Required, StringLength(100)]
         public string ExamType { get; set; }
 
         [Required]
         public int CategoryId { get; set; }   // Class
 
-       
         [Required]
         public int SubjectId { get; set; }
 
-
-        [Required]
-        public int AssignedTeacherId { get; set; }
+        // ✅ was non-nullable; make it nullable to match existing DB rows
+        public int? AssignedTeacherId { get; set; }
 
         public int? CreatedBy { get; set; }
-
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
-        // Navigation properties (optional, for EF relationships)
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
 
-        [Required]
-        public DateTime ExamDate { get; set; }
-
+        // ✅ was non-nullable; make it nullable to match existing DB rows
+        public DateTime? ExamDate { get; set; }
 
         [ForeignKey("SubjectId")]
         public virtual Subject Subject { get; set; }
-
 
         [ForeignKey("AssignedTeacherId")]
         public virtual User AssignedTeacher { get; set; }

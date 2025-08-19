@@ -22,7 +22,7 @@
                 <td>@item.Description</td>
                 <td>@item.ClassName</td>
                 <td>@item.SubjectName</td>
-                <td>@item.ExamDate.ToString("yyyy-MM-dd")</td>
+                <td>@(item.ExamDate?.ToString("yyyy-MM-dd") ?? "-")</td>
             </tr>
         }
     </tbody>
