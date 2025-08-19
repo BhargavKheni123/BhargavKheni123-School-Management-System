@@ -99,7 +99,6 @@ namespace digital.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult Edit(int id, QuestionMaster form, List<string> answerOptions, int? correctAnswerIndex)
         {
             var question = _context.QuestionMaster
@@ -113,6 +112,7 @@ namespace digital.Controllers
             question.SubjectId = form.SubjectId;
             question.ExamType = form.ExamType;
             question.QuestionText = form.QuestionText;
+            
 
             _context.AnswerOptions.RemoveRange(question.AnswerOptions);
 

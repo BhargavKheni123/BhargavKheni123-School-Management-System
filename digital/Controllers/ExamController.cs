@@ -70,7 +70,6 @@ namespace digital.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // re-populate dropdowns
                 model.Categories = _context.Categories
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                     .ToList();
@@ -82,7 +81,6 @@ namespace digital.Controllers
                     .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
                     .ToList();
 
-                // keep the list visible on validation errors
                 model.ExamList = _context.Exams
                     .Include(e => e.Category)
                     .Include(e => e.Subject)
@@ -108,10 +106,10 @@ namespace digital.Controllers
                 ExamTitle = model.ExamTitle,
                 Description = model.Description,
                 ExamType = model.ExamType,
-                CategoryId = model.CategoryId.GetValueOrDefault(),   // form requires it
-                SubjectId = model.SubjectId.GetValueOrDefault(),     // form requires it
-                AssignedTeacherId = model.AssignedTeacherId,         // nullable
-                ExamDate = model.ExamDate,                           // nullable
+                CategoryId = model.CategoryId.GetValueOrDefault(),   
+                SubjectId = model.SubjectId.GetValueOrDefault(),    
+                AssignedTeacherId = model.AssignedTeacherId,        
+                ExamDate = model.ExamDate,                          
                 CreatedBy = 1,
                 CreatedDate = DateTime.Now
             };
@@ -184,8 +182,8 @@ namespace digital.Controllers
                 exam.ExamType = model.ExamType;
                 exam.CategoryId = model.CategoryId.GetValueOrDefault();
                 exam.SubjectId = model.SubjectId.GetValueOrDefault();
-                exam.AssignedTeacherId = model.AssignedTeacherId; // nullable ok
-                exam.ExamDate = model.ExamDate;                   // nullable ok
+                exam.AssignedTeacherId = model.AssignedTeacherId; 
+                exam.ExamDate = model.ExamDate;                   
             }
 
             _context.SaveChanges();

@@ -34,8 +34,21 @@ namespace digital.Controllers
             ViewBag.StudentName = student.Name;
             ViewBag.Std = student.Category.Name;
 
+            var subjectExam = (from q in _context.QuestionMaster
+                               join s in _context.Subjects on q.SubjectId equals s.Id
+                               where q.CategoryId == student.CategoryId
+                               select new { s.Name, q.ExamType })
+                              .FirstOrDefault();
+
+            if (subjectExam != null)
+            {
+                ViewBag.SubjectName = subjectExam.Name;
+                ViewBag.ExamType = subjectExam.ExamType;
+            }
+
             return View(questions);
         }
+
 
         [HttpPost]
         public IActionResult SubmitExam(List<StudentAnswer> answers)
@@ -47,12 +60,19 @@ namespace digital.Controllers
             {
                 ans.StudentId = studentId.Value;
                 ans.SubmittedOn = DateTime.Now;
-            }
 
-            _context.StudentAnswers.AddRange(answers);
+                var question = _context.QuestionMaster.FirstOrDefault(q => q.Id == ans.QuestionId);
+                if (question != null)
+                {
+                    ans.SubjectId = question.SubjectId;
+                    ans.ExamType = question.ExamType;
+                }
+            }
+        
+        _context.StudentAnswers.AddRange(answers);
             _context.SaveChanges();
 
-            return RedirectToAction("ThankYou");
+            return RedirectToAction("Index");
         }
 
         public IActionResult ThankYou()
