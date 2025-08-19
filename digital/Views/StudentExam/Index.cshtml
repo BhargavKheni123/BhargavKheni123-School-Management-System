@@ -1,0 +1,30 @@
+﻿@model List<digital.Models.QuestionMaster>
+
+<div class="container mt-4">
+    <h2 class="mb-3">Student Exam</h2>
+    <p><strong>Std:</strong> @ViewBag.Std | <strong>Student:</strong> @ViewBag.StudentName </p>
+
+    <form asp-action="SubmitExam" method="post">
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <div class="card mb-3 p-3">
+                <h5>Q@(i + 1). @Model[i].QuestionText</h5>
+
+                @foreach (var option in Model[i].AnswerOptions)
+                {
+                    <div>
+                        <input type="radio"
+                               name="answers[@i].SelectedAnswer"
+                               value="@option.OptionText"
+                               required />
+                        <label>@option.OptionText</label>
+                    </div>
+                }
+
+                <input type="hidden" name="answers[@i].QuestionId" value="@Model[i].Id" />
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary">Submit Exam</button>
+    </form>
+</div>

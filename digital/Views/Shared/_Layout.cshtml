@@ -85,6 +85,11 @@
                     <li class="nav-item">
         <a class="nav-link" asp-controller="Exam" asp-action="StudentExamList">My Exams</a>
     </li>
+                   <li class="nav-item">
+                        <a class="nav-link" href="/StudentExam/Index">
+                            <i class="fas fa-list"></i> Quetion List
+                       </a>
+                   </li>
                 }
                 else if (Role == "Admin")
                 {
@@ -168,7 +173,7 @@
                 </li>
                <li class="nav-item">
                     <a asp-controller="QuestionMaster" asp-action="Create" class="nav-link @(currentController == "QuestionMaster" && (currentAction == "Create" || currentAction == "Create") ? "active" : "")">
-                        <p>Register</p>
+                        <p>Create Question</p>
                     </a>
                 </li>
 

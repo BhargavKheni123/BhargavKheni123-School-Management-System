@@ -39,34 +39,49 @@ namespace digital.Controllers
 
 
         [HttpPost]
-        public IActionResult Create(QuestionMaster question, List<string> answerOptions, List<bool> isCorrect)
+        public IActionResult Create(QuestionMaster question, List<string> answerOptions, int? correctAnswerIndex)
         {
-            if (ModelState.IsValid)
-            {
+            var opts = (answerOptions ?? new List<string>())
+              .Where(o => !string.IsNullOrWhiteSpace(o))
+              .Take(4).ToList();
+
+            question.Answer1 = opts.ElementAtOrDefault(0);
+            question.Answer2 = opts.ElementAtOrDefault(1);
+            question.Answer3 = opts.ElementAtOrDefault(2);
+            question.Answer4 = opts.ElementAtOrDefault(3);
+
+            if (correctAnswerIndex.HasValue && correctAnswerIndex.Value < answerOptions.Count)
+                {
+                    question.RightAnswer = answerOptions[correctAnswerIndex.Value];
+                }
+
                 _context.QuestionMaster.Add(question);
                 _context.SaveChanges();
 
                 for (int i = 0; i < answerOptions.Count; i++)
                 {
-                    var ans = new AnswerOptions
+                    if (!string.IsNullOrWhiteSpace(answerOptions[i]))
                     {
-                        QuestionId = question.Id,
-                        OptionText = answerOptions[i],
-                        AnswerText = answerOptions[i],
-                        IsCorrect = isCorrect[i]
-                    };
-                    _context.AnswerOptions.Add(ans);
+                        var ans = new AnswerOptions
+                        {
+                            QuestionId = question.Id,
+                            OptionText = answerOptions[i],
+                            AnswerText = answerOptions[i],
+                            IsCorrect = (correctAnswerIndex.HasValue && i == correctAnswerIndex.Value)
+                        };
+                        _context.AnswerOptions.Add(ans);
+                    }
                 }
-                _context.SaveChanges();
 
-                return RedirectToAction("Create"); 
-            }
 
             ViewBag.CategoryList = new SelectList(_context.Categories.ToList(), "Id", "Name");
             ViewBag.SubjectList = new SelectList(_context.Subjects.ToList(), "Id", "Name");
+            _context.SaveChanges();
+                return RedirectToAction("Create");
+            
 
-            return View(question);
         }
+
         [HttpGet]
         public IActionResult Edit(int id)
         {
@@ -84,36 +99,47 @@ namespace digital.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(QuestionMaster question, List<string> answerOptions, List<bool> isCorrect)
+        [ValidateAntiForgeryToken]
+        public IActionResult Edit(int id, QuestionMaster form, List<string> answerOptions, int? correctAnswerIndex)
         {
-            if (ModelState.IsValid)
+            var question = _context.QuestionMaster
+                .Include(q => q.AnswerOptions)
+                .FirstOrDefault(q => q.Id == id);
+
+            if (question == null)
+                return NotFound();
+
+            question.CategoryId = form.CategoryId;
+            question.SubjectId = form.SubjectId;
+            question.ExamType = form.ExamType;
+            question.QuestionText = form.QuestionText;
+
+            _context.AnswerOptions.RemoveRange(question.AnswerOptions);
+
+            string rightAnswer = null;
+            for (int i = 0; i < answerOptions.Count; i++)
             {
-                _context.QuestionMaster.Update(question);
-
-                var oldAnswers = _context.AnswerOptions.Where(a => a.QuestionId == question.Id).ToList();
-                _context.AnswerOptions.RemoveRange(oldAnswers);
-
-                for (int i = 0; i < answerOptions.Count; i++)
+                if (!string.IsNullOrWhiteSpace(answerOptions[i]))
                 {
+                    bool isCorrect = (correctAnswerIndex.HasValue && i == correctAnswerIndex.Value);
+                    if (isCorrect) rightAnswer = answerOptions[i];
+
                     _context.AnswerOptions.Add(new AnswerOptions
                     {
                         QuestionId = question.Id,
                         OptionText = answerOptions[i],
                         AnswerText = answerOptions[i],
-                        IsCorrect = i < isCorrect.Count ? isCorrect[i] : false
+                        IsCorrect = isCorrect
                     });
                 }
-
-                _context.SaveChanges();
-
-                return RedirectToAction("Create");
             }
 
-            ViewBag.CategoryList = new SelectList(_context.Categories.ToList(), "Id", "Name", question.CategoryId);
-            ViewBag.SubjectList = new SelectList(_context.Subjects.ToList(), "Id", "Name", question.SubjectId);
+            question.RightAnswer = rightAnswer;
+            _context.SaveChanges();
 
-            return RedirectToAction("Create");
+            return RedirectToAction(nameof(Create));
         }
+
 
 
         [HttpGet]

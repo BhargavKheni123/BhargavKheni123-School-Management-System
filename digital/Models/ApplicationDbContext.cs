@@ -23,6 +23,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Exam> Exams { get; set; }
     public DbSet<QuestionMaster> QuestionMaster { get; set; }
     public DbSet<AnswerOptions> AnswerOptions { get; set; }
+    public DbSet<StudentAnswer> StudentAnswers { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
