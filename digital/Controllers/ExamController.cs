@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using digital.Models;
+﻿using digital.Models;
 using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -39,17 +38,22 @@ namespace digital.Controllers
                     .ToList()
             };
 
+            // ✅ Include navigation props and map safely
             var examQuery = _context.Exams
+                .Include(e => e.Category)
+                .Include(e => e.Subject)
+                .Include(e => e.AssignedTeacher)
                 .Select(e => new ExamListItem
                 {
                     ExamId = e.ExamId,
                     ExamTitle = e.ExamTitle,
                     ExamType = e.ExamType,
-                    ClassName = e.Category.Name,
-                    SubjectName = e.Subject.Name,
-                    TeacherName = e.AssignedTeacher.Name,
+                    ClassName = e.Category != null ? e.Category.Name : "N/A",
+                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
+                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
                     AssignedTeacherId = e.AssignedTeacherId,
-                    ExamDate = e.ExamDate
+                    ExamDate = e.ExamDate,
+                    Description = e.Description
                 });
 
             if (User.IsInRole("Teacher"))
@@ -64,15 +68,50 @@ namespace digital.Controllers
         [HttpPost]
         public IActionResult CreateExam(ExamViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                // re-populate dropdowns
+                model.Categories = _context.Categories
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                    .ToList();
+                model.Subjects = _context.Subjects
+                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
+                    .ToList();
+                model.Teachers = _context.Users
+                    .Where(u => u.Role == "Teacher")
+                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
+                    .ToList();
+
+                // keep the list visible on validation errors
+                model.ExamList = _context.Exams
+                    .Include(e => e.Category)
+                    .Include(e => e.Subject)
+                    .Include(e => e.AssignedTeacher)
+                    .Select(e => new ExamListItem
+                    {
+                        ExamId = e.ExamId,
+                        ExamTitle = e.ExamTitle,
+                        ExamType = e.ExamType,
+                        ClassName = e.Category != null ? e.Category.Name : "N/A",
+                        SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
+                        TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
+                        AssignedTeacherId = e.AssignedTeacherId,
+                        ExamDate = e.ExamDate,
+                        Description = e.Description
+                    }).ToList();
+
+                return View(model);
+            }
+
             var exam = new Exam
             {
                 ExamTitle = model.ExamTitle,
                 Description = model.Description,
                 ExamType = model.ExamType,
-                CategoryId = model.CategoryId,
-                SubjectId = model.SubjectId,
-                AssignedTeacherId = model.AssignedTeacherId,
-                ExamDate = model.ExamDate,
+                CategoryId = model.CategoryId.GetValueOrDefault(),   // form requires it
+                SubjectId = model.SubjectId.GetValueOrDefault(),     // form requires it
+                AssignedTeacherId = model.AssignedTeacherId,         // nullable
+                ExamDate = model.ExamDate,                           // nullable
                 CreatedBy = 1,
                 CreatedDate = DateTime.Now
             };
@@ -143,10 +182,10 @@ namespace digital.Controllers
                 exam.ExamTitle = model.ExamTitle;
                 exam.Description = model.Description;
                 exam.ExamType = model.ExamType;
-                exam.CategoryId = model.CategoryId;
-                exam.SubjectId = model.SubjectId;
-                exam.AssignedTeacherId = model.AssignedTeacherId;
-                exam.ExamDate = model.ExamDate;
+                exam.CategoryId = model.CategoryId.GetValueOrDefault();
+                exam.SubjectId = model.SubjectId.GetValueOrDefault();
+                exam.AssignedTeacherId = model.AssignedTeacherId; // nullable ok
+                exam.ExamDate = model.ExamDate;                   // nullable ok
             }
 
             _context.SaveChanges();
@@ -168,18 +207,20 @@ namespace digital.Controllers
         private List<ExamListItem> GetExamList(int? teacherId = null)
         {
             var query = _context.Exams
-                .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
-                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, s })
-                .Join(_context.Users, ecss => ecss.e.AssignedTeacherId, u => u.Id, (ecss, u) => new ExamListItem
+                .Include(e => e.Category)
+                .Include(e => e.Subject)
+                .Include(e => e.AssignedTeacher)
+                .Select(e => new ExamListItem
                 {
-                    ExamId = ecss.e.ExamId,
-                    ExamTitle = ecss.e.ExamTitle,
-                    ExamType = ecss.e.ExamType,
-                    ClassName = ecss.c.Name,
-                    SubjectName = ecss.s.Name,
-                    TeacherName = u.Name,
-                    AssignedTeacherId = ecss.e.AssignedTeacherId,
-                    ExamDate = ecss.e.ExamDate
+                    ExamId = e.ExamId,
+                    ExamTitle = e.ExamTitle,
+                    ExamType = e.ExamType,
+                    ClassName = e.Category != null ? e.Category.Name : "N/A",
+                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
+                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
+                    AssignedTeacherId = e.AssignedTeacherId,
+                    ExamDate = e.ExamDate,
+                    Description = e.Description
                 });
 
             if (teacherId.HasValue)
@@ -203,18 +244,20 @@ namespace digital.Controllers
 
             var exams = _context.Exams
                 .Where(e => e.CategoryId == student.CategoryId)
-                .Join(_context.Categories, e => e.CategoryId, c => c.Id, (e, c) => new { e, c })
-                .Join(_context.Subjects, ecs => ecs.e.SubjectId, s => s.Id, (ecs, s) => new { ecs.e, ecs.c, s })
-                .Join(_context.Users, ecss => ecss.e.AssignedTeacherId, u => u.Id, (ecss, u) => new ExamListItem
+                .Include(e => e.Category)
+                .Include(e => e.Subject)
+                .Include(e => e.AssignedTeacher)
+                .Select(e => new ExamListItem
                 {
-                    ExamId = ecss.e.ExamId,
-                    ExamTitle = ecss.e.ExamTitle,
-                    ExamType = ecss.e.ExamType,
-                    ClassName = ecss.c.Name,
-                    SubjectName = ecss.s.Name,
-                    TeacherName = u.Name,
-                    AssignedTeacherId = ecss.e.AssignedTeacherId,
-                    ExamDate = ecss.e.ExamDate
+                    ExamId = e.ExamId,
+                    ExamTitle = e.ExamTitle,
+                    ExamType = e.ExamType,
+                    ClassName = e.Category != null ? e.Category.Name : "N/A",
+                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
+                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
+                    AssignedTeacherId = e.AssignedTeacherId,
+                    ExamDate = e.ExamDate,
+                    Description = e.Description
                 })
                 .ToList();
 
@@ -231,7 +274,6 @@ namespace digital.Controllers
                 .Where(t => t.Email == loggedInUserEmail)
                 .Select(t => t.TeacherId)
                 .FirstOrDefault();
-
 
             if (loggedInTeacherId == 0)
             {
@@ -250,24 +292,15 @@ namespace digital.Controllers
                     ExamTitle = e.ExamTitle,
                     ExamType = e.ExamType,
                     Description = e.Description,
-                    ClassName = e.Category.Name,
-                    SubjectName = e.Subject.Name,
-                    TeacherName = e.AssignedTeacher.Name,
+                    ClassName = e.Category != null ? e.Category.Name : "N/A",
+                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
+                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
                     ExamDate = e.ExamDate
                 })
                 .ToList();
 
-            var model = new ExamViewModel
-            {
-                ExamList = exams
-            };
-
+            var model = new ExamViewModel { ExamList = exams };
             return View(model);
-
         }
-
-
-
-
     }
 }

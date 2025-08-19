@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -17,25 +18,23 @@ namespace digital.ViewModels
         public string ExamType { get; set; }
 
         [Required(ErrorMessage = "Class is required")]
-        public int CategoryId { get; set; }
-
+        public int? CategoryId { get; set; }
 
         [Required(ErrorMessage = "Subject is required")]
-        public int SubjectId { get; set; }
+        public int? SubjectId { get; set; }
 
         [Required(ErrorMessage = "Assigned Teacher is required")]
-        public int AssignedTeacherId { get; set; }
+        public int? AssignedTeacherId { get; set; }
 
         [Required(ErrorMessage = "Exam Date is required")]
         [DataType(DataType.Date)]
-        public DateTime ExamDate { get; set; }
+        public DateTime? ExamDate { get; set; }
 
-
-        // Dropdown lists
+        // Dropdowns
         public IEnumerable<SelectListItem> Categories { get; set; }
-        
         public IEnumerable<SelectListItem> Subjects { get; set; }
         public IEnumerable<SelectListItem> Teachers { get; set; }
+
         public List<ExamListItem> ExamList { get; set; }
     }
 
@@ -47,10 +46,8 @@ namespace digital.ViewModels
         public string ClassName { get; set; }
         public string SubjectName { get; set; }
         public string TeacherName { get; set; }
-        public int AssignedTeacherId { get; set; }
-        public DateTime ExamDate { get; set; }
-        public string Description { get; internal set; }
+        public int? AssignedTeacherId { get; set; }
+        public DateTime? ExamDate { get; set; }
+        public string Description { get; set; }
     }
-
 }
-
