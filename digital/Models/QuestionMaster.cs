@@ -9,7 +9,7 @@
         public string? QuestionText { get; set; }  
         public string? RightAnswer { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.Now;
-
+        public DateTime? ExamDate { get; set; }
         public string? Answer1 { get; set; }
         public string? Answer2 { get; set; }
         public string? Answer3 { get; set; }

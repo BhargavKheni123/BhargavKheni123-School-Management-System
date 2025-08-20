@@ -28,7 +28,9 @@ namespace digital.Controllers
                 .Include(q => q.AnswerOptions)
                 .Include(q => q.Category)
                 .Include(q => q.Subject)
-                .Where(q => q.CategoryId == student.CategoryId)
+                .Where(q => q.CategoryId == student.CategoryId
+                 && q.ExamDate.HasValue
+                 && q.ExamDate.Value.Date == DateTime.Today)
                 .ToList();
 
             ViewBag.StudentName = student.Name;
@@ -37,13 +39,21 @@ namespace digital.Controllers
             var subjectExam = (from q in _context.QuestionMaster
                                join s in _context.Subjects on q.SubjectId equals s.Id
                                where q.CategoryId == student.CategoryId
-                               select new { s.Name, q.ExamType })
+                               && q.ExamDate.HasValue
+                               && q.ExamDate.Value.Date == DateTime.Today
+                               select new { s.Name, q.ExamType, q.ExamDate })
                               .FirstOrDefault();
 
             if (subjectExam != null)
             {
                 ViewBag.SubjectName = subjectExam.Name;
                 ViewBag.ExamType = subjectExam.ExamType;
+                ViewBag.ExamDate = subjectExam.ExamDate?.ToString("dd-MM-yyyy");
+            }
+
+            if (!questions.Any())
+            {
+                ViewBag.NoExamMsg = "No exam is available for today.";
             }
 
             return View(questions);

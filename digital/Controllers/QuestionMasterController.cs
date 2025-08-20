@@ -23,17 +23,17 @@ namespace digital.Controllers
             ViewBag.SubjectList = new SelectList(_context.Subjects.ToList(), "Id", "Name");
 
             var questions = _context.QuestionMaster
-    .Include(q => q.Category)
-    .Include(q => q.Subject)
-    .Include(q => q.AnswerOptions)
-    .Where(q => q.QuestionText != null)
-    .ToList();
-
+                .Include(q => q.Category)
+                .Include(q => q.Subject)
+                .Include(q => q.AnswerOptions)
+                .Where(q => q.QuestionText != null)
+                .ToList();
 
             ViewBag.QuestionList = questions;
 
-            return View(new QuestionMaster());
+            return View(new QuestionMaster()); 
         }
+
 
 
 
