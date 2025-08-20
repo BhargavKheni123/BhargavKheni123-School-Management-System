@@ -1,0 +1,52 @@
+﻿@model digital.Models.ExamResultViewModel
+@{
+    ViewData["Title"] = "Exam Result";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h2>Exam Result</h2>
+        <p>
+            <strong>Student:</strong> @Model.Result.Student.Name |
+            <strong>Std:</strong> @Model.Result.Student.Category.Name |
+            <strong>Subject:</strong> @Model.Result.Subject.Name |
+            <strong>Exam Type:</strong> @Model.Result.ExamType
+        </p>
+        <h4>Score: @Model.Result.CorrectAnswers / @Model.Result.TotalQuestions</h4>
+    </div>
+
+    @for (int i = 0; i < Model.Answers.Count; i++)
+    {
+        var question = Model.Answers[i].Question;
+        var selected = Model.Answers[i].SelectedAnswer;
+        var correct = question.AnswerOptions.FirstOrDefault(o => o.IsCorrect)?.OptionText;
+
+        <div class="card mb-3 p-3 shadow-sm">
+            <h5>Q@(i + 1). @question.QuestionText</h5>
+
+            @foreach (var option in question.AnswerOptions)
+            {
+                bool isSelected = option.OptionText == selected;
+                bool isCorrect = option.OptionText == correct;
+
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" disabled
+                           checked="@(isSelected ? "checked" : null)" />
+                    <label class="form-check-label">
+                        @option.OptionText
+                        @if (isSelected && isCorrect)
+                        {
+                            <span class="text-success fw-bold"> ✅ Correct</span>
+                        }
+                        else if (isSelected && !isCorrect)
+                        {
+                            <span class="text-danger fw-bold"> ❌ Wrong</span>
+                            <div class="text-success small">Correct Answer: @correct</div>
+                        }
+                    </label>
+                </div>
+            }
+        </div>
+    }
+</div>

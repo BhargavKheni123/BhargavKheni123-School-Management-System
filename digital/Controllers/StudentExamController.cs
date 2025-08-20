@@ -56,24 +56,98 @@ namespace digital.Controllers
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null) return RedirectToAction("Login", "Account");
 
+            int correctCount = 0;
+            int subjectId = 0;
+            string examType = "";
+
             foreach (var ans in answers)
             {
                 ans.StudentId = studentId.Value;
                 ans.SubmittedOn = DateTime.Now;
 
-                var question = _context.QuestionMaster.FirstOrDefault(q => q.Id == ans.QuestionId);
+                var question = _context.QuestionMaster
+                                       .Include(q => q.AnswerOptions)
+                                       .FirstOrDefault(q => q.Id == ans.QuestionId);
+
                 if (question != null)
                 {
                     ans.SubjectId = question.SubjectId;
                     ans.ExamType = question.ExamType;
+
+                    subjectId = question.SubjectId;
+                    examType = question.ExamType;
+
+                    var correctOption = question.AnswerOptions.FirstOrDefault(o => o.IsCorrect);
+                    if (correctOption != null && correctOption.OptionText == ans.SelectedAnswer)
+                    {
+                        correctCount++;
+                    }
                 }
             }
-        
-        _context.StudentAnswers.AddRange(answers);
+
+            
+            var result = new StudentExamResult
+            {
+                StudentId = studentId.Value,
+                SubjectId = subjectId,
+                ExamType = examType,
+                TotalQuestions = answers.Count,
+                CorrectAnswers = correctCount,
+                SubmittedOn = DateTime.Now
+            };
+
+            _context.StudentExamResults.Add(result);
             _context.SaveChanges();
 
-            return RedirectToAction("Index");
+            
+            foreach (var ans in answers)
+            {
+                ans.ResultId = result.Id;
+            }
+
+            _context.StudentAnswers.AddRange(answers);
+            _context.SaveChanges();
+
+            return RedirectToAction("Result", new { resultId = result.Id });
         }
+
+
+
+
+
+
+        public IActionResult Result(int resultId)
+        {
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+            if (studentId == null) return RedirectToAction("Login", "Account");
+
+            var result = _context.StudentExamResults
+                .Include(r => r.Subject)
+                .Include(r => r.Student)
+                .ThenInclude(s => s.Category) 
+                .FirstOrDefault(r => r.Id == resultId && r.StudentId == studentId);
+
+            if (result == null) return NotFound();
+
+            var answers = _context.StudentAnswers
+                .Include(a => a.Question)
+                .ThenInclude(q => q.AnswerOptions)
+                .Where(a => a.ResultId == result.Id)
+                .ToList();
+                
+   
+
+
+            var vm = new ExamResultViewModel
+            {
+                Result = result,
+                Answers = answers
+            };
+
+            return View(vm);
+        }
+
+
 
         public IActionResult ThankYou()
         {

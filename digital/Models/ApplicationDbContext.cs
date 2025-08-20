@@ -25,6 +25,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<AnswerOptions> AnswerOptions { get; set; }
     public DbSet<StudentAnswer> StudentAnswers { get; set; }
 
+    public DbSet<StudentExamResult> StudentExamResults { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
