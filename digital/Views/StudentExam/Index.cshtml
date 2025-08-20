@@ -1,30 +1,18 @@
-﻿@model List<digital.Models.QuestionMaster>
-@{
+﻿@{
     ViewData["Title"] = "Exam list";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-    var examDate = ViewBag.ExamDate;
-    var startHour = ViewBag.StartHour;
-    var startMinute = ViewBag.StartMinute;
-    var endHour = ViewBag.EndHour;
-    var endMinute = ViewBag.EndMinute;
 }
 
 <div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-10">
 
             <div class="text-center mb-4">
                 <h2>Exam list</h2>
                 <p>
                     <strong>Std:</strong> @ViewBag.Std |
-                    <strong>Student:</strong> @ViewBag.StudentName |
-                    <strong>Subject:</strong> @ViewBag.SubjectName |
-                    <strong>Exam Type:</strong> @ViewBag.ExamType  |
-                    <strong>Exam Date:</strong> @examDate
+                    <strong>Student:</strong> @ViewBag.StudentName
                 </p>
-
-                
             </div>
 
             @if (ViewBag.NoExamMsg != null)
@@ -35,66 +23,77 @@
             }
             else
             {
-                <h4 class="text-danger">Time Left: <span id="timer"></span></h4>
-                <form asp-action="SubmitExam" method="post" id="examForm">
-                    @for (int i = 0; i < Model.Count; i++)
-                    {
-                        <div class="card mb-3 p-3 shadow-sm">
-                            <h5>Q@(i + 1). @Model[i].QuestionText</h5>
+                foreach (var exam in ViewBag.Exams)
+                {
+                    <div class="card shadow-sm mb-4 p-3">
+                        <h4>
+                            Subject: <strong>@exam.SubjectName</strong> |
+                            Exam Type: @exam.ExamType |
+                            Date: @exam.ExamDate
+                        </h4>
+                        <p><strong>Status:</strong> @exam.Status</p>
 
-                            @foreach (var option in Model[i].AnswerOptions)
-                            {
-                                <div class="form-check">
-                                    <input class="form-check-input"
-                                           type="radio"
-                                           name="answers[@i].SelectedAnswer"
-                                           value="@option.OptionText"
-                                           required />
-                                    <label class="form-check-label">@option.OptionText</label>
+                        @if (exam.Status == "Available")
+                        {
+                            <h5 class="text-danger">Time Left: <span id="timer-@exam.SubjectId"></span></h5>
+
+                            <form asp-action="SubmitExam" method="post" id="examForm-@exam.SubjectId">
+                                @for (int i = 0; i < exam.Questions.Count; i++)
+                                {
+                                    var q = exam.Questions[i];
+                                    <div class="card mb-3 p-3 border">
+                                        <h6>Q@(i + 1). @q.QuestionText</h6>
+                                        @foreach (var option in q.AnswerOptions)
+                                        {
+                                            <div class="form-check">
+                                                <input class="form-check-input"
+                                                       type="radio"
+                                                       name="answers[@i].SelectedAnswer"
+                                                       value="@option.OptionText"
+                                                       required />
+                                                <label class="form-check-label">@option.OptionText</label>
+                                            </div>
+                                        }
+                                        <input type="hidden" name="answers[@i].QuestionId" value="@q.Id" />
+                                    </div>
+                                }
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary">Submit @exam.SubjectName Exam</button>
                                 </div>
-                            }
+                            </form>
 
-                            <input type="hidden" name="answers[@i].QuestionId" value="@Model[i].Id" />
-                        </div>
-                    }
+                            <script>
+                                (function () {
+                                    const examEnd = new Date("@exam.ExamEnd");
+                                    const timerElement = document.getElementById("timer-@exam.SubjectId");
+                                    const examForm = document.getElementById("examForm-@exam.SubjectId");
 
-                    <div class="text-center">
-                        <button type="submit" class="btn btn-primary px-4">Submit Exam</button>
+                                    const countdown = setInterval(() => {
+                                        const now = new Date().getTime();
+                                        const distance = examEnd.getTime() - now;
+
+                                        if (distance <= 0) {
+                                            clearInterval(countdown);
+                                            timerElement.innerHTML = "Time's up!";
+                                            examForm.submit();
+                                            return;
+                                        }
+
+                                        const minutes = Math.floor((distance / (1000 * 60)) % 60);
+                                        const seconds = Math.floor((distance / 1000) % 60);
+
+                                        timerElement.innerHTML = minutes + "m " + seconds + "s ";
+                                    }, 1000);
+                                })();
+                            </script>
+                        }
+                        else
+                        {
+                            <div class="alert alert-secondary">Exam @exam.Status</div>
+                        }
                     </div>
-                </form>
+                }
             }
         </div>
     </div>
 </div>
-
-@section Scripts
-{
-    @if (ViewBag.NoExamMsg == null)
-    {
-        <script>
-            const examEnd = new Date("@ViewBag.ExamEnd");
-            const timerElement = document.getElementById("timer");
-            const examForm = document.getElementById("examForm");
-
-            const countdown = setInterval(() => {
-                const now = new Date().getTime();
-                const distance = examEnd.getTime() - now;
-
-                if (distance <= 0) {
-                    clearInterval(countdown);
-                    timerElement.innerHTML = "Time's up!";
-                    examForm.submit();
-                    return;
-                }
-
-                const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
-                const minutes = Math.floor((distance / (1000 * 60)) % 60);
-                const seconds = Math.floor((distance / 1000) % 60);
-
-                timerElement.innerHTML =
-                    (hours > 0 ? hours + "h " : "") +
-                    minutes + "m " + seconds + "s ";
-            }, 1000);
-        </script>
-    }
-}

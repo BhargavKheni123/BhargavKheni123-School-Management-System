@@ -24,76 +24,75 @@ namespace digital.Controllers
 
             if (student == null) return NotFound();
 
-            var questions = _context.QuestionMaster
-                .Include(q => q.AnswerOptions)
-                .Include(q => q.Category)
-                .Include(q => q.Subject)
-                .Where(q => q.CategoryId == student.CategoryId
-                        && q.ExamDate.HasValue
-                        && q.ExamDate.Value.Date == DateTime.Today)
-                .ToList();
-
             ViewBag.StudentName = student.Name;
             ViewBag.Std = student.Category.Name;
 
-            var subjectExam = (from q in _context.QuestionMaster
-                               join s in _context.Subjects on q.SubjectId equals s.Id
-                               where q.CategoryId == student.CategoryId
-                               && q.ExamDate.HasValue
-                               && q.ExamDate.Value.Date == DateTime.Today
-                               select new
-                               {
-                                   s.Name,
-                                   q.ExamType,
-                                   q.ExamDate,
-                                   q.StartHour,
-                                   q.StartMinute,
-                                   q.EndHour,
-                                   q.EndMinute
-                               }).FirstOrDefault();
+            
+            var exams = (from q in _context.QuestionMaster
+                         join s in _context.Subjects on q.SubjectId equals s.Id
+                         where q.CategoryId == student.CategoryId
+                         && q.ExamDate.HasValue
+                         && q.ExamDate.Value.Date == DateTime.Today
+                         select new
+                         {
+                             SubjectName = s.Name,
+                             q.SubjectId,
+                             q.ExamType,
+                             q.ExamDate,
+                             q.StartHour,
+                             q.StartMinute,
+                             q.EndHour,
+                             q.EndMinute
+                         }).Distinct().ToList();
 
-            if (subjectExam != null)
-            {
-                ViewBag.StartHour = subjectExam.StartHour;
-                ViewBag.StartMinute = subjectExam.StartMinute;
-                ViewBag.EndHour = subjectExam.EndHour;
-                ViewBag.EndMinute = subjectExam.EndMinute;
-                ViewBag.SubjectName = subjectExam.Name;
-                ViewBag.ExamType = subjectExam.ExamType;
-                ViewBag.ExamDate = subjectExam.ExamDate?.ToString("dd-MM-yyyy");
-
-                DateTime examStart = subjectExam.ExamDate.Value
-                   .AddHours(subjectExam.StartHour ?? 0)
-                   .AddMinutes(subjectExam.StartMinute ?? 0);
-
-                DateTime examEnd = subjectExam.ExamDate.Value
-                    .AddHours(subjectExam.EndHour ?? 23)
-                    .AddMinutes(subjectExam.EndMinute ?? 59);
-
-                var now = DateTime.Now;
-
-                if (now < examStart)
-                {
-                    ViewBag.NoExamMsg = $"Your exam will start at {examStart:hh:mm tt}. Please wait.";
-                    questions.Clear();
-                }
-                else if (now > examEnd)
-                {
-                    ViewBag.NoExamMsg = "Your exam time is over. You are not allowed to attempt this exam.";
-                    questions.Clear();
-                }
-
-                ViewBag.ExamStart = examStart.ToString("yyyy-MM-ddTHH:mm:ss");
-                ViewBag.ExamEnd = examEnd.ToString("yyyy-MM-ddTHH:mm:ss");
-            }
-
-            if (!questions.Any() && ViewBag.NoExamMsg == null)
+            if (!exams.Any())
             {
                 ViewBag.NoExamMsg = "No exam is available for today.";
+                return View(new List<QuestionMaster>());
             }
 
-            return View(questions);
+            
+            var examData = new List<dynamic>();
+            foreach (var exam in exams)
+            {
+                var questions = _context.QuestionMaster
+                    .Include(q => q.AnswerOptions)
+                    .Where(q => q.CategoryId == student.CategoryId
+                             && q.SubjectId == exam.SubjectId
+                             && q.ExamDate.Value.Date == DateTime.Today)
+                    .ToList();
+
+                DateTime examStart = exam.ExamDate.Value
+                    .AddHours(exam.StartHour ?? 0)
+                    .AddMinutes(exam.StartMinute ?? 0);
+
+                DateTime examEnd = exam.ExamDate.Value
+                    .AddHours(exam.EndHour ?? 23)
+                    .AddMinutes(exam.EndMinute ?? 59);
+
+                string status = "Available";
+                if (DateTime.Now < examStart)
+                    status = $"Not started (Starts at {examStart:hh:mm tt})";
+                else if (DateTime.Now > examEnd)
+                    status = "Expired";
+
+                examData.Add(new
+                {
+                    exam.SubjectId,
+                    exam.SubjectName,
+                    exam.ExamType,
+                    ExamDate = exam.ExamDate?.ToString("dd-MM-yyyy"),
+                    ExamStart = examStart.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    ExamEnd = examEnd.ToString("yyyy-MM-ddTHH:mm:ss"),
+                    Status = status,
+                    Questions = questions
+                });
+            }
+
+            ViewBag.Exams = examData;
+            return View();
         }
+
 
         [HttpPost]
         public IActionResult SubmitExam(List<StudentAnswer> answers)
@@ -101,22 +100,8 @@ namespace digital.Controllers
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null) return RedirectToAction("Login", "Account");
 
-            var lastExam = _context.QuestionMaster
-                .Where(q => q.ExamDate.HasValue && q.ExamDate.Value.Date == DateTime.Today)
-                .OrderByDescending(q => q.ExamDate)
-                .FirstOrDefault();
-
-            if (lastExam != null)
-            {
-                DateTime examEnd = lastExam.ExamDate.Value
-                    .AddHours(lastExam.EndHour ?? 23)
-                    .AddMinutes(lastExam.EndMinute ?? 59);
-
-                if (DateTime.Now > examEnd)
-                {
-                    return RedirectToAction("Result");
-                }
-            }
+            if (answers == null || !answers.Any())
+                return RedirectToAction("Index");
 
             int correctCount = 0;
             int subjectId = 0;
@@ -198,7 +183,5 @@ namespace digital.Controllers
 
             return View(vm);
         }
-
-        
     }
 }
