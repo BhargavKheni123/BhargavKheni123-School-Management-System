@@ -4,6 +4,42 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        background: #3a3a3a;
+        color: white;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .form-select, .form-control {
+        border-radius: 6px;
+        padding: 8px 10px;
+        border: 1px solid #bbb;
+        box-shadow: none;
+        transition: border-color 0.2s ease;
+    }
+
+        .form-select:focus, .form-control:focus {
+            border-color: #3a3a3a;
+            outline: none;
+        }
+
+    .btn-primary {
+        background-color: #3a3a3a;
+        border: none;
+    }
+
+        .btn-primary:hover {
+            background-color: #555;
+        }
+</style>
+
 <div class="container mt-4">
     <div class="text-center mb-4">
         <h2>Exam Result</h2>

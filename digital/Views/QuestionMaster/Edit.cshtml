@@ -1,4 +1,5 @@
-﻿@model digital.Models.QuestionMaster
+﻿
+@model digital.Models.QuestionMaster
 @{
     ViewData["Title"] = "Edit Question";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -42,6 +43,30 @@
                                 <option>Viva</option>
                                 <option>Assignment</option>
                             </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label>Exam Date</label>
+                        <input asp-for="ExamDate" class="form-control" type="date" />
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <label>Start Hour</label>
+                            <input asp-for="StartHour" type="number" min="0" max="23" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label>Start Minute</label>
+                            <input asp-for="StartMinute" type="number" min="0" max="59" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label>End Hour</label>
+                            <input asp-for="EndHour" type="number" min="0" max="23" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label>End Minute</label>
+                            <input asp-for="EndMinute" type="number" min="0" max="59" class="form-control" />
                         </div>
                     </div>
 

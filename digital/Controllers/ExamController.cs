@@ -38,7 +38,7 @@ namespace digital.Controllers
                     .ToList()
             };
 
-            // ✅ Include navigation props and map safely
+            
             var examQuery = _context.Exams
                 .Include(e => e.Category)
                 .Include(e => e.Subject)

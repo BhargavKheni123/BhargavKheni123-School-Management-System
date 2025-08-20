@@ -41,5 +41,6 @@ namespace digital.Models
 
         [ForeignKey("AssignedTeacherId")]
         public virtual User AssignedTeacher { get; set; }
+        
     }
 }
