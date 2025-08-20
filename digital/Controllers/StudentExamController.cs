@@ -25,14 +25,13 @@ namespace digital.Controllers
             if (student == null) return NotFound();
 
             var questions = _context.QuestionMaster
-    .Include(q => q.AnswerOptions)
-    .Include(q => q.Category)
-    .Include(q => q.Subject)
-    .Where(q => q.CategoryId == student.CategoryId
-         && q.ExamDate.HasValue
-         && q.ExamDate.Value.Date == DateTime.Today)
-    .ToList();
-
+                .Include(q => q.AnswerOptions)
+                .Include(q => q.Category)
+                .Include(q => q.Subject)
+                .Where(q => q.CategoryId == student.CategoryId
+                        && q.ExamDate.HasValue
+                        && q.ExamDate.Value.Date == DateTime.Today)
+                .ToList();
 
             ViewBag.StudentName = student.Name;
             ViewBag.Std = student.Category.Name;
@@ -55,33 +54,37 @@ namespace digital.Controllers
 
             if (subjectExam != null)
             {
+                ViewBag.StartHour = subjectExam.StartHour;
+                ViewBag.StartMinute = subjectExam.StartMinute;
+                ViewBag.EndHour = subjectExam.EndHour;
+                ViewBag.EndMinute = subjectExam.EndMinute;
                 ViewBag.SubjectName = subjectExam.Name;
                 ViewBag.ExamType = subjectExam.ExamType;
                 ViewBag.ExamDate = subjectExam.ExamDate?.ToString("dd-MM-yyyy");
 
                 DateTime examStart = subjectExam.ExamDate.Value
-                    .AddHours(subjectExam.StartHour ?? 0)
-                    .AddMinutes(subjectExam.StartMinute ?? 0);
+                   .AddHours(subjectExam.StartHour ?? 0)
+                   .AddMinutes(subjectExam.StartMinute ?? 0);
 
                 DateTime examEnd = subjectExam.ExamDate.Value
                     .AddHours(subjectExam.EndHour ?? 23)
                     .AddMinutes(subjectExam.EndMinute ?? 59);
 
-                ViewBag.ExamStart = examStart;
-                ViewBag.ExamEnd = examEnd;
-
                 var now = DateTime.Now;
 
                 if (now < examStart)
                 {
-                    ViewBag.NoExamMsg = $"Exam will start at {examStart:HH:mm}. Please wait.";
+                    ViewBag.NoExamMsg = $"Your exam will start at {examStart:hh:mm tt}. Please wait.";
                     questions.Clear();
                 }
                 else if (now > examEnd)
                 {
-                    ViewBag.NoExamMsg = "Exam time is over. You cannot attempt this exam.";
+                    ViewBag.NoExamMsg = "Your exam time is over. You are not allowed to attempt this exam.";
                     questions.Clear();
                 }
+
+                ViewBag.ExamStart = examStart.ToString("yyyy-MM-ddTHH:mm:ss");
+                ViewBag.ExamEnd = examEnd.ToString("yyyy-MM-ddTHH:mm:ss");
             }
 
             if (!questions.Any() && ViewBag.NoExamMsg == null)
@@ -98,7 +101,6 @@ namespace digital.Controllers
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null) return RedirectToAction("Login", "Account");
 
-            
             var lastExam = _context.QuestionMaster
                 .Where(q => q.ExamDate.HasValue && q.ExamDate.Value.Date == DateTime.Today)
                 .OrderByDescending(q => q.ExamDate)
@@ -112,7 +114,7 @@ namespace digital.Controllers
 
                 if (DateTime.Now > examEnd)
                 {
-                    return RedirectToAction("ThankYou"); 
+                    return RedirectToAction("Result");
                 }
             }
 
@@ -197,9 +199,6 @@ namespace digital.Controllers
             return View(vm);
         }
 
-        public IActionResult ThankYou()
-        {
-            return View();
-        }
+        
     }
 }
