@@ -9,11 +9,10 @@ namespace digital.Models
         public int CategoryId { get; set; }
         public int SubCategoryId { get; set; }
         public int SubjectId { get; set; }
-        public int TeacherId { get; set; }
+        public string TeacherId { get; set; }
 
         public DateTime CreatedDate { get; set; }
 
-        // For displaying related data
         public string CategoryName { get; set; }
         public string SubCategoryName { get; set; }
         public string SubjectName { get; set; }

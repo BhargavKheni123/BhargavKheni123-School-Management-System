@@ -128,5 +128,15 @@ namespace digital.Controllers
             }
             return RedirectToAction("TeacherMaster");
         }
+        public List<TeacherMaster> GetAllWithRelations()
+        {
+            return _context.TeacherMaster
+                .Include(t => t.Category)
+                .Include(t => t.SubCategory)
+                .Include(t => t.Subject)
+                .Include(t => t.Teacher)
+                .OrderByDescending(t => t.CreatedDate)
+                .ToList();
+        }
     }
 }

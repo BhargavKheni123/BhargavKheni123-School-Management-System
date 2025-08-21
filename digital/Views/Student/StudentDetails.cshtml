@@ -39,35 +39,55 @@
 
     <h3 class="mt-4">Attendance Details</h3>
 
-    <div class="row mb-3">
-        <div class="col-md-3">
-            <label>Month</label>
-            <select id="MonthDropdown" class="form-control">
-                <option value="">-- Select Month --</option>
-                @{
-                    var months = System.Globalization.DateTimeFormatInfo.InvariantInfo.MonthNames;
-                    for (int i = 0; i < 12; i++)
-                    {
-                        <option value="@(@i + 1)">@months[i]</option>
+   <div class="row mb-3">
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label>Month</label>
+                <select id="MonthDropdown" class="form-control">
+                    <option value="">-- Select Month --</option>
+                    @{
+                        var months = System.Globalization.DateTimeFormatInfo.InvariantInfo.MonthNames;
+                        for (int i = 0; i < 12; i++)
+                        {
+                            var monthValue = i + 1;
+                            if (monthValue == currentMonth)
+                            {
+                                <option value="@monthValue" selected>@months[i]</option>
+                            }
+                            else
+                            {
+                                <option value="@monthValue">@months[i]</option>
+                            }
+                        }
                     }
-                }
-            </select>
-        </div>
-        <div class="col-md-3">
-            <label>Year</label>
-            <select id="YearDropdown" class="form-control">
-                <option value="">-- Select Year --</option>
-                @for (int y = 2025; y <= 2050; y++)
-                {
-                    <option value="@y">@y</option>
-                }
-            </select>
-        </div>
-    </div>
+                </select>
+            </div>
 
-    <div id="attendanceTableContainer">
-    </div>
+            <div class="col-md-3">
+                <label>Year</label>
+                <select id="YearDropdown" class="form-control">
+                    <option value="">-- Select Year --</option>
+                    @for (int y = 2025; y <= 2050; y++)
+                    {
+                        if (y == currentYear)
+                        {
+                            <option value="@y" selected>@y</option>
+                        }
+                        else
+                        {
+                            <option value="@y">@y</option>
+                        }
+                    }
+                </select>
+            </div>
 
+            <div class="col-md-3 d-flex align-items-end">
+                <button id="LoadAttendanceBtn" class="btn btn-primary">Load Attendance</button>
+            </div>
+        </div>
+
+        <div id="attendanceTableContainer"></div>
+</div>
 
 
 
@@ -81,7 +101,7 @@
 
                     if (month && year) {
                         $.ajax({
-                            url: '/Home/GetStudentAttendance',
+                            url: '/StudentDetails/GetStudentAttendance',
                             type: 'GET',
                             data: {
                                 studentId: studentId,
@@ -95,15 +115,16 @@
                                 alert('Something went wrong while loading attendance.');
                             }
                         });
+                    } else {
+                        alert('Please select both month and year.');
                     }
                 }
 
-                $('#MonthDropdown, #YearDropdown').change(function () {
+                $('#LoadAttendanceBtn').click(function (e) {
+                    e.preventDefault();
                     loadAttendance();
                 });
             });
         </script>
-
-
-
 }
+

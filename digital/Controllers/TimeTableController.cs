@@ -79,7 +79,6 @@ namespace digital.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public IActionResult TimeTableForm(TimeTableViewModel model)
         {
             if (!ModelState.IsValid)

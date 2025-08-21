@@ -5,8 +5,6 @@
 
 <div class="content-wrapper" style="min-height: 100vh;">
     <div class="container-fluid pt-3 px-4">
-        <!-- px-4 gives left/right space -->
-
         <div class="row">
             <div class="col text-center">
                 <h4 class="fw-light mb-4"><em>Standard page</em></h4>
@@ -30,7 +28,7 @@
                 <table class="table table-bordered text-center mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th><em>standard</em></th>
+                            <th><em>Standard</em></th>
                             <th><em>Edit / Delete</em></th>
                         </tr>
                     </thead>
@@ -40,8 +38,8 @@
                             <tr>
                                 <td>@item.Name</td>
                                 <td>
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edit</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
+                                    <a asp-action="EditCategory" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edit</a>
+                                    <a asp-action="DeleteCategory" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
                                 </td>
                             </tr>
                         }
@@ -49,6 +47,5 @@
                 </table>
             </div>
         </div>
-
     </div>
 </div>

@@ -3,7 +3,6 @@ using digital.Interfaces;
 using digital.Models;
 using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace digital.Controllers
 {
@@ -26,6 +25,7 @@ namespace digital.Controllers
             _mapper = mapper;
         }
 
+        // List + Create
         [HttpGet]
         public IActionResult Subcategories()
         {
@@ -44,6 +44,9 @@ namespace digital.Controllers
             if (!string.IsNullOrEmpty(model.SubCategoryToEdit?.Name) && model.SubCategoryToEdit.CategoryId > 0)
             {
                 var newSubCategory = _mapper.Map<SubCategory>(model.SubCategoryToEdit);
+                newSubCategory.CreatedBy = "admin";
+                newSubCategory.CreatedDate = DateTime.Now;
+
                 _subCategoryRepository.AddSubCategory(newSubCategory);
             }
 
@@ -56,6 +59,7 @@ namespace digital.Controllers
             return View(viewModel);
         }
 
+        // Edit GET
         [HttpGet]
         public async Task<IActionResult> EditSub(int id)
         {
@@ -72,10 +76,11 @@ namespace digital.Controllers
             return View(viewModel);
         }
 
+        // Edit POST
         [HttpPost]
         public async Task<IActionResult> EditSub(SubCategoryViewModel model)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid && model.SubCategoryToEdit != null)
             {
                 var updatedSub = _mapper.Map<SubCategory>(model.SubCategoryToEdit);
                 updatedSub.CreatedDate = DateTime.Now;
@@ -91,24 +96,7 @@ namespace digital.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> UpdateSub(int id, int CategoryId, string Name)
-        {
-            var sub = await _subCategoryRepo.GetByIdAsync(id);
-            if (sub != null)
-            {
-                sub.CategoryId = CategoryId;
-                sub.Name = Name;
-                sub.CreatedDate = DateTime.Now;
-                sub.CreatedBy = "admin";
-
-                await _subCategoryRepo.UpdateAsync(sub);
-                await _subCategoryRepo.SaveAsync();
-            }
-
-            return RedirectToAction("Subcategories");
-        }
-
+        // Delete
         [HttpGet]
         public async Task<IActionResult> DeleteSub(int id)
         {
@@ -122,11 +110,10 @@ namespace digital.Controllers
             return RedirectToAction("Subcategories");
         }
 
-        // JSON: Get subcategories by CategoryId (used in Student form)
+        // JSON: Get subcategories by CategoryId
         [HttpGet]
         public JsonResult GetSubCategories(int categoryId)
         {
-            // NOTE: repository returns SelectList, but we just need id/name here
             var list = _subCategoryRepository
                 .GetSubCategoriesWithCategory()
                 .Where(sc => sc.CategoryId == categoryId)

@@ -1,14 +1,13 @@
-﻿@model digital.Models.Category
-
+﻿@model digital.ViewModels.CategoryViewModel
 @{
     ViewData["Title"] = "Edit Category";
 }
 
 <div class="content-wrapper" style="min-height: 100vh;">
     <div class="container pt-4">
-        <h4 class="mb-3">Edit </h4>
+        <h4 class="mb-3">Edit Standard</h4>
 
-        <form asp-action="Edit" method="post">
+        <form asp-action="EditCategory" method="post">
             <input type="hidden" asp-for="Id" />
 
             <div class="mb-3">

@@ -68,8 +68,6 @@ namespace digital.Controllers
         [HttpPost]
         public IActionResult CreateExam(ExamViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
                 model.Categories = _context.Categories
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                     .ToList();
@@ -98,8 +96,7 @@ namespace digital.Controllers
                         Description = e.Description
                     }).ToList();
 
-                return View(model);
-            }
+            
 
             var exam = new Exam
             {
@@ -119,6 +116,7 @@ namespace digital.Controllers
 
             TempData["Success"] = "Exam created successfully!";
             return RedirectToAction("CreateExam");
+       
         }
 
         [HttpGet]
@@ -148,18 +146,15 @@ namespace digital.Controllers
                 Teachers = _context.Users
                     .Where(u => u.Role == "Teacher")
                     .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
-                    .ToList(),
-                ExamList = GetExamList()
+                    .ToList()
             };
 
-            return View("CreateExam", model);
+            return View("EditExam", model);  
         }
 
         [HttpPost]
         public IActionResult EditExam(ExamViewModel model)
         {
-            if (!ModelState.IsValid)
-            {
                 model.Categories = _context.Categories
                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                     .ToList();
@@ -170,25 +165,29 @@ namespace digital.Controllers
                     .Where(u => u.Role == "Teacher")
                     .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
                     .ToList();
-                model.ExamList = GetExamList();
-                return View("CreateExam", model);
-            }
+            
 
             var exam = _context.Exams.FirstOrDefault(e => e.ExamId == model.ExamId);
-            if (exam != null)
+            if (exam == null)
             {
-                exam.ExamTitle = model.ExamTitle;
-                exam.Description = model.Description;
-                exam.ExamType = model.ExamType;
-                exam.CategoryId = model.CategoryId.GetValueOrDefault();
-                exam.SubjectId = model.SubjectId.GetValueOrDefault();
-                exam.AssignedTeacherId = model.AssignedTeacherId; 
-                exam.ExamDate = model.ExamDate;                   
+                return NotFound();
             }
 
+            exam.ExamTitle = model.ExamTitle;
+            exam.Description = model.Description;
+            exam.ExamType = model.ExamType;
+            exam.CategoryId = model.CategoryId.GetValueOrDefault();
+            exam.SubjectId = model.SubjectId.GetValueOrDefault();
+            exam.AssignedTeacherId = model.AssignedTeacherId;
+            exam.ExamDate = model.ExamDate;
+
             _context.SaveChanges();
+
+            TempData["Success"] = "Exam updated successfully!";
             return RedirectToAction("CreateExam");
         }
+
+
 
         [HttpGet]
         public IActionResult DeleteExam(int id)

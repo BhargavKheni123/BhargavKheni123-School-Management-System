@@ -103,6 +103,7 @@
                 <th>Gender</th>
                 <th>Mobile</th>
                 <th>Address</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -117,6 +118,14 @@
                     <td>@student.Gender</td>
                     <td>@student.MobileNumber</td>
                     <td>@student.Address</td>
+                    <td>
+                        <a asp-action="EditStudent" asp-route-id="@student.Id" class="btn btn-warning btn-sm">Edit</a>
+                        <a asp-action="DeleteStudent" asp-route-id="@student.Id"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this student?');">
+                            Delete
+                        </a>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -134,7 +143,7 @@
 
                 if (categoryId !== "") {
                     $.ajax({
-                        url: '/Home/GetSubCategories',
+                       url: '@Url.Action("GetSubCategories", "Student")',
                         type: 'GET',
                         data: { categoryId: categoryId },
                         success: function (data) {

@@ -54,7 +54,7 @@ namespace digital.Controllers
             if (category == null) return NotFound();
 
             var viewModel = _mapper.Map<CategoryViewModel>(category);
-            return View(viewModel);
+            return View("EditCategory", viewModel);
         }
 
         [HttpPost]
@@ -62,13 +62,20 @@ namespace digital.Controllers
         {
             if (ModelState.IsValid)
             {
-                var category = _mapper.Map<Category>(model);
-                await _categoryRepo.UpdateAsync(category);
+                var existingCategory = await _categoryRepo.GetByIdAsync(model.Id);
+                if (existingCategory == null) return NotFound();
+
+                existingCategory.Name = model.Name;
+
+                await _categoryRepo.UpdateAsync(existingCategory);
                 await _categoryRepo.SaveAsync();
+
                 return RedirectToAction("Category");
             }
-            return View(model);
+
+            return View("EditCategory", model);
         }
+
 
         public async Task<IActionResult> DeleteCategory(int id)
         {

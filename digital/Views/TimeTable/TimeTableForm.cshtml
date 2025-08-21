@@ -276,18 +276,20 @@
 @section Scripts {
     <script>
         $(function () {
-            $('#Std').on('change', function () {
-                var stdName = $(this).val();
-                $('#Class').empty().append('<option value="">Loading...</option>');
-                $.get('/Home/GetSubCategoriesByStd', { stdName: stdName }, function (data) {
-                    $('#Class').empty().append('<option value="">-- Select Class --</option>');
-                    $.each(data, function (i, item) {
-                        $('#Class').append('<option value="' + item.name + '">' + item.name + '</option>');
-                    });
-                }).fail(function () {
-                    $('#Class').empty().append('<option value="">-- Error loading --</option>');
+                    $('#Std').on('change', function () {
+            var stdName = $(this).val();
+            $('#Class').empty().append('<option value="">Loading...</option>');
+
+            $.get('/TimeTable/GetSubCategoriesByStd', { stdName: stdName }, function (data) {
+                $('#Class').empty().append('<option value="">-- Select Class --</option>');
+                $.each(data, function (i, item) {
+                    $('#Class').append('<option value="' + item.name + '">' + item.name + '</option>');
                 });
+            }).fail(function () {
+                $('#Class').empty().append('<option value="">-- Error loading --</option>');
             });
+        });
+
 
             $('#StartHour, #StartMinute').on('change', function () {
                 var startHour = parseInt($('#StartHour').val() || '0', 10);

@@ -1,0 +1,100 @@
+﻿@model digital.ViewModels.ExamViewModel
+
+@{
+    ViewData["Title"] = "Edit Exam";
+}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <div class="container-fluid">
+            <h1 class="text-center mb-4">Edit Exam</h1>
+        </div>
+    </section>
+
+    <section class="content">
+        <div class="container-fluid d-flex justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-warning mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Update Exam</h3>
+                    </div>
+                    <form asp-action="EditExam" asp-controller="Exam" method="post">
+                        <input type="hidden" asp-for="ExamId" />
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Exam Title</label>
+                                <input asp-for="ExamTitle" class="form-control" />
+                                <span asp-validation-for="ExamTitle" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Description / Instructions</label>
+                                <textarea asp-for="Description" class="form-control"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Exam Type</label>
+                                <select asp-for="ExamType" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    <option>Unit Test</option>
+                                    <option>Midterm</option>
+                                    <option>Final</option>
+                                    <option>Practical</option>
+                                    <option>Viva</option>
+                                    <option>Assignment</option>
+                                </select>
+                                <span asp-validation-for="ExamType" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Class</label>
+                                <select asp-for="CategoryId" class="form-control">
+                                    <option value="">-- Select Class --</option>
+                                    @foreach (var item in Model.Categories)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Value == Model.CategoryId?.ToString())">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Exam Date</label>
+                                <input asp-for="ExamDate" type="date" class="form-control" />
+                                <span asp-validation-for="ExamDate" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select asp-for="SubjectId" class="form-control">
+                                    <option value="">-- Select Subject --</option>
+                                    @foreach (var item in Model.Subjects)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Value == Model.SubjectId?.ToString())">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="SubjectId" class="text-danger"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Assigned Teacher</label>
+                                <select asp-for="AssignedTeacherId" class="form-control">
+                                    <option value="">-- Select Teacher --</option>
+                                    @foreach (var item in Model.Teachers)
+                                    {
+                                        <option value="@item.Value" selected="@(item.Value == Model.AssignedTeacherId?.ToString())">@item.Text</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="AssignedTeacherId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-warning">Update</button>
+                            <a asp-action="CreateExam" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

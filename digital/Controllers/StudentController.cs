@@ -207,5 +207,16 @@ namespace digital.Controllers
 
             return PartialView("_StudentAttendanceTable");
         }
+        [HttpGet]
+        public JsonResult GetSubCategories(int categoryId)
+        {
+            var subcategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == categoryId)
+                .Select(sc => new { id = sc.Id, name = sc.Name })
+                .ToList();
+
+            return Json(subcategories);
+        }
+
     }
 }
