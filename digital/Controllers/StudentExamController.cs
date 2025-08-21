@@ -1,4 +1,5 @@
 ﻿using digital.Models;
+using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -183,5 +184,71 @@ namespace digital.Controllers
 
             return View(vm);
         }
+
+        [HttpGet]
+        public IActionResult StudentRank()
+        {
+            var vm = new StudentRankViewModel
+            {
+                Categories = _context.Categories.ToList(),
+                SubCategories = new List<SubCategory>(),
+                Subjects = _context.Subjects.ToList(),
+                StudentRanks = new List<StudentRankData>()
+            };
+
+            return View(vm);
+        }
+
+
+        [HttpPost]
+        public IActionResult StudentRank(StudentRankViewModel model)
+        {
+            
+            var students = _context.Student
+                .Where(s => s.CategoryId == model.CategoryId && s.SubCategoryId == model.SubCategoryId)
+                .ToList();
+
+            var studentRanks = students.Select(s => new
+            {
+                StudentName = s.Name,
+                TotalMarks = _context.StudentExamResults
+                                .Where(r => r.StudentId == s.Id && r.SubjectId == model.SubjectId)
+                                .Sum(r => r.CorrectAnswers), 
+                StudentId = s.Id
+            })
+            .OrderByDescending(x => x.TotalMarks)
+            .ToList();
+
+            
+            int rank = 1;
+            var finalList = studentRanks.Select(x => new StudentRankData
+            {
+                StudentName = x.StudentName,
+                TotalMarks = x.TotalMarks,
+                Rank = rank++
+            }).ToList();
+
+            model.Categories = _context.Categories.ToList();
+            model.SubCategories = _context.SubCategories.Where(sc => sc.CategoryId == model.CategoryId).ToList();
+            model.Subjects = _context.Subjects.ToList();
+            model.StudentRanks = finalList;
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult GetSubCategories(int categoryId)
+        {
+            var subCategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == categoryId)
+                .Select(sc => new
+                {
+                    Id = sc.Id,
+                    Name = sc.Name
+                }).ToList();
+
+            return Json(subCategories);
+        }
+
     }
 }

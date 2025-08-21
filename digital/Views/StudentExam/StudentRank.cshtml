@@ -1,0 +1,119 @@
+﻿@model digital.ViewModels.StudentRankViewModel
+
+@{
+    ViewData["Title"] = "Student Rank";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Page Wrapper -->
+<div class="content-wrapper">
+    <!-- Page Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Student Rank</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="/Home/Index">Home</a></li>
+                        <li class="breadcrumb-item active">Student Rank</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card shadow-lg">
+                <div class="card-body">
+                    <form asp-action="StudentRank" method="post">
+                        <div class="form-group">
+                            <label for="CategoryId">Standard</label>
+                            <select id="CategoryId" name="CategoryId" class="form-control">
+                                <option value="">-- Select Standard --</option>
+                                @foreach (var category in Model.Categories)
+                                {
+                                    <option value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="SubCategoryId">Class</label>
+                            <select id="SubCategoryId" name="SubCategoryId" class="form-control">
+                                <option value="">-- Select Class --</option>
+                            </select>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select asp-for="SubjectId" class="form-control" id="SubjectId" name="SubjectId">
+                                <option value="">-- Select Subject --</option>
+                                @foreach (var s in Model.Subjects)
+                                {
+                                    <option value="@s.Id">@s.Name</option>
+                                }
+                            </select>
+                        </div>
+
+
+                        <button type="submit" class="btn btn-primary">Get Rank</button>
+                    </form>
+
+                    <hr />
+
+                    @if (Model.StudentRanks != null && Model.StudentRanks.Any())
+                    {
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Total Marks</th>
+                                    <th>Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.StudentRanks)
+                                {
+                                    <tr>
+                                        <td>@s.StudentName</td>
+                                        <td>@s.TotalMarks</td>
+                                        <td>@s.Rank</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#CategoryId").change(function () {
+                var categoryId = $(this).val();
+                $("#SubCategoryId").empty();
+
+                if (categoryId) {
+                    $.getJSON("/StudentExam/GetSubCategories", { categoryId: categoryId }, function (data) {
+                        $("#SubCategoryId").append('<option value="">-- Select Class --</option>');
+                        $.each(data, function (i, item) {
+                            $("#SubCategoryId").append('<option value="' + item.id + '">' + item.name + '</option>');
+                        });
+                    });
+                } else {
+                    $("#SubCategoryId").append('<option value="">-- Select Class --</option>');
+                }
+            });
+        });
+    </script>
+}
