@@ -104,14 +104,19 @@ namespace digital.Controllers
             if (student == null) return NotFound();
 
             var vm = _mapper.Map<StudentViewModel>(student);
-            vm.Categories = _context.Categories
-                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
-            vm.SubCategories = _context.SubCategories
+
+            ViewBag.Categories = _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                .ToList();
+
+            ViewBag.SubCategories = _context.SubCategories
                 .Where(sc => sc.CategoryId == student.CategoryId)
-                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
+                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
+                .ToList();
 
             return View("EditStudent", vm);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> EditStudent(StudentViewModel studentVM)
@@ -126,14 +131,18 @@ namespace digital.Controllers
                 return RedirectToAction("Student");
             }
 
-            studentVM.Categories = _context.Categories
-                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
-            studentVM.SubCategories = _context.SubCategories
+            ViewBag.Categories = _context.Categories
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                .ToList();
+
+            ViewBag.SubCategories = _context.SubCategories
                 .Where(sc => sc.CategoryId == studentVM.CategoryId)
-                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name }).ToList();
+                .Select(sc => new SelectListItem { Value = sc.Id.ToString(), Text = sc.Name })
+                .ToList();
 
             return View("EditStudent", studentVM);
         }
+
 
         public async Task<IActionResult> DeleteStudent(int id)
         {

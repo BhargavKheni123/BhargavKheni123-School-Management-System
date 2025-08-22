@@ -1,5 +1,6 @@
 ﻿using digital.Models;
 using digital.ViewModels;
+using digital.Repository;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 
@@ -7,19 +8,18 @@ namespace digital.Controllers
 {
     public class TeacherController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ITeacherRepository _repository;
 
-        public TeacherController(ApplicationDbContext context)
+        public TeacherController(ITeacherRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         [HttpGet]
         public IActionResult TeacherRegister()
         {
-            ViewBag.TeacherList = _context.Teachers.ToList(); 
+            ViewBag.TeacherList = _repository.GetAllTeachers().ToList();
             return View(new TeacherViewModel());
-
         }
 
         [HttpPost]
@@ -37,8 +37,8 @@ namespace digital.Controllers
                     Address = model.Address
                 };
 
-                _context.Teachers.Add(teacher);
-                _context.SaveChanges();
+                _repository.AddTeacher(teacher);
+                _repository.Save();
 
                 var user = new User
                 {
@@ -49,18 +49,20 @@ namespace digital.Controllers
                     TeacherId = teacher.TeacherId
                 };
 
-                _context.Users.Add(user);
-                _context.SaveChanges();
+                _repository.AddUser(user);
+                _repository.Save();
 
                 return RedirectToAction("TeacherRegister", "Teacher");
             }
-            ViewBag.TeacherList = _context.Teachers.ToList();
+
+            ViewBag.TeacherList = _repository.GetAllTeachers().ToList();
             return View(model);
         }
+
         [HttpGet]
         public IActionResult Edit(int id)
         {
-            var teacher = _context.Teachers.FirstOrDefault(t => t.TeacherId == id);
+            var teacher = _repository.GetTeacherById(id);
             if (teacher == null)
             {
                 return NotFound();
@@ -76,7 +78,7 @@ namespace digital.Controllers
                 Address = teacher.Address
             };
 
-            ViewBag.TeacherId = id; 
+            ViewBag.TeacherId = id;
             return View(model);
         }
 
@@ -85,7 +87,7 @@ namespace digital.Controllers
         {
             if (ModelState.IsValid)
             {
-                var teacher = _context.Teachers.FirstOrDefault(t => t.TeacherId == id);
+                var teacher = _repository.GetTeacherById(id);
                 if (teacher == null)
                 {
                     return NotFound();
@@ -98,15 +100,18 @@ namespace digital.Controllers
                 teacher.Gender = model.Gender;
                 teacher.Address = model.Address;
 
-                var user = _context.Users.FirstOrDefault(u => u.TeacherId == id);
+                _repository.UpdateTeacher(teacher);
+
+                var user = _repository.GetUserByTeacherId(id);
                 if (user != null)
                 {
                     user.Name = model.Name;
                     user.Email = model.Email;
                     user.Password = model.Password;
+                    _repository.UpdateUser(user);
                 }
 
-                _context.SaveChanges();
+                _repository.Save();
                 return RedirectToAction("TeacherRegister");
             }
 
@@ -114,21 +119,13 @@ namespace digital.Controllers
             return View(model);
         }
 
-
         public IActionResult Delete(int id)
         {
-            var teacher = _context.Teachers.Find(id);
-            if (teacher != null)
-            {
-                _context.Teachers.Remove(teacher);
+            _repository.DeleteTeacher(id);
+            _repository.DeleteUser(id);
+            _repository.Save();
 
-                var user = _context.Users.FirstOrDefault(u => u.TeacherId == id);
-                if (user != null) _context.Users.Remove(user);
-
-                _context.SaveChanges();
-            }
             return RedirectToAction("TeacherRegister");
         }
     }
 }
-

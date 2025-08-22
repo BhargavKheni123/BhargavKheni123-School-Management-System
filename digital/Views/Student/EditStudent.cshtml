@@ -27,13 +27,13 @@
                 </div>
 
                 <label for="CategoryId">Standard</label>
-                <select asp-for="CategoryId" class="form-control" asp-items="ViewBag.Categories">
+                <select asp-for="CategoryId" class="form-control" asp-items="Model.Categories">
                     <option value="">-- Select Standard --</option>
                 </select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
 
                 <label for="SubCategoryId">Class</label>
-                <select asp-for="SubCategoryId" class="form-control" asp-items="ViewBag.SubCategories">
+                <select asp-for="SubCategoryId" class="form-control" asp-items="Model.SubCategories">
                     <option value="">-- Select Class --</option>
                 </select>
                 <span asp-validation-for="SubCategoryId" class="text-danger"></span>
@@ -106,7 +106,7 @@
             $('#CategoryId').change(function () {
                 var categoryId = $(this).val();
                 $.ajax({
-                    url: '/Home/GetSubCategories?categoryId=' + categoryId,
+                    url: '/EditStudent/GetSubCategories?categoryId=' + categoryId,
                     type: 'GET',
                     success: function (data) {
                         var subCatDropdown = $('#SubCategoryId');

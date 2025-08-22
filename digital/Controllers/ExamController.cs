@@ -1,128 +1,75 @@
 ﻿using digital.Models;
 using digital.ViewModels;
+using digital.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace digital.Controllers
 {
     public class ExamController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IExamRepository _repository;
 
-        public ExamController(ApplicationDbContext context)
+        public ExamController(IExamRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         [HttpGet]
         public IActionResult CreateExam()
         {
             var loggedInUserEmail = User.Identity?.Name ?? HttpContext.Session.GetString("UserEmail");
-            var loggedInTeacherId = _context.Teachers
-                .Where(u => u.Email == loggedInUserEmail)
-                .Select(u => u.TeacherId)
-                .FirstOrDefault();
+            var loggedInTeacher = _repository.GetTeacherByEmail(loggedInUserEmail);
 
             var model = new ExamViewModel
             {
-                Categories = _context.Categories
-                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList(),
-                Subjects = _context.Subjects
-                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
-                    .ToList(),
-                Teachers = _context.Users
-                    .Where(u => u.Role == "Teacher")
-                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
-                    .ToList()
+                Categories = _repository.GetCategories()
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
+                Subjects = _repository.GetSubjects()
+                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList(),
+                Teachers = _repository.GetTeachers()
+                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList(),
+                ExamList = (User.IsInRole("Teacher") && loggedInTeacher != null)
+                    ? _repository.GetExamsByTeacherId(loggedInTeacher.Id).ToList()
+                    : _repository.GetAllExams().ToList()
             };
 
-            
-            var examQuery = _context.Exams
-                .Include(e => e.Category)
-                .Include(e => e.Subject)
-                .Include(e => e.AssignedTeacher)
-                .Select(e => new ExamListItem
-                {
-                    ExamId = e.ExamId,
-                    ExamTitle = e.ExamTitle,
-                    ExamType = e.ExamType,
-                    ClassName = e.Category != null ? e.Category.Name : "N/A",
-                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
-                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
-                    AssignedTeacherId = e.AssignedTeacherId,
-                    ExamDate = e.ExamDate,
-                    Description = e.Description
-                });
-
-            if (User.IsInRole("Teacher"))
-            {
-                examQuery = examQuery.Where(e => e.AssignedTeacherId == loggedInTeacherId);
-            }
-
-            model.ExamList = examQuery.ToList();
             return View(model);
         }
 
         [HttpPost]
         public IActionResult CreateExam(ExamViewModel model)
         {
-                model.Categories = _context.Categories
-                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList();
-                model.Subjects = _context.Subjects
-                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
-                    .ToList();
-                model.Teachers = _context.Users
-                    .Where(u => u.Role == "Teacher")
-                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
-                    .ToList();
-
-                model.ExamList = _context.Exams
-                    .Include(e => e.Category)
-                    .Include(e => e.Subject)
-                    .Include(e => e.AssignedTeacher)
-                    .Select(e => new ExamListItem
-                    {
-                        ExamId = e.ExamId,
-                        ExamTitle = e.ExamTitle,
-                        ExamType = e.ExamType,
-                        ClassName = e.Category != null ? e.Category.Name : "N/A",
-                        SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
-                        TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
-                        AssignedTeacherId = e.AssignedTeacherId,
-                        ExamDate = e.ExamDate,
-                        Description = e.Description
-                    }).ToList();
-
-            
+            model.Categories = _repository.GetCategories()
+                .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList();
+            model.Subjects = _repository.GetSubjects()
+                .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList();
+            model.Teachers = _repository.GetTeachers()
+                .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList();
 
             var exam = new Exam
             {
                 ExamTitle = model.ExamTitle,
                 Description = model.Description,
                 ExamType = model.ExamType,
-                CategoryId = model.CategoryId.GetValueOrDefault(),   
-                SubjectId = model.SubjectId.GetValueOrDefault(),    
-                AssignedTeacherId = model.AssignedTeacherId,        
-                ExamDate = model.ExamDate,                          
+                CategoryId = model.CategoryId.GetValueOrDefault(),
+                SubjectId = model.SubjectId.GetValueOrDefault(),
+                AssignedTeacherId = model.AssignedTeacherId,
+                ExamDate = model.ExamDate,
                 CreatedBy = 1,
                 CreatedDate = DateTime.Now
             };
 
-            _context.Exams.Add(exam);
-            _context.SaveChanges();
+            _repository.AddExam(exam);
 
             TempData["Success"] = "Exam created successfully!";
             return RedirectToAction("CreateExam");
-       
         }
 
         [HttpGet]
         public IActionResult EditExam(int id)
         {
-            var exam = _context.Exams.FirstOrDefault(e => e.ExamId == id);
+            var exam = _repository.GetExamById(id);
             if (exam == null)
                 return RedirectToAction("CreateExam");
 
@@ -137,41 +84,23 @@ namespace digital.Controllers
                 AssignedTeacherId = exam.AssignedTeacherId,
                 ExamDate = exam.ExamDate,
 
-                Categories = _context.Categories
-                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList(),
-                Subjects = _context.Subjects
-                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
-                    .ToList(),
-                Teachers = _context.Users
-                    .Where(u => u.Role == "Teacher")
-                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
-                    .ToList()
+                Categories = _repository.GetCategories()
+                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
+                Subjects = _repository.GetSubjects()
+                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList(),
+                Teachers = _repository.GetTeachers()
+                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name }).ToList()
             };
 
-            return View("EditExam", model);  
+            return View("EditExam", model);
         }
 
         [HttpPost]
         public IActionResult EditExam(ExamViewModel model)
         {
-                model.Categories = _context.Categories
-                    .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
-                    .ToList();
-                model.Subjects = _context.Subjects
-                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
-                    .ToList();
-                model.Teachers = _context.Users
-                    .Where(u => u.Role == "Teacher")
-                    .Select(t => new SelectListItem { Value = t.Id.ToString(), Text = t.Name })
-                    .ToList();
-            
-
-            var exam = _context.Exams.FirstOrDefault(e => e.ExamId == model.ExamId);
+            var exam = _repository.GetExamById(model.ExamId);
             if (exam == null)
-            {
-                return NotFound();
-            }
+                return RedirectToAction("CreateExam");
 
             exam.ExamTitle = model.ExamTitle;
             exam.Description = model.Description;
@@ -181,51 +110,18 @@ namespace digital.Controllers
             exam.AssignedTeacherId = model.AssignedTeacherId;
             exam.ExamDate = model.ExamDate;
 
-            _context.SaveChanges();
+            _repository.UpdateExam(exam);
 
             TempData["Success"] = "Exam updated successfully!";
             return RedirectToAction("CreateExam");
         }
 
-
-
         [HttpGet]
         public IActionResult DeleteExam(int id)
         {
-            var exam = _context.Exams.FirstOrDefault(e => e.ExamId == id);
-            if (exam != null)
-            {
-                _context.Exams.Remove(exam);
-                _context.SaveChanges();
-            }
+            _repository.DeleteExam(id);
+            TempData["Success"] = "Exam deleted successfully!";
             return RedirectToAction("CreateExam");
-        }
-
-        private List<ExamListItem> GetExamList(int? teacherId = null)
-        {
-            var query = _context.Exams
-                .Include(e => e.Category)
-                .Include(e => e.Subject)
-                .Include(e => e.AssignedTeacher)
-                .Select(e => new ExamListItem
-                {
-                    ExamId = e.ExamId,
-                    ExamTitle = e.ExamTitle,
-                    ExamType = e.ExamType,
-                    ClassName = e.Category != null ? e.Category.Name : "N/A",
-                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
-                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
-                    AssignedTeacherId = e.AssignedTeacherId,
-                    ExamDate = e.ExamDate,
-                    Description = e.Description
-                });
-
-            if (teacherId.HasValue)
-            {
-                query = query.Where(e => e.AssignedTeacherId == teacherId.Value);
-            }
-
-            return query.ToList();
         }
 
         [HttpGet]
@@ -235,28 +131,11 @@ namespace digital.Controllers
             if (studentId == null)
                 return RedirectToAction("StudentDetails", "Student");
 
-            var student = _context.Student.FirstOrDefault(s => s.Id == studentId.Value);
+            var student = _repository.GetStudentById(studentId.Value);
             if (student == null)
                 return NotFound();
 
-            var exams = _context.Exams
-                .Where(e => e.CategoryId == student.CategoryId)
-                .Include(e => e.Category)
-                .Include(e => e.Subject)
-                .Include(e => e.AssignedTeacher)
-                .Select(e => new ExamListItem
-                {
-                    ExamId = e.ExamId,
-                    ExamTitle = e.ExamTitle,
-                    ExamType = e.ExamType,
-                    ClassName = e.Category != null ? e.Category.Name : "N/A",
-                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
-                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
-                    AssignedTeacherId = e.AssignedTeacherId,
-                    ExamDate = e.ExamDate,
-                    Description = e.Description
-                })
-                .ToList();
+            var exams = _repository.GetExamsByCategoryId(student.CategoryId).ToList();
 
             var model = new ExamViewModel { ExamList = exams };
             return View(model);
@@ -266,35 +145,15 @@ namespace digital.Controllers
         public IActionResult TeacherExamList()
         {
             var loggedInUserEmail = User.Identity?.Name ?? HttpContext.Session.GetString("UserEmail");
+            var teacher = _repository.GetTeacherByEmail(loggedInUserEmail);
 
-            var loggedInTeacherId = _context.Teachers
-                .Where(t => t.Email == loggedInUserEmail)
-                .Select(t => t.TeacherId)
-                .FirstOrDefault();
-
-            if (loggedInTeacherId == 0)
+            if (teacher == null)
             {
                 ViewBag.Message = "No exams found for this teacher.";
                 return View(new ExamViewModel { ExamList = new List<ExamListItem>() });
             }
 
-            var exams = _context.Exams
-                .Include(e => e.Category)
-                .Include(e => e.Subject)
-                .Include(e => e.AssignedTeacher)
-                .Where(e => e.AssignedTeacherId == loggedInTeacherId)
-                .Select(e => new ExamListItem
-                {
-                    ExamId = e.ExamId,
-                    ExamTitle = e.ExamTitle,
-                    ExamType = e.ExamType,
-                    Description = e.Description,
-                    ClassName = e.Category != null ? e.Category.Name : "N/A",
-                    SubjectName = e.Subject != null ? e.Subject.Name : "N/A",
-                    TeacherName = e.AssignedTeacher != null ? e.AssignedTeacher.Name : "Unassigned",
-                    ExamDate = e.ExamDate
-                })
-                .ToList();
+            var exams = _repository.GetExamsByTeacherId(teacher.Id).ToList();
 
             var model = new ExamViewModel { ExamList = exams };
             return View(model);

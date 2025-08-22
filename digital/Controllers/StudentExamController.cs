@@ -1,17 +1,17 @@
 ﻿using digital.Models;
 using digital.ViewModels;
+using digital.Repository;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace digital.Controllers
 {
     public class StudentExamController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IStudentExamRepository _repository;
 
-        public StudentExamController(ApplicationDbContext context)
+        public StudentExamController(IStudentExamRepository repository)
         {
-            _context = context;
+            _repository = repository;
         }
 
         public IActionResult Index()
@@ -19,32 +19,13 @@ namespace digital.Controllers
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null) return RedirectToAction("Login", "Account");
 
-            var student = _context.Student
-                .Include(s => s.Category)
-                .FirstOrDefault(s => s.Id == studentId);
-
+            var student = _repository.GetStudentById(studentId.Value);
             if (student == null) return NotFound();
 
             ViewBag.StudentName = student.Name;
             ViewBag.Std = student.Category.Name;
 
-            
-            var exams = (from q in _context.QuestionMaster
-                         join s in _context.Subjects on q.SubjectId equals s.Id
-                         where q.CategoryId == student.CategoryId
-                         && q.ExamDate.HasValue
-                         && q.ExamDate.Value.Date == DateTime.Today
-                         select new
-                         {
-                             SubjectName = s.Name,
-                             q.SubjectId,
-                             q.ExamType,
-                             q.ExamDate,
-                             q.StartHour,
-                             q.StartMinute,
-                             q.EndHour,
-                             q.EndMinute
-                         }).Distinct().ToList();
+            var exams = _repository.GetTodayExams(student.CategoryId).ToList();
 
             if (!exams.Any())
             {
@@ -52,16 +33,10 @@ namespace digital.Controllers
                 return View(new List<QuestionMaster>());
             }
 
-            
             var examData = new List<dynamic>();
             foreach (var exam in exams)
             {
-                var questions = _context.QuestionMaster
-                    .Include(q => q.AnswerOptions)
-                    .Where(q => q.CategoryId == student.CategoryId
-                             && q.SubjectId == exam.SubjectId
-                             && q.ExamDate.Value.Date == DateTime.Today)
-                    .ToList();
+                var questions = _repository.GetQuestionsForExam(student.CategoryId, exam.SubjectId, exam.ExamDate);
 
                 DateTime examStart = exam.ExamDate.Value
                     .AddHours(exam.StartHour ?? 0)
@@ -94,7 +69,6 @@ namespace digital.Controllers
             return View();
         }
 
-
         [HttpPost]
         public IActionResult SubmitExam(List<StudentAnswer> answers)
         {
@@ -113,9 +87,9 @@ namespace digital.Controllers
                 ans.StudentId = studentId.Value;
                 ans.SubmittedOn = DateTime.Now;
 
-                var question = _context.QuestionMaster
-                                       .Include(q => q.AnswerOptions)
-                                       .FirstOrDefault(q => q.Id == ans.QuestionId);
+                var question = _repository
+                    .GetQuestionsForExam(ans.StudentId, ans.SubjectId, DateTime.Today)
+                    .FirstOrDefault(q => q.Id == ans.QuestionId);
 
                 if (question != null)
                 {
@@ -143,16 +117,7 @@ namespace digital.Controllers
                 SubmittedOn = DateTime.Now
             };
 
-            _context.StudentExamResults.Add(result);
-            _context.SaveChanges();
-
-            foreach (var ans in answers)
-            {
-                ans.ResultId = result.Id;
-            }
-
-            _context.StudentAnswers.AddRange(answers);
-            _context.SaveChanges();
+            _repository.SaveExamResult(result, answers);
 
             return RedirectToAction("Result", new { resultId = result.Id });
         }
@@ -162,19 +127,10 @@ namespace digital.Controllers
             var studentId = HttpContext.Session.GetInt32("StudentId");
             if (studentId == null) return RedirectToAction("Login", "Account");
 
-            var result = _context.StudentExamResults
-                .Include(r => r.Subject)
-                .Include(r => r.Student)
-                .ThenInclude(s => s.Category)
-                .FirstOrDefault(r => r.Id == resultId && r.StudentId == studentId);
-
+            var result = _repository.GetExamResult(resultId, studentId.Value);
             if (result == null) return NotFound();
 
-            var answers = _context.StudentAnswers
-                .Include(a => a.Question)
-                .ThenInclude(q => q.AnswerOptions)
-                .Where(a => a.ResultId == result.Id)
-                .ToList();
+            var answers = _repository.GetAnswersByResultId(result.Id);
 
             var vm = new ExamResultViewModel
             {
@@ -190,36 +146,20 @@ namespace digital.Controllers
         {
             var vm = new StudentRankViewModel
             {
-                Categories = _context.Categories.ToList(),
+                Categories = _repository.GetCategories().ToList(),
                 SubCategories = new List<SubCategory>(),
-                Subjects = _context.Subjects.ToList(),
+                Subjects = _repository.GetSubjects().ToList(),
                 StudentRanks = new List<StudentRankData>()
             };
 
             return View(vm);
         }
 
-
         [HttpPost]
         public IActionResult StudentRank(StudentRankViewModel model)
         {
-            
-            var students = _context.Student
-                .Where(s => s.CategoryId == model.CategoryId && s.SubCategoryId == model.SubCategoryId)
-                .ToList();
+            var studentRanks = _repository.GetStudentRanks(model.CategoryId, model.SubCategoryId, model.SubjectId);
 
-            var studentRanks = students.Select(s => new
-            {
-                StudentName = s.Name,
-                TotalMarks = _context.StudentExamResults
-                                .Where(r => r.StudentId == s.Id && r.SubjectId == model.SubjectId)
-                                .Sum(r => r.CorrectAnswers), 
-                StudentId = s.Id
-            })
-            .OrderByDescending(x => x.TotalMarks)
-            .ToList();
-
-            
             int rank = 1;
             var finalList = studentRanks.Select(x => new StudentRankData
             {
@@ -228,9 +168,9 @@ namespace digital.Controllers
                 Rank = rank++
             }).ToList();
 
-            model.Categories = _context.Categories.ToList();
-            model.SubCategories = _context.SubCategories.Where(sc => sc.CategoryId == model.CategoryId).ToList();
-            model.Subjects = _context.Subjects.ToList();
+            model.Categories = _repository.GetCategories().ToList();
+            model.SubCategories = _repository.GetSubCategoriesByCategory(model.CategoryId).ToList();
+            model.Subjects = _repository.GetSubjects().ToList();
             model.StudentRanks = finalList;
 
             return View(model);
@@ -239,8 +179,7 @@ namespace digital.Controllers
         [HttpGet]
         public JsonResult GetSubCategories(int categoryId)
         {
-            var subCategories = _context.SubCategories
-                .Where(sc => sc.CategoryId == categoryId)
+            var subCategories = _repository.GetSubCategoriesByCategory(categoryId)
                 .Select(sc => new
                 {
                     Id = sc.Id,
@@ -249,6 +188,5 @@ namespace digital.Controllers
 
             return Json(subCategories);
         }
-
     }
 }
