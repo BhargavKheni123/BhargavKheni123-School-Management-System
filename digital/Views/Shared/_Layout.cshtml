@@ -332,7 +332,36 @@
         }, 1000);
     }
 </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
+            var inputs = document.querySelectorAll("input[type='text'], textarea");
+
+            inputs.forEach(function (input) {
+
+                input.addEventListener("contextmenu", function (e) {
+                    e.preventDefault();
+                    alert(" Copy, paste, and right-click are disabled for this field.");
+                });
+
+
+                input.addEventListener("copy", function (e) {
+                    e.preventDefault();
+                    alert(" Copy, paste, and right-click are disabled for this field.");
+                });
+
+
+                input.addEventListener("paste", function (e) {
+                    e.preventDefault();
+                    alert(" Copy, paste, and right-click are disabled for this field.");
+                });
+
+
+
+
+            });
+        });
+    </script>
 
 </body>
 </html>
