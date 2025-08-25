@@ -94,10 +94,24 @@ namespace digital.Controllers
                 return View();
             }
 
+            if (user.IsLoggedIn)
+            {
+                ViewBag.Error = "User already logged in from another device or browser. Please logout first.";
+                return View();
+            }
+
+            var newSessionId = Guid.NewGuid().ToString();
+            user.IsLoggedIn = true;
+            user.CurrentSessionId = newSessionId;
+
+            _context.Users.Update(user);
+            _context.SaveChanges();
+
             var token = GenerateJwtToken(user);
             HttpContext.Session.SetString("JWTToken", token);
             HttpContext.Session.SetString("TokenExpireTime", DateTime.UtcNow.AddMinutes(15).ToString("o"));
 
+            HttpContext.Session.SetString("SessionId", newSessionId);
             HttpContext.Session.SetString("UserName", user.Name);
             HttpContext.Session.SetString("UserEmail", user.Email);
             HttpContext.Session.SetString("UserRole", user.Role);
@@ -172,10 +186,24 @@ namespace digital.Controllers
         [HttpPost]
         public IActionResult Logout()
         {
+            var email = HttpContext.Session.GetString("UserEmail");
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = _context.Users.FirstOrDefault(u => u.Email == email);
+                if (user != null)
+                {
+                    user.IsLoggedIn = false;  
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+                }
+            }
+
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
-    
+
+
+
         public IActionResult Index()
         {
             var email = HttpContext.Session.GetString("UserEmail");

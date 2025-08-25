@@ -19,5 +19,7 @@ namespace digital.Models
         public int? TeacherId { get; set; }
         [ForeignKey("TeacherId")]
         public TeacherMaster Teacher { get; set; }
+        public string CurrentSessionId { get; set; }
+        public bool IsLoggedIn { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using digital.Helpers;
 using digital.Interfaces;
 using digital.Mapping;
 using digital.Models;
@@ -66,6 +67,7 @@ builder.Services.AddScoped<IStudentExamRepository, StudentExamRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+
 // Singleton helpers
 builder.Services.AddSingleton<JwtTokenHelper>();
 
@@ -92,7 +94,8 @@ app.UseRouting();
 app.UseSession();
 
 app.UseAuthentication();
-app.UseMiddleware<JwtMiddleware>();  // Your custom middleware here
+app.UseMiddleware<JwtMiddleware>();
+app.UseMiddleware<SingleLoginMiddleware>();
 app.UseAuthorization();
 
 // Routes
