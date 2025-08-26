@@ -2,6 +2,7 @@
 using digital.Interfaces;
 using digital.Models;
 using digital.Repositories;
+using digital.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -18,18 +19,21 @@ namespace digital.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IUserRepository _userRepository;
         private readonly IStudentRepository _studentRepository;
+        private readonly ITeacherRepository _teacherRepository;
         private readonly IConfiguration _configuration;
 
         public HomeController(ILogger<HomeController> logger,
                               ApplicationDbContext context,
                               IUserRepository userRepository,
                               IStudentRepository studentRepository,
+                              ITeacherRepository teacherRepository,
                               IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
             _userRepository = userRepository;
             _studentRepository = studentRepository;
+            _teacherRepository = teacherRepository;
             _configuration = configuration;
         }
 
@@ -103,8 +107,7 @@ namespace digital.Controllers
             user.IsLoggedIn = true;
             user.CurrentSessionId = newSessionId;
 
-            _context.Users.Update(user);
-            _context.SaveChanges();
+            _userRepository.UpdateUser(user);
 
             var token = GenerateJwtToken(user);
             HttpContext.Session.SetString("JWTToken", token);
@@ -190,26 +193,25 @@ namespace digital.Controllers
             var email = HttpContext.Session.GetString("UserEmail");
             if (!string.IsNullOrEmpty(email))
             {
-                var user = _context.Users.FirstOrDefault(u => u.Email == email);
+                var user = _userRepository.GetUserByEmail(email);
                 if (user != null)
                 {
-                    user.IsLoggedIn = false;            
-                    user.CurrentSessionId = null;      
                     user.IsLoggedIn = false;
-                    _context.Users.Update(user);
-                    _context.SaveChanges();
+                    user.CurrentSessionId = null;
+
+                    _userRepository.UpdateUser(user);  
                 }
             }
 
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
         #endregion
         public IActionResult ExportToExcel()
         {
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Users");
-
 
             worksheet.Cell(1, 1).Value = "No.";
             worksheet.Cell(1, 2).Value = "Name";
@@ -222,10 +224,9 @@ namespace digital.Controllers
             worksheet.Cell(1, 9).Value = "Mobile";
             worksheet.Cell(1, 10).Value = "Address";
 
-
-            var students = _context.Student.ToList();
-            var teachers = _context.Teachers.ToList();
-            var users = _context.Users.ToList();
+            var students = _studentRepository.GetAllStudentsWithCategoryAndSubCategory();
+            var teachers = _teacherRepository.GetAllTeachers().ToList();
+            var users = _userRepository.GetAllUsers();
 
             int row = 2;
             int counter = 1;
@@ -242,12 +243,12 @@ namespace digital.Controllers
                     var s = students.FirstOrDefault(x => x.Id == u.StudentId.Value);
                     if (s != null)
                     {
-                        //worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
-                        //worksheet.Cell(row, 6).Value = s.Gender;
-                        worksheet.Cell(row, 7).Value = s.CategoryId;
-                        worksheet.Cell(row, 8).Value = s.SubCategoryId;
+                        worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
+                        worksheet.Cell(row, 6).Value = s.Gender;
+                        worksheet.Cell(row, 7).Value = s.Category?.Name ?? s.CategoryId.ToString();
+                        worksheet.Cell(row, 8).Value = s.SubCategory?.Name ?? s.SubCategoryId.ToString();
                         worksheet.Cell(row, 9).Value = s.MobileNumber;
-                        //worksheet.Cell(row, 10).Value = s.Address;
+                        worksheet.Cell(row, 10).Value = s.Address;
                     }
                 }
                 else if (u.Role == "Teacher" && u.TeacherId.HasValue)
@@ -258,8 +259,6 @@ namespace digital.Controllers
                         worksheet.Cell(row, 5).Value = t.DOB.ToString("yyyy-MM-dd");
                         worksheet.Cell(row, 6).Value = t.Gender;
                     }
-
-
                     worksheet.Cell(row, 7).Value = "";
                     worksheet.Cell(row, 8).Value = "";
                     worksheet.Cell(row, 9).Value = "";
@@ -274,12 +273,11 @@ namespace digital.Controllers
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             var content = stream.ToArray();
-            return File(
-                content,
+            return File(content,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Users.xlsx"
-            );
+                "Users.xlsx");
         }
+
 
         public IActionResult Index()
         {

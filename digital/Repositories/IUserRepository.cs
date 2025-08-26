@@ -8,6 +8,7 @@ namespace digital.Repositories
         User GetUserByEmail(string email);
         List<User> GetTeachers();
         void AddUser(User user);
+        void UpdateUser(User user);
         IEnumerable<User> GetAllUsers();
     }
 }
