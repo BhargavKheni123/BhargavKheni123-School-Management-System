@@ -9,128 +9,193 @@
         margin-left: 250px; 
         padding: 20px;
         min-height: 100vh;
+        background-color: #f9f9f9;
+    }
+
+    .register-header {
+        background-color: #f1f1f1;
+        padding: 15px;
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+    }
+
+    .register-form {
+        margin: 20px 0;
+        padding: 20px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
+
+        .register-form .form-group {
+            margin-bottom: 15px;
+        }
+
+    .form-actions {
+        text-align: right;
+        margin-top: 10px;
+    }
+
+        .form-actions button {
+            margin-left: 10px;
+        }
+
+    .table-section {
+        margin-top: 30px;
+    }
+
+    .form-select {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        font-size: 15px;
+        color: #333;
+        transition: all 0.3s ease;
+        appearance: none; 
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-caret-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14l-4.796-5.481c-.566-.647-.106-1.659.753-1.659h9.592c.86 0 1.32 1.012.753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px 16px;
+        cursor: pointer;
+    }
+
+        .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 8px rgba(13, 110, 253, 0.4);
+            outline: none;
+        }
+
+        .form-select option {
+            padding: 10px;
+            background-color: #fff;
+            color: #333;
+        }
+
+    
+
     }
 </style>
 
 <div class="student-content">
-    <h2 class="text-center mb-4">Student Registration</h2>
+    <div class="register-header">
+        Student Register
+    </div>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+    <div class="register-form">
+        <form asp-action="Student" method="post">
+            <div class="row">
+                <div class="col-md-6 form-group">
+                    <label asp-for="Name"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
 
-    <form asp-action="Student" method="post" class="row g-3">
-        <div class="col-12">
-            <label asp-for="Name" class="form-label"></label>
-            <input asp-for="Name" class="form-control" />
-            <span asp-validation-for="Name" class="text-danger"></span>
-        </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="Password"></label>
+                    <input asp-for="Password" class="form-control" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="DOB"></label>
+                    <input asp-for="DOB" type="date" class="form-control" />
+                    <span asp-validation-for="DOB" class="text-danger"></span>
+                </div>
 
-        <div class="col-12">
-            <label asp-for="Email" class="form-label"></label>
-            <input asp-for="Email" class="form-control" />
-            <span asp-validation-for="Email" class="text-danger"></span>
-        </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="CategoryId"></label>
+                    <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories" id="CategoryId">
+                        <option value="">Select Standard</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="SubCategoryId"></label>
+                    <select asp-for="SubCategoryId" class="form-select" asp-items="Model.SubCategories" id="SubCategoryId">
+                        <option value="">Select Class</option>
+                    </select>
+                    <span asp-validation-for="SubCategoryId" class="text-danger"></span>
+                </div>
 
-        <div class="col-12">
-            <label asp-for="Password" class="form-label"></label>
-            <input asp-for="Password" class="form-control" />
-            <span asp-validation-for="Password" class="text-danger"></span>
-        </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="Gender"></label>
+                    <select asp-for="Gender" class="form-select">
+                        <option value="">Select Gender</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                    </select>
+                    <span asp-validation-for="Gender" class="text-danger"></span>
+                </div>
+                <div class="col-md-6 form-group">
+                    <label asp-for="MobileNumber"></label>
+                    <input asp-for="MobileNumber" class="form-control" />
+                    <span asp-validation-for="MobileNumber" class="text-danger"></span>
+                </div>
 
-        <div class="col-12">
-            <label asp-for="CategoryId" class="form-label"></label>
-            <select asp-for="CategoryId" class="form-select" asp-items="Model.Categories">
-                <option value="">-- Select Standard --</option>
-            </select>
-            <span asp-validation-for="CategoryId" class="text-danger"></span>
-        </div>
+                <div class="col-12 form-group">
+                    <label asp-for="Address"></label>
+                    <textarea asp-for="Address" class="form-control"></textarea>
+                    <span asp-validation-for="Address" class="text-danger"></span>
+                </div>
+            </div>
 
-        <div class="col-12">
-            <label asp-for="SubCategoryId" class="form-label"></label>
-            <select asp-for="SubCategoryId" class="form-select" asp-items="Model.SubCategories">
-                <option value="">-- Select Class --</option>
-            </select>
-            <span asp-validation-for="SubCategoryId" class="text-danger"></span>
-        </div>
+            <div class="form-actions">
+                <button type="reset" class="btn btn-outline-dark">Clear</button>
+                <button type="submit" class="btn btn-outline-primary">Submit</button>
+            </div>
+        </form>
+    </div>
 
-        <div class="col-12">
-            <label asp-for="DOB" class="form-label"></label>
-            <input asp-for="DOB" class="form-control" />
-            <span asp-validation-for="DOB" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Gender" class="form-label"></label>
-            <select asp-for="Gender" class="form-select">
-                <option value="">-- Select Gender --</option>
-                <option>Male</option>
-                <option>Female</option>
-            </select>
-            <span asp-validation-for="Gender" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="MobileNumber" class="form-label"></label>
-            <input asp-for="MobileNumber" class="form-control" />
-            <span asp-validation-for="MobileNumber" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <label asp-for="Address" class="form-label"></label>
-            <textarea asp-for="Address" class="form-control"></textarea>
-            <span asp-validation-for="Address" class="text-danger"></span>
-        </div>
-
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Register</button>
-        </div>
-    </form>
-
-
-    <hr class="my-4" />
-
-    <h4 class="mb-3">Registered Students</h4>
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Standard</th>
-                <th>Class</th>
-                <th>DOB</th>
-                <th>Gender</th>
-                <th>Mobile</th>
-                <th>Address</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var student in Model.StudentList)
-            {
+    <div class="table-section">
+        <h4 class="mb-3">Registered Students</h4>
+        <table class="table table-bordered table-striped">
+            <thead>
                 <tr>
-                    <td>@student.Name</td>
-                    <td>@student.Email</td>
-                    <td>@student.Category?.Name</td>
-                    <td>@student.SubCategory?.Name</td>
-                    <td>@student.DOB.ToString("dd-MM-yyyy")</td>
-                    <td>@student.Gender</td>
-                    <td>@student.MobileNumber</td>
-                    <td>@student.Address</td>
-                    <td>
-                        <a asp-action="EditStudent" asp-route-id="@student.Id" class="btn btn-warning btn-sm">Edit</a>
-                        <a asp-action="DeleteStudent" asp-route-id="@student.Id"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Are you sure you want to delete this student?');">
-                            Delete
-                        </a>
-                    </td>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Standard</th>
+                    <th>Class</th>
+                    <th>DOB</th>
+                    <th>Gender</th>
+                    <th>Mobile</th>
+                    <th>Address</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var student in Model.StudentList)
+                {
+                    <tr>
+                        <td>@student.Name</td>
+                        <td>@student.Email</td>
+                        <td>@student.Category?.Name</td>
+                        <td>@student.SubCategory?.Name</td>
+                        <td>@student.DOB.ToString("dd-MM-yyyy")</td>
+                        <td>@student.Gender</td>
+                        <td>@student.MobileNumber</td>
+                        <td>@student.Address</td>
+                        <td>
+                            <a asp-action="EditStudent" asp-route-id="@student.Id" class="btn btn-sm btn-warning">✏️</a>
+                            <a asp-action="DeleteStudent" asp-route-id="@student.Id"
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Are you sure you want to delete this student?');">🗑️</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

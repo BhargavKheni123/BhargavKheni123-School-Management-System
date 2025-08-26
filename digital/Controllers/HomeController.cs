@@ -193,6 +193,8 @@ namespace digital.Controllers
                 var user = _context.Users.FirstOrDefault(u => u.Email == email);
                 if (user != null)
                 {
+                    user.IsLoggedIn = false;            
+                    user.CurrentSessionId = null;      
                     user.IsLoggedIn = false;
                     _context.Users.Update(user);
                     _context.SaveChanges();

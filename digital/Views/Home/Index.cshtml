@@ -44,7 +44,7 @@
 
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
- 
+
             <!-- Right navbar links -->
             <ul class="navbar-nav ml-auto">
                 <!-- Navbar Search -->
@@ -130,132 +130,179 @@
             </ul>
         </nav>
         <!-- /.navbar -->
-     
         <!-- Main Sidebar Container -->
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
-            <a href="/" class="brand-link">
-                <span class="brand-text font-weight-light">AdminLTE 3</span>
-            </a>
-            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+            
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar user (optional) -->
+                <a href="/" class="brand-link">
+                    <span class="brand-text font-weight-light">AdminLTE 3</span>
+                </a>
+                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                    @{
+                        var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
+                        var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+                    }
+
+                    <div class="info">
+                        @if (!string.IsNullOrEmpty(userName))
+                        {
+                            <a href="#" class="d-block">@userName</a>
+                        }
+                        else
+                        {
+                            <a href="/Home/Login" class="d-block text-danger">Login</a>
+                        }
+
+                        @if (!string.IsNullOrEmpty(userRole))
+                        {
+                            <span class="text-muted small">(@userRole)</span>
+                        }
+                    </div>
+                </div>
+
                 @{
-                    var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
-                    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
                 }
 
-                <div class="info">
-                    @if (!string.IsNullOrEmpty(userName))
-                    {
-                        <a href="#" class="d-block">@userName</a>
-                    }
-                    else
-                    {
-                        <a href="/Home/Login" class="d-block text-danger">Login</a>
-                    }
-
-                    @if (!string.IsNullOrEmpty(userRole))
-                    {
-                        <span class="text-muted small">(@userRole)</span>
-                    }
+                <!-- SidebarSearch Form -->
+                <div class="form-inline">
+                    <div class="input-group" data-widget="sidebar-search">
+                        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                        <div class="input-group-append">
+                            <button class="btn btn-sidebar">
+                                <i class="fas fa-search fa-fw"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                        <!-- Add icons to the links using the .nav-icon class
+                             with font-awesome or any other icon font library -->
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Dashboard
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a asp-controller="Home" asp-action="Index" class="nav-link @(currentController == "Home" && currentAction == "Index" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Dashboard v1</p>
+                                    </a>
+                                </li>
+
+                                
+                            </ul>
+                        </li>
+                        <li class="nav-item @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "menu-open" : "")">
+                            <a href="#" class="nav-link @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "active" : "")">
+                                <i class="nav-icon fas fa-tachometer-alt"></i>
+                                <p>
+                                    Master
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a asp-controller="Category" asp-action="Category" class="nav-link @(currentAction == "Category" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Standard</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="Subcategory" asp-action="Subcategories" class="nav-link @(currentAction == "Subcategories" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Class</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="TimeTable" asp-action="TimeTableForm" class="nav-link @(currentAction == "TimeTableForm" ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>TimeTableForm</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Student" asp-action="Student" class="nav-link @(currentController == "Student" ? "active" : "")">
+                                <i class="nav-icon fas fa-user-graduate"></i>
+                                <p>Student</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Attendance" asp-action="AttendanceForm" class="nav-link @(currentController == "Attendance" ? "active" : "")">
+                                <i class="nav-icon fas fa-check-square"></i>
+                                <p>Attendance Form</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Home" asp-action="Register" class="nav-link @(currentController == "Home" && (currentAction == "Register" || currentAction == "Register") ? "active" : "")">
+                                <i class="nav-icon fas fa-question-circle"></i>
+                                <p>Register</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Teacher" asp-action="TeacherRegister" class="nav-link @(currentController == "Teacher" && currentAction == "TeacherRegister" ? "active" : "")">
+                                <i class="nav-icon fas fa-chalkboard-teacher"></i>
+                                <p>Teacher Register</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="TeacherMaster" asp-action="TeacherMaster" class="nav-link @(currentController == "TeacherMaster" ? "active" : "")">
+                                <i class="nav-icon fas fa-chalkboard"></i>
+                                <p>Teacher</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Exam" asp-action="CreateExam" class="nav-link @(currentController == "Exam" ? "active" : "")">
+                                <i class="nav-icon fas fa-file-alt"></i>
+                                <p>Exam Page</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="QuestionMaster" asp-action="Create" class="nav-link @(currentController == "QuestionMaster" ? "active" : "")">
+                                <i class="nav-icon fas fa-question-circle"></i>
+                                <p>Create Question</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="StudentExam" asp-action="StudentRank" class="nav-link @(currentController == "StudentExam" && currentAction == "StudentRank" ? "active" : "")">
+                                <i class="nav-icon fas fa-chart-line"></i>
+                                <p>Rank</p>
+                            </a>
+                        </li>
+
+                     </ul>
+                        
+                </nav>
+                <!-- /.sidebar-menu -->
             </div>
 
-            @{
-                var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-                var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
-            }
-
-            <ul class="nav nav-pills nav-sidebar flex-column"
-                data-widget="treeview"
-                role="menu"
-                data-accordion="false">
-
-                <!-- Master Menu -->
-                <li class="nav-item @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "menu-open" : "")">
-                    <a href="#" class="nav-link @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "active" : "")">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>
-                            Master
-                            <i class="right fas fa-angle-left"></i>
-                        </p>
-                    </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a asp-controller="Category" asp-action="Category" class="nav-link @(currentAction == "Category" && currentController == "Category" ? "active" : "")">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Standard</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a asp-controller="Subcategory" asp-action="Subcategories" class="nav-link @(currentAction == "Subcategories" && currentController == "Subcategory" ? "active" : "")">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>Class</p>
-                            </a>
-                        </li>
-
-                        <li class="nav-item">
-                            <a asp-controller="TimeTable" asp-action="TimeTableForm" class="nav-link @(currentAction == "TimeTableForm" && currentController == "TimeTable" ? "active" : "")">
-                                <i class="far fa-circle nav-icon"></i>
-                                <p>TimeTableForm</p>
-                            </a>
-                        </li>
-
-
-                    </ul>
-
-                </li>
-
-                <li class="nav-item">
-                    <a asp-controller="Student" asp-action="Student" class="nav-link @(currentController == "Student" && (currentAction == "Student" || currentAction == "Student") ? "active" : "")">
-                        <p>Student</p>
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a asp-controller="Attendance" asp-action="AttendanceForm" class="nav-link @(currentController == "Attendance" && (currentAction == "AttendanceForm" || currentAction == "AtttendanceForm") ? "active" : "")">
-                        <p>Attendance Form</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="Home" asp-action="Register" class="nav-link @(currentController == "Home" && (currentAction == "Register" || currentAction == "Register") ? "active" : "")">
-                        <p>Register</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="Teacher" asp-action="TeacherRegister" class="nav-link @(currentController == "Teacher" && (currentAction == "TeacherRegister" || currentAction == "TeacherRegister") ? "active" : "")">
-                        <p>TeacherRegister</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="TeacherMaster" asp-action="TeacherMaster" class="nav-link @(currentAction == "TeacherMasterPage" ? "active" : "")">
-                        <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Teacher</p>
-                    </a>
-                </li>
-               
-                <li class="nav-item">
-                    <a asp-controller="Exam" asp-action="CreateExam" class="nav-link @(currentAction == "CreateExam" ? "active" : "")">
-                        <i class="nav-icon fas fa-chalkboard-teacher"></i><p>Exam Page</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a asp-controller="QuestionMaster" asp-action="Create" class="nav-link @(currentAction == "Create" ? "active" : "")">
-                        <p>Create Question</p>
-                    </a>
-                </li>
-
-
-
-            </ul>
             <div class="logout-button" style="position: absolute; bottom: 20px; width: 100%;">
                 <form asp-action="Logout" asp-controller="Home" method="post">
                     <button type="submit" class="btn btn-danger w-100">Logout</button>
                 </form>
             </div>
 
-            
-
-
+            <!-- /.sidebar -->
         </aside>
+
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
             <!-- Content Header (Page header) -->
