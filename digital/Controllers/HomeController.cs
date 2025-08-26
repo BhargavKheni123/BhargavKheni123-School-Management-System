@@ -192,7 +192,8 @@ namespace digital.Controllers
                 var user = _context.Users.FirstOrDefault(u => u.Email == email);
                 if (user != null)
                 {
-                    user.IsLoggedIn = false;  
+                    user.IsLoggedIn = false;            
+                    user.CurrentSessionId = null;      
                     _context.Users.Update(user);
                     _context.SaveChanges();
                 }
@@ -201,6 +202,10 @@ namespace digital.Controllers
             HttpContext.Session.Clear();
             return RedirectToAction("Login", "Home");
         }
+
+
+
+
 
 
 
