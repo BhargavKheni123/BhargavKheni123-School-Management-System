@@ -27,6 +27,7 @@ namespace digital.Controllers
         {
             if (ModelState.IsValid)
             {
+                
                 var teacher = new Teacher
                 {
                     Name = model.Name,
@@ -38,15 +39,17 @@ namespace digital.Controllers
                 };
 
                 _repository.AddTeacher(teacher);
-                _repository.Save();
+                _repository.Save(); 
 
+                
                 var user = new User
                 {
                     Name = teacher.Name,
                     Email = teacher.Email,
                     Password = teacher.Password,
                     Role = "Teacher",
-                    TeacherId = teacher.TeacherId
+                    TeacherId = teacher.TeacherId,
+                    CurrentSessionId = _repository.GetCurrentSessionId().ToString() 
                 };
 
                 _repository.AddUser(user);
@@ -58,6 +61,7 @@ namespace digital.Controllers
             ViewBag.TeacherList = _repository.GetAllTeachers().ToList();
             return View(model);
         }
+
 
         [HttpGet]
         public IActionResult Edit(int id)

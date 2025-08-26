@@ -13,6 +13,11 @@ namespace digital.Repository
             _context = context;
         }
 
+        public int GetCurrentSessionId()
+        {
+            return 1; 
+        }
+
         public IEnumerable<Teacher> GetAllTeachers()
         {
             return _context.Teachers.ToList();

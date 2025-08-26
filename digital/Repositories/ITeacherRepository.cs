@@ -15,7 +15,7 @@ namespace digital.Repository
         User GetUserByTeacherId(int teacherId);
         void UpdateUser(User user);
         void DeleteUser(int teacherId);
-
+        int GetCurrentSessionId();
         void Save();
     }
 }

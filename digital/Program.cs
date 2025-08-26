@@ -99,9 +99,17 @@ app.UseMiddleware<SingleLoginMiddleware>();
 app.UseAuthorization();
 
 // Routes
+// Routes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Register}/{id?}");
+//pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
+
+//app.MapControllerRoute(
+//    name: "export",
+//    pattern: "Home/ExportToExcel",
+//    defaults: new { controller = "Home", action = "ExportToExcel" });
+
 
 
 app.Run();
