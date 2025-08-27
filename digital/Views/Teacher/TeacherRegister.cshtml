@@ -120,6 +120,16 @@
         </form>
     </div>
 
+    <div class="mt-3">
+        <a asp-controller="Teacher" asp-action="ExportTeachersToExcel" class="btn btn-success">
+            Export to Excel
+        </a>
+        <a asp-controller="Teacher" asp-action="ExportTeachersToPdf" class="btn btn-danger">
+            Export to PDF
+        </a>
+    </div>
+
+
     <div class="table-section">
         <h4 class="mb-3">Teacher List</h4>
         <table class="table table-bordered table-striped">
