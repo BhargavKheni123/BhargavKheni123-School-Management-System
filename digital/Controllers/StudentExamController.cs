@@ -205,7 +205,7 @@ namespace digital.Controllers
                 ExamTypes = _repository.GetExamTypesByStudent(HttpContext.Session.GetInt32("StudentId") ?? 0)
                     .Select(x => new SelectListItem { Value = x, Text = x })
                     .ToList(),
-                Dates = new List<SelectListItem>() // Initially empty
+                Dates = new List<SelectListItem>() 
             };
 
             return View(vm);
@@ -215,9 +215,8 @@ namespace digital.Controllers
         public IActionResult StudentResultFilter(ExamResultFilterViewModel model)
         {
             var studentId = HttpContext.Session.GetInt32("StudentId");
-            if (studentId == null) return RedirectToAction("Login", "Account");
+            if (studentId == null) return RedirectToAction("Login", "Home");
 
-            // Repopulate dropdowns
             model.Subjects = _repository.GetSubjects()
                 .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
                 .ToList();
@@ -226,10 +225,10 @@ namespace digital.Controllers
                 .Select(x => new SelectListItem { Value = x, Text = x })
                 .ToList();
 
-
             model.IsSubmitted = true;
+            model.SelectedSubjectId = model.SubjectId ?? 0;
+            model.SelectedExamType = model.ExamType;
 
-            // Fetch result
             var result = _repository.GetFilteredExamResult(
                 studentId.Value,
                 model.SelectedSubjectId,
@@ -244,6 +243,7 @@ namespace digital.Controllers
 
             return View(model);
         }
+
 
 
 

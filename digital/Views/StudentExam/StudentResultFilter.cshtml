@@ -1,40 +1,55 @@
 ﻿@model digital.ViewModels.ExamResultFilterViewModel
 
-
 @{
     ViewData["Title"] = "Exam Result Filter";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Filter Your Exam Results</h2>
-
-    <form asp-action="StudentResultFilter" method="post" class="row g-3">
-        <select asp-for="ExamType" asp-items="Model.ExamTypes" class="form-select">
-            <option value="">-- Select Exam Type --</option>
-        </select>
-
-        <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-select">
-            <option value="">-- Select Subject --</option>
-        </select>
-
-
-
-        <div class="col-12">
-            <button type="submit" class="btn btn-primary">Get Result</button>
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Filter Your Exam Results</h1>
+                </div>
+            </div>
         </div>
-    </form>
+    </div>
 
-    <hr />
+    <div class="content">
+        <div class="container-fluid">
+            <div class="card p-3 shadow-sm">
+                <form asp-action="StudentResultFilter" method="post" class="row g-3">
+                    <div class="col-md-4">
+                        <select asp-for="ExamType" asp-items="Model.ExamTypes" class="form-select">
+                            <option value="">-- Select Exam Type --</option>
+                        </select>
+                    </div>
 
-    @if (Model.ResultViewModel != null)
-    {
-        <!-- reuse your existing result page -->
-        <partial name="ExamResult" model="Model.ResultViewModel" />
-    }
-    else if (Model.IsSubmitted)
-    {
-        <div class="alert alert-warning mt-3">
-            No result found.
+                    <div class="col-md-4">
+                        <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-select">
+                            <option value="">-- Select Subject --</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary w-100">Get Result</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="mt-4">
+                @if (Model.ResultViewModel != null)
+                {
+                    <partial name="Result" model="Model.ResultViewModel" />
+                }
+                else if (Model.IsSubmitted)
+                {
+                    <div class="alert alert-warning mt-3">
+                        No result found.
+                    </div>
+                }
+            </div>
         </div>
-    }
+    </div>
 </div>

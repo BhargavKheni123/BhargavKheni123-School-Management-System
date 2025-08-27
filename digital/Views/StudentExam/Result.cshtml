@@ -1,22 +1,10 @@
 ﻿@model digital.Models.ExamResultViewModel
 @{
     ViewData["Title"] = "Exam Result";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
-
 <div class="container mt-4">
-    <div class="container mt-5 pt-5">
-        <h2>Exam Result</h2>
-        <p>
-            <strong>Student:</strong> @Model.Result.Student.Name |
-            <strong>Std:</strong> @Model.Result.Student.Category.Name |
-            <strong>Subject:</strong> @Model.Result.Subject.Name |
-            <strong>Exam Type:</strong> @Model.Result.ExamType
-        </p>
-        <h4>Score: @Model.Result.CorrectAnswers / @Model.Result.TotalQuestions</h4>
-    </div>
+    
 
     @for (int i = 0; i < Model.Answers.Count; i++)
     {
