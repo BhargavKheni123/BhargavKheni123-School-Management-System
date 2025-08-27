@@ -122,5 +122,73 @@ namespace digital.Repository
 
             return studentRanks;
         }
+
+        public StudentExamResult GetFilteredExamResult(int studentId, int? subjectId, string examType, DateTime? examDate)
+        {
+            return _context.StudentExamResults
+                .Where(r => r.StudentId == studentId &&
+                            (subjectId == null || r.SubjectId == subjectId) &&
+                            (string.IsNullOrEmpty(examType) || r.ExamType == examType) &&
+                            (examDate == null || r.SubmittedOn.Date == examDate.Value.Date))
+                .OrderByDescending(r => r.SubmittedOn)
+                .FirstOrDefault();
+        }
+
+        public IEnumerable<string> GetExamTypesByStudent(int studentId)
+        {
+            return _context.StudentExamResults
+                .Where(r => r.StudentId == studentId)
+                .Select(r => r.ExamType)
+                .Distinct()
+                .ToList();
+        }
+
+        public IEnumerable<DateTime> GetExamDatesByStudent(int studentId)
+        {
+            return _context.StudentExamResults
+                .Where(r => r.StudentId == studentId)
+                .Select(r => r.SubmittedOn.Date)
+                .Distinct()
+                .ToList();
+        }
+
+        public ExamResultViewModel BuildExamResultViewModel(int resultId)
+        {
+            var result = _context.StudentExamResults
+                .Include(r => r.Student)
+                    .ThenInclude(s => s.Category)
+                .Include(r => r.Subject)
+                .FirstOrDefault(r => r.Id == resultId);
+
+            if (result == null) return null;
+
+            var answers = _context.StudentAnswers
+                .Where(a => a.ResultId == resultId)
+                .Include(a => a.Question)
+                    .ThenInclude(q => q.AnswerOptions)
+                .Select(a => new StudentAnswer
+                {
+                    Id = a.Id,
+                    QuestionId = a.QuestionId,
+                    Question = a.Question,
+                    SelectedAnswer = a.SelectedAnswer
+                }).ToList();
+
+            return new ExamResultViewModel
+            {
+                Result = result,
+                Answers = answers
+            };
+        }
+
+        public async Task<List<DateTime>> GetExamDatesByStudentAsync(int studentId, int subjectId, string examType)
+        {
+            return await _context.QuestionMaster
+                .Where(q => q.SubjectId == subjectId && q.ExamType == examType)
+                .Select(q => q.ExamDate.Value.Date)
+                .Distinct()
+                .ToListAsync();
+        }
+
     }
 }

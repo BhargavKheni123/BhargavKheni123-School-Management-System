@@ -23,6 +23,13 @@
             </form>
         </div>
 
+        <div class="mb-3 text-end">
+           
+            <a asp-controller="Category" asp-action="ExportCategoriesToExcel" class="btn btn-success me-2">Export to Excel</a>
+            <a asp-controller="Category" asp-action="ExportCategoriesToPdf" class="btn btn-danger">Export to PDF</a>
+        </div>
+
+
         <div class="card shadow-sm rounded">
             <div class="table-responsive">
                 <table class="table table-bordered text-center mb-0">

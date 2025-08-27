@@ -216,6 +216,16 @@
                                     </div>
                                 </form>
 
+                                <div class="mb-3 text-end">
+                                    <a asp-controller="TimeTable" asp-action="ExportTimeTableToExcel" class="btn btn-success me-2">
+                                        Export to Excel
+                                    </a>
+                                    <a asp-controller="TimeTable" asp-action="ExportTimeTableToPdf" class="btn btn-danger">
+                                        Export to PDF
+                                    </a>
+
+                                </div>
+
 
                                 <!-- Table -->
                                 <div class="card mt-5 shadow-sm border-0">

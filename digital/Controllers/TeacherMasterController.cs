@@ -2,6 +2,11 @@
 using digital.Models;
 using digital.Repositories;
 using Microsoft.AspNetCore.Mvc;
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System.IO;
 
 namespace digital.Controllers
 {
@@ -101,6 +106,99 @@ namespace digital.Controllers
         {
             _teacherMasterRepository.Delete(id);
             return RedirectToAction("TeacherMaster");
+        }
+
+        public IActionResult ExportTeacherMasterToExcel()
+        {
+            var data = _teacherMasterRepository.GetAllWithRelations();
+
+            using (var workbook = new XLWorkbook())
+            {
+                var worksheet = workbook.Worksheets.Add("TeacherAssignments");
+
+                
+                worksheet.Cell(1, 1).Value = "Standard";
+                worksheet.Cell(1, 2).Value = "Class";
+                worksheet.Cell(1, 3).Value = "Subject";
+                worksheet.Cell(1, 4).Value = "Teacher";
+                worksheet.Cell(1, 5).Value = "Assigned Date";
+
+                int row = 2;
+                foreach (var item in data)
+                {
+                    worksheet.Cell(row, 1).Value = item.Category?.Name ?? "";
+                    worksheet.Cell(row, 2).Value = item.SubCategory?.Name ?? "";
+                    worksheet.Cell(row, 3).Value = item.Subject?.Name ?? "";
+                    worksheet.Cell(row, 4).Value = item.Teacher?.Name ?? "";
+                    worksheet.Cell(row, 5).Value = item.CreatedDate.ToString("dd-MM-yyyy");
+                    row++;
+                }
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return File(stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        "TeacherAssignments.xlsx");
+                }
+            }
+        }
+
+        public IActionResult ExportTeacherMasterToPdf()
+        {
+            var data = _teacherMasterRepository.GetAllWithRelations();
+
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Size(PageSizes.A4);
+
+                    page.Header()
+                        .Text("Teacher Assignment Report")
+                        .FontSize(18)
+                        .Bold()
+                        .AlignCenter();
+
+                    page.Content()
+                        .Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.ConstantColumn(100); 
+                                columns.ConstantColumn(100); 
+                                columns.ConstantColumn(100);
+                                columns.ConstantColumn(120); 
+                                columns.ConstantColumn(100); 
+                            });
+
+                            
+                            table.Header(header =>
+                            {
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Standard").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Class").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Subject").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Teacher").Bold();
+                                header.Cell().Background(Colors.Grey.Lighten2).Padding(5).Text("Assigned Date").Bold();
+                            });
+
+                            
+                            foreach (var item in data)
+                            {
+                                table.Cell().Padding(5).Text(item.Category?.Name ?? "");
+                                table.Cell().Padding(5).Text(item.SubCategory?.Name ?? "");
+                                table.Cell().Padding(5).Text(item.Subject?.Name ?? "");
+                                table.Cell().Padding(5).Text(item.Teacher?.Name ?? "");
+                                table.Cell().Padding(5).Text(item.CreatedDate.ToString("dd-MM-yyyy"));
+                            }
+                        });
+                });
+            });
+
+            var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            return File(stream.ToArray(), "application/pdf", "TeacherAssignments.pdf");
         }
 
     }

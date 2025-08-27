@@ -11,6 +11,7 @@ using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.IO;
 
+
 namespace digital.Controllers
 {
     public class StudentController : Controller
@@ -353,6 +354,200 @@ namespace digital.Controllers
 
             return File(pdfBytes, "application/pdf", fileName);
         }
+
+
+        public async Task<IActionResult> ExportStudentExamResultExcel(int studentId)
+        {
+            
+            var allSubjects = await _context.Subjects.ToListAsync();
+
+            
+            var results = await (from r in _context.StudentExamResults
+                                 join s in _context.Subjects on r.SubjectId equals s.Id
+                                 where r.StudentId == studentId
+                                 select new
+                                 {
+                                     SubjectName = s.Name,
+                                     r.TotalQuestions,
+                                     r.CorrectAnswers
+                                 }).ToListAsync();
+
+            using var workbook = new XLWorkbook();
+            var ws = workbook.Worksheets.Add("Exam Results");
+
+         
+            ws.Cell(1, 1).Value = "Subject";
+            int col = 2;
+            foreach (var subj in allSubjects)
+            {
+                ws.Cell(1, col).Value = subj.Name;
+                col++;
+            }
+
+            
+            ws.Cell(2, 1).Value = "Total Marks";
+            col = 2;
+            foreach (var subj in allSubjects)
+            {
+                var res = results.Where(r => r.SubjectName == subj.Name).ToList();
+                if (res.Any())
+                {
+                    ws.Cell(2, col).Value = res.Sum(x => x.TotalQuestions);
+                }
+                else
+                {
+                    ws.Cell(2, col).Value = "Not Attended";
+                }
+                col++;
+            }
+
+
+            ws.Cell(3, 1).Value = "Correct Answers";
+            col = 2;
+            foreach (var subj in allSubjects)
+            {
+                var res = results.Where(r => r.SubjectName == subj.Name).ToList();
+                if (res.Any())
+                {
+                    ws.Cell(3, col).Value = res.Sum(x => x.CorrectAnswers);
+                }
+                else
+                {
+                    ws.Cell(3, col).Value = "Not Attended";
+                }
+                col++;
+            }
+
+           
+            ws.Cell(4, 1).Value = "Percentage";
+            col = 2;
+            foreach (var subj in allSubjects)
+            {
+                var res = results.Where(r => r.SubjectName == subj.Name).ToList();
+                if (res.Any())
+                {
+                    int total = res.Sum(x => x.TotalQuestions);
+                    int correct = res.Sum(x => x.CorrectAnswers);
+                    double percentage = total == 0 ? 0 : (correct * 100.0 / total);
+                    ws.Cell(4, col).Value = $"{percentage:F2}%";
+
+                    
+                    if (percentage < 35)
+                    {
+                        ws.Cell(4, col).Style.Fill.BackgroundColor = XLColor.Red;
+                        ws.Cell(4, col).Style.Font.FontColor = XLColor.White;
+                    }
+                }
+                else
+                {
+                    ws.Cell(4, col).Value = "Not Attended";
+                }
+                col++;
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            stream.Position = 0;
+
+            string fileName = $"Student_{studentId}_ExamResults.xlsx";
+            return File(stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        fileName);
+        }
+
+        public async Task<IActionResult> ExportStudentExamResultPdf(int studentId)
+        {
+            var allSubjects = await _context.Subjects.ToListAsync();
+
+            var results = await (from r in _context.StudentExamResults
+                                 join s in _context.Subjects on r.SubjectId equals s.Id
+                                 where r.StudentId == studentId
+                                 select new
+                                 {
+                                     SubjectName = s.Name,
+                                     r.TotalQuestions,
+                                     r.CorrectAnswers
+                                 }).ToListAsync();
+
+            
+            var data = new Dictionary<string, List<string>>();
+
+            data["Total Marks"] = new List<string>();
+            data["Correct Answers"] = new List<string>();
+            data["Percentage"] = new List<string>();
+
+            foreach (var subj in allSubjects)
+            {
+                var res = results.Where(r => r.SubjectName == subj.Name).ToList();
+                if (res.Any())
+                {
+                    int total = res.Sum(x => x.TotalQuestions);
+                    int correct = res.Sum(x => x.CorrectAnswers);
+                    double percentage = total == 0 ? 0 : (correct * 100.0 / total);
+
+                    data["Total Marks"].Add(total.ToString());
+                    data["Correct Answers"].Add(correct.ToString());
+                    data["Percentage"].Add($"{percentage:F2}%");
+                }
+                else
+                {
+                    data["Total Marks"].Add("Not Attended");
+                    data["Correct Answers"].Add("Not Attended");
+                    data["Percentage"].Add("Not Attended");
+                }
+            }
+
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Header().Text($"Exam Results for Student {studentId}").Bold().FontSize(16);
+                    page.Content().Table(table =>
+                    {
+                        
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(150);
+                            foreach (var subj in allSubjects)
+                                columns.RelativeColumn();
+                        });
+
+                        
+                        table.Cell().Text("Subject").Bold();
+                        foreach (var subj in allSubjects)
+                            table.Cell().Text(subj.Name).Bold();
+
+                        
+                        foreach (var rowKey in data.Keys)
+                        {
+                            table.Cell().Text(rowKey).Bold();
+
+                            for (int i = 0; i < allSubjects.Count; i++)
+                            {
+                                string value = data[rowKey][i];
+                                if (rowKey == "Percentage" && double.TryParse(value.Replace("%", ""), out double perc) && perc < 35)
+                                {
+                                    table.Cell().Background(Colors.Red.Medium).Padding(5).Text(value).FontColor(Colors.White);
+                                }
+                                else
+                                {
+                                    table.Cell().Padding(5).Text(value);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+
+            using var stream = new MemoryStream();
+            pdf.GeneratePdf(stream);
+            stream.Position = 0;
+
+            string fileName = $"Student_{studentId}_ExamResults.pdf";
+            return File(stream.ToArray(), "application/pdf", fileName);
+        }
+
 
     }
 }

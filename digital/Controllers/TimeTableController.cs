@@ -1,10 +1,18 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using digital.Interfaces;
 using digital.Models;
 using digital.Repositories;
 using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System.IO;
+
+
 
 namespace digital.Controllers
 {
@@ -233,5 +241,98 @@ namespace digital.Controllers
             }
             return RedirectToAction("TimeTableForm");
         }
+
+        public IActionResult ExportTimeTableToExcel()
+        {
+            var timetables = _context.TimeTables
+                .Include(t => t.Teacher)
+                .ToList();
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("TimeTables");
+
+            
+            worksheet.Cell(1, 1).Value = "Std";
+            worksheet.Cell(1, 2).Value = "Class";
+            worksheet.Cell(1, 3).Value = "Subject";
+            worksheet.Cell(1, 4).Value = "Start Time";
+            worksheet.Cell(1, 5).Value = "End Time";
+            worksheet.Cell(1, 6).Value = "Teacher";
+
+          
+            for (int i = 0; i < timetables.Count; i++)
+            {
+                var t = timetables[i];
+                worksheet.Cell(i + 2, 1).Value = t.Std;
+                worksheet.Cell(i + 2, 2).Value = t.Class;
+                worksheet.Cell(i + 2, 3).Value = t.Subject;
+                worksheet.Cell(i + 2, 4).Value = $"{t.StartHour:D2}:{t.StartMinute:D2}";
+                worksheet.Cell(i + 2, 5).Value = $"{t.EndHour:D2}:{t.EndMinute:D2}";
+                worksheet.Cell(i + 2, 6).Value = t.Teacher?.Name ?? "-";
+            }
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var content = stream.ToArray();
+            return File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "TimeTables.xlsx");
+        }
+
+        public IActionResult ExportTimeTableToPdf()
+        {
+            var timetables = _context.TimeTables
+                .Include(t => t.Teacher)
+                .ToList();
+
+            var pdf = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.Header().Text("TimeTable List").SemiBold().FontSize(20).AlignCenter();
+                    page.Content().Table(table =>
+                    {
+                       
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(1);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                            columns.RelativeColumn(2);
+                        });
+
+                      
+                        table.Header(header =>
+                        {
+                            header.Cell().Text("Std").Bold();
+                            header.Cell().Text("Class").Bold();
+                            header.Cell().Text("Subject").Bold();
+                            header.Cell().Text("Start Time").Bold();
+                            header.Cell().Text("End Time").Bold();
+                            header.Cell().Text("Teacher").Bold();
+                        });
+
+                      
+                        foreach (var t in timetables)
+                        {
+                            table.Cell().Text(t.Std);
+                            table.Cell().Text(t.Class);
+                            table.Cell().Text(t.Subject);
+                            table.Cell().Text($"{t.StartHour:D2}:{t.StartMinute:D2}");
+                            table.Cell().Text($"{t.EndHour:D2}:{t.EndMinute:D2}");
+                            table.Cell().Text(t.Teacher?.Name ?? "-");
+                        }
+                    });
+                });
+            });
+
+            var pdfBytes = pdf.GeneratePdf();
+            return File(pdfBytes, "application/pdf", "TimeTables.pdf");
+        }
+
     }
 }

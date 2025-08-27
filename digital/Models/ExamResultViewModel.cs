@@ -4,5 +4,6 @@
     {
         public StudentExamResult Result { get; set; }
         public List<StudentAnswer> Answers { get; set; }
+
     }
 }

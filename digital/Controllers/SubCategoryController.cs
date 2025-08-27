@@ -3,6 +3,11 @@ using digital.Interfaces;
 using digital.Models;
 using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System.IO;
 
 namespace digital.Controllers
 {
@@ -25,7 +30,7 @@ namespace digital.Controllers
             _mapper = mapper;
         }
 
-        // List + Create
+        
         [HttpGet]
         public IActionResult Subcategories()
         {
@@ -59,7 +64,7 @@ namespace digital.Controllers
             return View(viewModel);
         }
 
-        // Edit GET
+        
         [HttpGet]
         public async Task<IActionResult> EditSub(int id)
         {
@@ -76,7 +81,7 @@ namespace digital.Controllers
             return View(viewModel);
         }
 
-        // Edit POST
+        
         [HttpPost]
         public async Task<IActionResult> EditSub(SubCategoryViewModel model)
         {
@@ -96,7 +101,7 @@ namespace digital.Controllers
             return View(model);
         }
 
-        // Delete
+       
         [HttpGet]
         public async Task<IActionResult> DeleteSub(int id)
         {
@@ -110,7 +115,7 @@ namespace digital.Controllers
             return RedirectToAction("Subcategories");
         }
 
-        // JSON: Get subcategories by CategoryId
+        
         [HttpGet]
         public JsonResult GetSubCategories(int categoryId)
         {
@@ -121,5 +126,100 @@ namespace digital.Controllers
                 .ToList();
             return Json(list);
         }
+
+        [HttpGet]
+        public IActionResult ExportSubCategoriesToExcel()
+        {
+            var subCategories = _subCategoryRepository.GetSubCategoriesWithCategory();
+
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("SubCategories");
+
+           
+            worksheet.Cell(1, 1).Value = "No.";
+            worksheet.Cell(1, 2).Value = "Standard";
+            worksheet.Cell(1, 3).Value = "Class";
+
+            int row = 2, counter = 1;
+
+            foreach (var sc in subCategories)
+            {
+                worksheet.Cell(row, 1).Value = counter++;
+                worksheet.Cell(row, 2).Value = sc.Category?.Name ?? "";
+                worksheet.Cell(row, 3).Value = sc.Name ?? "";
+                row++;
+            }
+
+            worksheet.Columns().AdjustToContents();
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var content = stream.ToArray();
+
+            return File(content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "SubCategories.xlsx");
+        }
+
+        [HttpGet]
+        public IActionResult ExportSubCategoriesToPdf()
+        {
+            var subCategories = _subCategoryRepository.GetSubCategoriesWithCategory();
+            int counter = 1;
+            var fileName = $"SubCategories_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+            var pdfBytes = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+
+                    page.Header().Column(col =>
+                    {
+                        col.Spacing(5);
+                        col.Item().AlignCenter().Text("Class Report")
+                            .FontSize(18).SemiBold();
+                        col.Item().LineHorizontal(1);
+                    });
+
+                   
+                    page.Content().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1); 
+                            columns.RelativeColumn(3); 
+                            columns.RelativeColumn(3); 
+                        });
+
+                        void HeaderCell(string text) =>
+                            table.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text(text).SemiBold();
+
+                        HeaderCell("No.");
+                        HeaderCell("Standard");
+                        HeaderCell("Class");
+
+                        foreach (var sc in subCategories)
+                        {
+                            table.Cell().Padding(3).Text(counter++.ToString());
+                            table.Cell().Padding(3).Text(sc.Category?.Name ?? "");
+                            table.Cell().Padding(3).Text(sc.Name ?? "");
+                        }
+                    });
+
+                    
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Page ");
+                        x.CurrentPageNumber();
+                        x.Span(" of ");
+                        x.TotalPages();
+                    });
+                });
+            }).GeneratePdf();
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
     }
 }

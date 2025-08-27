@@ -113,9 +113,10 @@ app.MapControllerRoute(
     //pattern: "{controller=Home}/{action=Index}/{id?}");
     //pattern: "{controller=Home}/{action=Register}/{id?}");
     //pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
-    //pattern: "{controller=Home}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Login}/{id?}");
     //pattern: "{controller=Student}/{action=Student}/{id?}");
-    pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
+    //pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
+    //pattern: "{controller=SubCategory}/{action=Subcategories}/{id?}");
 
 //app.MapControllerRoute(
 //    name: "export",

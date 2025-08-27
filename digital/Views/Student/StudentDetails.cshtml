@@ -7,8 +7,21 @@
     int currentMonth = DateTime.Now.Month;
 }
 
+
+
+
 <div class="container mt-4" style="margin-left: 250px; margin-right: 20px;">
     <h3 class="mb-4">Student Details</h3>
+
+
+    <div class="mb-3 text-end">
+        <a asp-action="ExportStudentExamResultExcel" asp-route-studentId="@Model.Id" class="btn btn-success">
+            Export To Excel
+        </a>
+        <a asp-action="ExportStudentExamResultPdf" asp-route-studentId="@Model.Id" class="btn btn-danger">
+            Export To PDF
+        </a>
+    </div>
 
     <dl class="row">
         <dt class="col-sm-3">Name</dt>

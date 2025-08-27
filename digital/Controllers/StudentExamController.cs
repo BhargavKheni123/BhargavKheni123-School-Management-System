@@ -1,17 +1,22 @@
 ﻿using digital.Models;
-using digital.ViewModels;
 using digital.Repository;
+using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using digital.ViewModels;
 
 namespace digital.Controllers
 {
     public class StudentExamController : Controller
     {
         private readonly IStudentExamRepository _repository;
+        private readonly IStudentExamRepository _examRepo;
 
-        public StudentExamController(IStudentExamRepository repository)
+        public StudentExamController(IStudentExamRepository repository, IStudentExamRepository examRepo)
+            
         {
             _repository = repository;
+            _examRepo = examRepo;
         }
 
         public IActionResult Index()
@@ -188,5 +193,60 @@ namespace digital.Controllers
 
             return Json(subCategories);
         }
+
+        [HttpGet]
+        public IActionResult StudentResultFilter()
+        {
+            var vm = new ExamResultFilterViewModel
+            {
+                Subjects = _repository.GetSubjects()
+                    .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
+                    .ToList(),
+                ExamTypes = _repository.GetExamTypesByStudent(HttpContext.Session.GetInt32("StudentId") ?? 0)
+                    .Select(x => new SelectListItem { Value = x, Text = x })
+                    .ToList(),
+                Dates = new List<SelectListItem>() // Initially empty
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        public IActionResult StudentResultFilter(ExamResultFilterViewModel model)
+        {
+            var studentId = HttpContext.Session.GetInt32("StudentId");
+            if (studentId == null) return RedirectToAction("Login", "Account");
+
+            // Repopulate dropdowns
+            model.Subjects = _repository.GetSubjects()
+                .Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name })
+                .ToList();
+
+            model.ExamTypes = _repository.GetExamTypesByStudent(studentId.Value)
+                .Select(x => new SelectListItem { Value = x, Text = x })
+                .ToList();
+
+
+            model.IsSubmitted = true;
+
+            // Fetch result
+            var result = _repository.GetFilteredExamResult(
+                studentId.Value,
+                model.SelectedSubjectId,
+                model.SelectedExamType,
+                string.IsNullOrEmpty(model.SelectedExamDate) ? (DateTime?)null : DateTime.Parse(model.SelectedExamDate)
+            );
+
+            if (result != null)
+            {
+                model.ResultViewModel = _repository.BuildExamResultViewModel(result.Id);
+            }
+
+            return View(model);
+        }
+
+
+
+
     }
 }
