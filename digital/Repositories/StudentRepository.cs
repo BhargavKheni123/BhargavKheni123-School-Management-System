@@ -33,5 +33,10 @@ namespace digital.Repositories
             _context.Student.Add(student);
             _context.SaveChanges();
         }
+        public int GetTotalStudents()
+        {
+            return _context.Student.Count();
+        }
+
     }
 }

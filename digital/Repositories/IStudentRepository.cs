@@ -9,5 +9,6 @@ namespace digital.Interfaces
         List<Student> GetAllStudentsWithCategoryAndSubCategory();
 
         void AddStudent(Student student);
+        int GetTotalStudents();
     }
 }

@@ -35,7 +35,6 @@
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
-    <div class="wrapper">
 
         <!-- Preloader -->
         <div class="preloader flex-column justify-content-center align-items-center">
@@ -131,61 +130,48 @@
         </nav>
         <!-- /.navbar -->
         <!-- Main Sidebar Container -->
+
+    <div class="wrapper">
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
+     
+          <div class="sidebar">
             <!-- Brand Logo -->
-            
+            <a href="/" class="brand-link">
+                <span class="brand-text font-weight-light">AdminLTE 3</span>
+            </a>
+            @{
+                var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+                var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+            }
 
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Sidebar user (optional) -->
-                <a href="/" class="brand-link">
-                    <span class="brand-text font-weight-light">AdminLTE 3</span>
-                </a>
-                <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-                    @{
-                        var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
-                        var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
-                    }
 
-                    <div class="info">
-                        @if (!string.IsNullOrEmpty(userName))
-                        {
-                            <a href="#" class="d-block">@userName</a>
-                        }
-                        else
-                        {
-                            <a href="/Home/Login" class="d-block text-danger">Login</a>
-                        }
-
-                        @if (!string.IsNullOrEmpty(userRole))
-                        {
-                            <span class="text-muted small">(@userRole)</span>
-                        }
-                    </div>
-                </div>
-
+            <div class="user-panel mt-3 pb-3 mb-3 d-flex">
                 @{
-                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
-                    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+                    var userName = HttpContextAccessor.HttpContext.Session.GetString("UserName");
+                    var userRole = HttpContextAccessor.HttpContext.Session.GetString("UserRole");
                 }
 
-                <!-- SidebarSearch Form -->
-                <div class="form-inline">
-                    <div class="input-group" data-widget="sidebar-search">
-                        <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
-                        <div class="input-group-append">
-                            <button class="btn btn-sidebar">
-                                <i class="fas fa-search fa-fw"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <div class="info">
+                    @if (!string.IsNullOrEmpty(userName))
+                    {
+                        <a href="#" class="d-block">@userName</a>
+                    }
+                    else
+                    {
+                        <a href="/Home/Login" class="d-block text-danger">Login</a>
+                    }
 
-                <!-- Sidebar Menu -->
-                <nav class="mt-2">
+                    @if (!string.IsNullOrEmpty(userRole))
+                    {
+                        <span class="text-muted small">(@userRole)</span>
+                    }
+                </div>
+            </div>
+
+            <ul class="nav">
+               
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-                        <!-- Add icons to the links using the .nav-icon class
-                             with font-awesome or any other icon font library -->
+
                         <li class="nav-item">
                             <a href="#" class="nav-link">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -202,7 +188,7 @@
                                     </a>
                                 </li>
 
-                                
+
                             </ul>
                         </li>
                         <li class="nav-item @(currentController == "Home" && (currentAction == "Index" || currentAction == "Index2") ? "menu-open" : "")">
@@ -287,20 +273,18 @@
                                 <p>Rank</p>
                             </a>
                         </li>
+                    </ul>
+                    
 
-                     </ul>
-                        
-                </nav>
-                <!-- /.sidebar-menu -->
+                
+              </ul>
             </div>
 
-            <div class="logout-button" style="position: absolute; bottom: 20px; width: 100%;">
-                <form asp-action="Logout" asp-controller="Home" method="post">
-                    <button type="submit" class="btn btn-danger w-100">Logout</button>
-                </form>
-            </div>
-
-            <!-- /.sidebar -->
+                <div class="logout-button" style="position: absolute; bottom: 20px; width: 100%;">
+                    <form asp-action="Logout" asp-controller="Home" method="post">
+                        <button type="submit" class="btn btn-danger w-100">Logout</button>
+                    </form>
+                </div>
         </aside>
 
         <!-- Content Wrapper. Contains page content -->
@@ -331,14 +315,15 @@
                             <!-- small box -->
                             <div class="small-box bg-info">
                                 <div class="inner">
-                                    <h3>150</h3>
-
-                                    <p>New Orders</p>
+                                    <h3>@ViewBag.TotalStudents</h3>
+                                    <p>Total Students Registered</p>
                                 </div>
                                 <div class="icon">
-                                    <i class="ion ion-bag"></i>
+                                    <i class="ion ion-person-add"></i>
                                 </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                <a href="@Url.Action("Student", "Student")" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
                             </div>
                         </div>
                         <!-- ./col -->
@@ -346,14 +331,15 @@
                             <!-- small box -->
                             <div class="small-box bg-success">
                                 <div class="inner">
-                                    <h3>53<sup style="font-size: 20px">%</sup></h3>
-
-                                    <p>Bounce Rate</p>
+                                    <h3>@ViewBag.AttendancePercentage<sup style="font-size: 20px">%</sup></h3>
+                                    <p>Overall Attendance</p>
                                 </div>
                                 <div class="icon">
                                     <i class="ion ion-stats-bars"></i>
                                 </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                <a href="@Url.Action("AttendanceForm", "Attendance")" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
                             </div>
                         </div>
                         <!-- ./col -->
@@ -361,14 +347,15 @@
                             <!-- small box -->
                             <div class="small-box bg-warning">
                                 <div class="inner">
-                                    <h3>44</h3>
-
-                                    <p>User Registrations</p>
+                                    <h3>@ViewBag.TotalTeachers</h3>
+                                    <p>Total Teachers Registered</p>
                                 </div>
                                 <div class="icon">
                                     <i class="ion ion-person-add"></i>
                                 </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                <a href="@Url.Action("TeacherRegister", "Teacher")" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
                             </div>
                         </div>
                         <!-- ./col -->
@@ -376,14 +363,15 @@
                             <!-- small box -->
                             <div class="small-box bg-danger">
                                 <div class="inner">
-                                    <h3>65</h3>
-
-                                    <p>Unique Visitors</p>
+                                    <h3>@ViewBag.UpcomingExamTitle</h3>
+                                    <p>Upcoming Exam @ViewBag.UpcomingExamDate</p>
                                 </div>
                                 <div class="icon">
                                     <i class="ion ion-pie-graph"></i>
                                 </div>
-                                <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                                <a href="@Url.Action("CreateExam", "Exam")" class="small-box-footer">
+                                    More info <i class="fas fa-arrow-circle-right"></i>
+                                </a>
                             </div>
                         </div>
                         <!-- ./col -->

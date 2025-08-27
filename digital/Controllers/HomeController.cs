@@ -21,13 +21,17 @@ namespace digital.Controllers
         private readonly IStudentRepository _studentRepository;
         private readonly ITeacherRepository _teacherRepository;
         private readonly IConfiguration _configuration;
+        private readonly IAttendanceRepository _attendanceRepository;
+        private readonly IExamRepository _examRepository;
 
         public HomeController(ILogger<HomeController> logger,
                               ApplicationDbContext context,
                               IUserRepository userRepository,
                               IStudentRepository studentRepository,
                               ITeacherRepository teacherRepository,
-                              IConfiguration configuration)
+                              IConfiguration configuration,
+                              IAttendanceRepository attendanceRepository,
+                              IExamRepository examRepository)
         {
             _logger = logger;
             _context = context;
@@ -35,6 +39,8 @@ namespace digital.Controllers
             _studentRepository = studentRepository;
             _teacherRepository = teacherRepository;
             _configuration = configuration;
+            _attendanceRepository = attendanceRepository;
+            _examRepository = examRepository;
         }
 
         #region JWT Helper
@@ -207,6 +213,69 @@ namespace digital.Controllers
             return RedirectToAction("Login", "Home");
         }
 
+
+        [HttpPost]
+        public IActionResult ImportFromExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please select a valid Excel file.";
+                return RedirectToAction("Register");
+            }
+
+            using (var stream = new MemoryStream())
+            {
+                file.CopyTo(stream);
+                using (var workbook = new XLWorkbook(stream))
+                {
+                    var worksheet = workbook.Worksheet("Users"); 
+                    var rows = worksheet.RowsUsed().Skip(1); 
+
+                    foreach (var row in rows)
+                    {
+                        var name = row.Cell(2).GetValue<string>();
+                        var email = row.Cell(3).GetValue<string>();
+                        var role = row.Cell(4).GetValue<string>();
+
+                        var existingUser = _userRepository.GetUserByEmail(email);
+                        if (existingUser != null) continue;
+
+                        var user = new User
+                        {
+                            Name = name,
+                            Email = email,
+                            Password = "12345", 
+                            Role = role
+                        };
+
+                        _userRepository.AddUser(user);
+
+                        if (role == "Student")
+                        {
+                            var student = new Student
+                            {
+                                Name = name,
+                                Email = email,
+                                Password = "12345",
+                                CreatedDate = DateTime.Now,
+                                CategoryId = 1,
+                                SubCategoryId = 1,
+                                DOB = DateTime.Now,
+                                Gender = "Not Set",
+                                MobileNumber = "0000000000",
+                                Address = "Not Provided"
+                            };
+
+                            _studentRepository.AddStudent(student);
+                        }
+                    }
+                }
+            }
+
+            TempData["Success"] = "Users imported successfully.";
+            return RedirectToAction("Register");
+        }
+
         #endregion
         public IActionResult ExportToExcel()
         {
@@ -243,12 +312,12 @@ namespace digital.Controllers
                     var s = students.FirstOrDefault(x => x.Id == u.StudentId.Value);
                     if (s != null)
                     {
-                        worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
-                        worksheet.Cell(row, 6).Value = s.Gender;
+                        //worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
+                        //worksheet.Cell(row, 6).Value = s.Gender;
                         worksheet.Cell(row, 7).Value = s.Category?.Name ?? s.CategoryId.ToString();
                         worksheet.Cell(row, 8).Value = s.SubCategory?.Name ?? s.SubCategoryId.ToString();
                         worksheet.Cell(row, 9).Value = s.MobileNumber;
-                        worksheet.Cell(row, 10).Value = s.Address;
+                        //worksheet.Cell(row, 10).Value = s.Address;
                     }
                 }
                 else if (u.Role == "Teacher" && u.TeacherId.HasValue)
@@ -282,15 +351,43 @@ namespace digital.Controllers
         public IActionResult Index()
         {
             var email = HttpContext.Session.GetString("UserEmail");
-            if (string.IsNullOrEmpty(email))
+            ViewBag.UserName = string.IsNullOrEmpty(email) ? "Email not in session" : $"Welcome, {email}";
+
+            ViewBag.TotalStudents = _studentRepository.GetAllStudentsWithCategoryAndSubCategory().Count;
+
+            ViewBag.TotalTeachers = _teacherRepository.GetAllTeachers().Count();
+
+            var allAttendance = _context.Attendance.ToList();
+            if (allAttendance.Count > 0)
             {
-                ViewBag.UserName = "Email not in session";
-                return View();
+                int presentCount = allAttendance.Count(a => a.Attend == "Yes");
+                double percentage = (double)presentCount / allAttendance.Count * 100;
+                ViewBag.AttendancePercentage = Math.Round(percentage, 2);
+            }
+            else
+            {
+                ViewBag.AttendancePercentage = 0;
             }
 
-            ViewBag.UserName = $"Welcome, {email}";
+            var upcomingExam = _examRepository.GetAllExams()
+                .Where(e => e.ExamDate != null && e.ExamDate >= DateTime.Now)
+                .OrderBy(e => e.ExamDate)
+                .FirstOrDefault();
+
+            if (upcomingExam != null)
+            {
+                ViewBag.UpcomingExamTitle = upcomingExam.ExamTitle;
+                ViewBag.UpcomingExamDate = upcomingExam.ExamDate?.ToString("dd MMM yyyy");
+            }
+            else
+            {
+                ViewBag.UpcomingExamTitle = "No Upcoming Exam";
+                ViewBag.UpcomingExamDate = "";
+            }
+
             return View();
         }
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
