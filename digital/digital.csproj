@@ -31,6 +31,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="QuestPDF" Version="2025.7.0" />
    <Content Remove="wwwroot\build\config\.eslintrc.json" />
    <Content Update="wwwroot\build\config\postcss.config.js" ExcludeFromPublish="true" />
 	  <None Update="wwwroot/build/config/postcss.config.js">

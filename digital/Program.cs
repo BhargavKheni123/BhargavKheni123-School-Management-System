@@ -8,7 +8,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Infrastructure;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +76,12 @@ builder.Services.AddSingleton<JwtTokenHelper>();
 // Controllers + Views
 builder.Services.AddControllersWithViews();
 
+
+QuestPDF.Settings.License = LicenseType.Community;
+
+
+
+
 var app = builder.Build();
 
 // ====== MIDDLEWARE PIPELINE ======
@@ -102,9 +110,12 @@ app.UseAuthorization();
 // Routes
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    //pattern: "{controller=Home}/{action=Index}/{id?}");
     //pattern: "{controller=Home}/{action=Register}/{id?}");
     //pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
+    //pattern: "{controller=Home}/{action=Login}/{id?}");
+    //pattern: "{controller=Student}/{action=Student}/{id?}");
+    pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
 
 //app.MapControllerRoute(
 //    name: "export",

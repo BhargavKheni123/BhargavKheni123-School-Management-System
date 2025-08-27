@@ -1,7 +1,10 @@
-﻿@{
-    ViewData["Title"] = " Registration";
+﻿@model digital.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Registration";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+
 <style>
     .Registration-content {
         margin-left: 250px;
@@ -20,65 +23,66 @@
 
     <form asp-controller="Home" asp-action="Register" method="post">
         <div class="input-group mb-3">
-            <input type="text" name="name" class="form-control" placeholder="Full name" required>
+            <input asp-for="Name" class="form-control" placeholder="Full name" required />
             <div class="input-group-append">
                 <div class="input-group-text">
                     <span class="fas fa-user"></span>
                 </div>
             </div>
+            <span asp-validation-for="Name" class="text-danger"></span>
         </div>
+
         <div class="input-group mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Email" required>
+            <input asp-for="Email" type="email" class="form-control" placeholder="Email" required />
             <div class="input-group-append">
                 <div class="input-group-text">
                     <span class="fas fa-envelope"></span>
                 </div>
             </div>
+            <span asp-validation-for="Email" class="text-danger"></span>
         </div>
+
         <div class="input-group mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Password" required>
+            <input asp-for="Password" type="password" class="form-control" placeholder="Password" required />
             <div class="input-group-append">
                 <div class="input-group-text">
                     <span class="fas fa-lock"></span>
                 </div>
             </div>
+            <span asp-validation-for="Password" class="text-danger"></span>
         </div>
-        <div class="input-group mb-3">
-            <input type="password" name="confirmPassword" class="form-control" placeholder="Retype password" required>
-            <div class="input-group-append">
-                <div class="input-group-text">
-                    <span class="fas fa-lock"></span>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
+
+        <div class="form-group mb-3">
             <label>Role</label><br />
-            <input type="radio" id="roleStudent" name="role" value="Student" required>
-            <label for="roleStudent">Student</label>
-
-            <input type="radio" id="roleTeacher" name="role" value="Teacher">
-            <label for="roleTeacher">Teacher</label>
-
-            <input type="radio" id="roleAdmin" name="role" value="Admin">
-            <label for="roleAdmin">Admin</label>
+            <input type="radio" asp-for="Role" value="Student" required /> Student
+            <input type="radio" asp-for="Role" value="Teacher" /> Teacher
+            <input type="radio" asp-for="Role" value="Admin" /> Admin
+            <span asp-validation-for="Role" class="text-danger"></span>
         </div>
 
-        <div>
-            @ViewBag.Error
+        <div class="text-danger">@ViewBag.Error</div>
 
-        </div>
-
-
-
-        <div class="col-4">
+        <div class="col-4 mt-3">
             <button type="submit" class="btn btn-primary btn-block">Register</button>
         </div>
-
     </form>
 
-    <a asp-controller="Home" asp-action="Login" class="text-center d-block mt-3">I already have a membership</a>
+    <a asp-controller="Home" asp-action="Login" class="text-center d-block mt-3">
+        I already have a membership
+    </a>
 
-    <a asp-controller="Home" asp-action="ExportToExcel" class="btn btn-success">Export to Excel</a>
+    <div class="mt-3">
+        <a asp-controller="Home" asp-action="ExportToExcel" class="btn btn-success">Export to Excel</a>
+
+        <a asp-controller="Home" asp-action="ExportToPdf"
+           asp-route-categoryId="1"
+           asp-route-subCategoryId="1"
+           asp-route-month="@DateTime.Now.Month"
+           asp-route-year="@DateTime.Now.Year"
+           class="btn btn-danger">
+            Export to PDF
+        </a>
+    </div>
 
     <hr />
     <h4>Registered Users</h4>
@@ -91,9 +95,9 @@
             </tr>
         </thead>
         <tbody>
-            @if (ViewBag.UserList != null)
+            @if (Model.UserList != null && Model.UserList.Any())
             {
-                foreach (var user in ViewBag.UserList)
+                foreach (var user in Model.UserList)
                 {
                     <tr>
                         <td>@user.Name</td>
@@ -102,7 +106,18 @@
                     </tr>
                 }
             }
+            else
+            {
+                <tr>
+                    <td colspan="3" class="text-center text-muted">No users registered yet.</td>
+                </tr>
+            }
         </tbody>
     </table>
-
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

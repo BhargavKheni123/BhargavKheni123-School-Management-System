@@ -6,8 +6,14 @@ using digital.Repository;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using System;
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
 using System.Text;
 
@@ -132,41 +138,42 @@ namespace digital.Controllers
         [HttpGet]
         public IActionResult Register()
         {
-            var users = _userRepository.GetAllUsers();
-            ViewBag.UserList = users;
-            return View();
+            var model = new RegisterViewModel
+            {
+                UserList = _userRepository.GetAllUsers().ToList()
+            };
+            return View(model);
         }
 
         [HttpPost]
-        public IActionResult Register(string name, string email, string password, string role)
+        public IActionResult Register(RegisterViewModel model)
         {
-            var existingUser = _userRepository.GetUserByEmail(email);
+            var existingUser = _userRepository.GetUserByEmail(model.Email);
             if (existingUser != null)
             {
+                model.UserList = _userRepository.GetAllUsers().ToList();
                 ViewBag.Error = "User already exists with this email.";
-                return View();
+                return View(model);
             }
 
             var newUser = new User
             {
-                Name = name,
-                Email = email,
-                Password = password,
-                Role = role,
+                Name = model.Name,
+                Email = model.Email,
+                Password = model.Password,
+                Role = model.Role,
                 CurrentSessionId = null
-
             };
 
             _userRepository.AddUser(newUser);
 
-
-            if (role == "Student")
+            if (model.Role == "Student")
             {
                 var student = new Student
                 {
                     Name = newUser.Name,
-                    Email = email,
-                    Password = password,
+                    Email = model.Email,
+                    Password = model.Password,
                     CreatedDate = DateTime.Now,
                     CategoryId = 1,
                     SubCategoryId = 1,
@@ -183,9 +190,10 @@ namespace digital.Controllers
 
                 return RedirectToAction("Index", "Student");
             }
-            ViewBag.UserList = _userRepository.GetAllUsers();
+
             return RedirectToAction("Login");
         }
+
 
         [HttpPost]
         public IActionResult Logout()
@@ -199,7 +207,7 @@ namespace digital.Controllers
                     user.IsLoggedIn = false;
                     user.CurrentSessionId = null;
 
-                    _userRepository.UpdateUser(user);  
+                    _userRepository.UpdateUser(user);
                 }
             }
 
@@ -243,12 +251,12 @@ namespace digital.Controllers
                     var s = students.FirstOrDefault(x => x.Id == u.StudentId.Value);
                     if (s != null)
                     {
-                        worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
-                        worksheet.Cell(row, 6).Value = s.Gender;
+                        //worksheet.Cell(row, 5).Value = s.DOB.ToString("yyyy-MM-dd");
+                        //worksheet.Cell(row, 6).Value = s.Gender;
                         worksheet.Cell(row, 7).Value = s.Category?.Name ?? s.CategoryId.ToString();
                         worksheet.Cell(row, 8).Value = s.SubCategory?.Name ?? s.SubCategoryId.ToString();
                         worksheet.Cell(row, 9).Value = s.MobileNumber;
-                        worksheet.Cell(row, 10).Value = s.Address;
+                        //worksheet.Cell(row, 10).Value = s.Address;
                     }
                 }
                 else if (u.Role == "Teacher" && u.TeacherId.HasValue)
@@ -275,8 +283,132 @@ namespace digital.Controllers
             var content = stream.ToArray();
             return File(content,
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                "Users.xlsx");
+                "Users.xlsx"
+            );
         }
+
+
+        [HttpGet]
+        public IActionResult ExportToPdf()
+        {
+            var students = _studentRepository.GetAllStudentsWithCategoryAndSubCategory();
+            var teachers = _teacherRepository.GetAllTeachers().ToList();
+            var users = _userRepository.GetAllUsers();
+
+            int counter = 1;
+
+            var fileName = $"Users_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+            var pdfBytes = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(20);
+
+
+                    page.Header().Column(col =>
+                    {
+                        col.Spacing(5);
+                        col.Item().AlignCenter().Text("Users Report")
+                            .FontSize(18).SemiBold();
+                        col.Item().LineHorizontal(1);
+                    });
+
+
+                    page.Content().Table(table =>
+                    {
+
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(1);  // No.
+                            columns.RelativeColumn(3);  // Name
+                            columns.RelativeColumn(3);  // Email
+                            columns.RelativeColumn(2);  // Role
+                            columns.RelativeColumn(2);  // DOB
+                            columns.RelativeColumn(2);  // Gender
+                            columns.RelativeColumn(2);  // Class
+                            columns.RelativeColumn(2);  // Division
+                            columns.RelativeColumn(3);  // Mobile
+                            columns.RelativeColumn(4);  // Address
+                        });
+
+
+                        void HeaderCell(string text) =>
+                            table.Cell().Background(Colors.Grey.Lighten3).Padding(4).Text(text).SemiBold();
+
+                        HeaderCell("No.");
+                        HeaderCell("Name");
+                        HeaderCell("Email");
+                        HeaderCell("Role");
+                        HeaderCell("DOB");
+                        HeaderCell("Gender");
+                        HeaderCell("Class");
+                        HeaderCell("Division");
+                        HeaderCell("Mobile");
+                        HeaderCell("Address");
+
+
+                        foreach (var u in users)
+                        {
+                            table.Cell().Padding(3).Text(counter++.ToString());
+                            table.Cell().Padding(3).Text(u.Name ?? "");
+                            table.Cell().Padding(3).Text(u.Email ?? "");
+                            table.Cell().Padding(3).Text(u.Role ?? "");
+
+                            string dob = "";
+                            string gender = "";
+                            string className = "";
+                            string division = "";
+                            string mobile = "";
+                            string address = "";
+
+                            if (u.Role == "Student" && u.StudentId.HasValue)
+                            {
+                                var s = students.FirstOrDefault(x => x.Id == u.StudentId.Value);
+                                if (s != null)
+                                {
+                                    //dob = s.DOB != default ? s.DOB.ToString("yyyy-MM-dd") : "";
+                                    //gender = s.Gender ?? "";
+                                    className = s.Category?.Name ?? s.CategoryId.ToString();
+                                    division = s.SubCategory?.Name ?? s.SubCategoryId.ToString();
+                                    mobile = s.MobileNumber ?? "";
+                                    //address = s.Address ?? "";
+                                }
+                            }
+                            else if (u.Role == "Teacher" && u.TeacherId.HasValue)
+                            {
+                                var t = teachers.FirstOrDefault(x => x.TeacherId == u.TeacherId.Value);
+                                if (t != null)
+                                {
+                                    dob = t.DOB != default ? t.DOB.ToString("yyyy-MM-dd") : "";
+                                    gender = t.Gender ?? "";
+                                }
+                            }
+
+                            table.Cell().Padding(3).Text(dob);
+                            table.Cell().Padding(3).Text(gender);
+                            table.Cell().Padding(3).Text(className);
+                            table.Cell().Padding(3).Text(division);
+                            table.Cell().Padding(3).Text(mobile);
+                            table.Cell().Padding(3).Text(address);
+                        }
+                    });
+
+
+                    page.Footer().AlignCenter().Text(x =>
+                    {
+                        x.Span("Page ");
+                        x.CurrentPageNumber();
+                        x.Span(" of ");
+                        x.TotalPages();
+                    });
+                });
+            }).GeneratePdf();
+
+            return File(pdfBytes, "application/pdf", fileName);
+        }
+
+
 
 
         public IActionResult Index()
@@ -287,8 +419,13 @@ namespace digital.Controllers
                 ViewBag.UserName = "Email not in session";
                 return View();
             }
+            else
+            {
+                ViewBag.UserName = $"Welcome, {email}";
+            }
+            int totalStudents = _studentRepository.GetAllStudentsWithCategoryAndSubCategory().Count;
+            ViewBag.TotalStudents = totalStudents;
 
-            ViewBag.UserName = $"Welcome, {email}";
             return View();
         }
 
