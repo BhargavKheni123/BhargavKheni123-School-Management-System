@@ -516,12 +516,6 @@ namespace digital.Controllers
                 ViewBag.UpcomingExamTitle = "No Upcoming Exam";
                 ViewBag.UpcomingExamDate = "";
             }
-            else
-            {
-                ViewBag.UserName = $"Welcome, {email}";
-            }
-            int totalStudents = _studentRepository.GetAllStudentsWithCategoryAndSubCategory().Count;
-            ViewBag.TotalStudents = totalStudents;
 
             return View();
         }
