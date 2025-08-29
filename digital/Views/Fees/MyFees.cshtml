@@ -1,0 +1,27 @@
+﻿@model digital.ViewModels.StudentFeeViewModel
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h2>My Fee Details</h2>
+    </section>
+
+    <section class="content">
+        <div class="card p-4 shadow-sm">
+            <h4>@Model.StudentName - (@Model.Year)</h4>
+            <table class="table table-bordered">
+                <tr>
+                    <th>Total Fees</th>
+                    <td>@Model.TotalFees.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <th>Paid Fees</th>
+                    <td>@Model.PaidFees.ToString("N2")</td>
+                </tr>
+                <tr>
+                    <th>Remaining Fees</th>
+                    <td>@Model.RemainingFees.ToString("N2")</td>
+                </tr>
+            </table>
+        </div>
+    </section>
+</div>

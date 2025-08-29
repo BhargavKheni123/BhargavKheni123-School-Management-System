@@ -1,5 +1,6 @@
 ﻿using digital.Interfaces;
 using digital.Models;
+using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace digital.Controllers
@@ -69,6 +70,40 @@ namespace digital.Controllers
             }
             return Json(new { success = false, fees = 0 });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MyFees()
+        {
+            var studentId = HttpContext.Session.GetInt32("StudentId"); 
+            if (studentId == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            var student = await _feesRepository.GetStudentByIdAsync(studentId.Value);
+            if (student == null)
+                return NotFound();
+
+            int currentYear = DateTime.Now.Year;
+
+            
+            var category = await _feesRepository.GetCategoryByIdAsync(student.CategoryId);
+            decimal totalFees = category?.Fees ?? 0;
+
+            
+            decimal paidFees = await _feesRepository.GetStudentPaidAmountAsync(studentId.Value, currentYear);
+
+            var vm = new StudentFeeViewModel
+            {
+                StudentName = student.Name,
+                Year = currentYear,
+                TotalFees = totalFees,
+                PaidFees = paidFees
+            };
+
+            return View(vm);
+        }
+
 
     }
 }
