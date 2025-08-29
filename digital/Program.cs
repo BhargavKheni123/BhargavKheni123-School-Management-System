@@ -67,6 +67,7 @@ builder.Services.AddScoped<IExamRepository, ExamRepository>();
 builder.Services.AddScoped<IQuestionMasterRepository, QuestionMasterRepository>();
 builder.Services.AddScoped<IStudentExamRepository, StudentExamRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
+builder.Services.AddScoped<IFeesRepository, FeesRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 
@@ -117,6 +118,7 @@ app.MapControllerRoute(
     //pattern: "{controller=Student}/{action=Student}/{id?}");
     //pattern: "{controller=Teacher}/{action=TeacherRegister}/{id?}");
     //pattern: "{controller=SubCategory}/{action=Subcategories}/{id?}");
+
 
 //app.MapControllerRoute(
 //    name: "export",

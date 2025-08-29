@@ -27,6 +27,10 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<StudentExamResult> StudentExamResults { get; set; }
 
+    public DbSet<StandardFees> StandardFees { get; set; }
+    public DbSet<StudentFees> StudentFees { get; set; }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

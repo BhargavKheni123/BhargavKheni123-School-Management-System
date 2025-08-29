@@ -1,0 +1,41 @@
+﻿@model digital.Models.StudentFees
+
+@{
+    ViewData["Title"] = "Add Payment";
+    var student = ViewBag.Student as Student;
+    int year = ViewBag.Year;
+}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h2>Add Payment</h2>
+    </section>
+
+    <section class="content">
+        <div class="card p-3">
+            <form asp-action="CreatePayment" method="post">
+                <input type="hidden" asp-for="StudentId" value="@student.Id" />
+                <input type="hidden" asp-for="Year" value="@year" />
+
+                <div class="form-group">
+                    <label>Student</label>
+                    <input type="text" class="form-control" value="@student.Name" disabled />
+                </div>
+
+                <div class="form-group">
+                    <label>Year</label>
+                    <input type="text" class="form-control" value="@year" disabled />
+                </div>
+
+                <div class="form-group">
+                    <label>Paid Amount</label>
+                    <input asp-for="PaidAmount" class="form-control" />
+                    <span asp-validation-for="PaidAmount" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Save</button>
+                <a href="@Url.Action("Index", "Fees")" class="btn btn-secondary">Cancel</a>
+            </form>
+        </div>
+    </section>
+</div>

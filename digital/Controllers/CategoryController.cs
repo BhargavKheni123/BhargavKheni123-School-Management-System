@@ -36,15 +36,20 @@ namespace digital.Controllers
             return View(viewModelList);
         }
 
-        
+       
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public IActionResult Category(CategoryViewModel model)
         {
             if (ModelState.IsValid)
             {
                 var category = _mapper.Map<Category>(model);
+              
+                if (category.CreatedDate == default)
+                    category.CreatedDate = DateTime.UtcNow;
+
                 _categoryRepository.AddCategory(category);
-                return RedirectToAction("Category");
+                return RedirectToAction(nameof(Category));
             }
 
             var categories = _categoryRepository.GetAllCategories();
@@ -52,6 +57,7 @@ namespace digital.Controllers
             return View(viewModelList);
         }
 
+      
         [HttpGet]
         public async Task<IActionResult> EditCategory(int id)
         {
@@ -62,7 +68,9 @@ namespace digital.Controllers
             return View("EditCategory", viewModel);
         }
 
+        
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditCategory(CategoryViewModel model)
         {
             if (ModelState.IsValid)
@@ -71,17 +79,19 @@ namespace digital.Controllers
                 if (existingCategory == null) return NotFound();
 
                 existingCategory.Name = model.Name;
+                existingCategory.Fees = model.Fees ?? existingCategory.Fees;
+                
 
                 await _categoryRepo.UpdateAsync(existingCategory);
                 await _categoryRepo.SaveAsync();
 
-                return RedirectToAction("Category");
+                return RedirectToAction(nameof(Category));
             }
 
             return View("EditCategory", model);
         }
 
-
+        
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var category = await _categoryRepo.GetByIdAsync(id);
@@ -90,9 +100,10 @@ namespace digital.Controllers
                 await _categoryRepo.DeleteAsync(category);
                 await _categoryRepo.SaveAsync();
             }
-            return RedirectToAction("Category");
+            return RedirectToAction(nameof(Category));
         }
 
+        
         [HttpGet]
         public IActionResult ExportCategoriesToExcel()
         {
@@ -101,10 +112,10 @@ namespace digital.Controllers
             using var workbook = new XLWorkbook();
             var worksheet = workbook.Worksheets.Add("Categories");
 
-            
             worksheet.Cell(1, 1).Value = "No.";
             worksheet.Cell(1, 2).Value = "Standard";
-            worksheet.Cell(1, 3).Value = "Created Date";
+            worksheet.Cell(1, 3).Value = "Fees";
+            worksheet.Cell(1, 4).Value = "Created Date";
 
             int row = 2, counter = 1;
 
@@ -112,7 +123,8 @@ namespace digital.Controllers
             {
                 worksheet.Cell(row, 1).Value = counter++;
                 worksheet.Cell(row, 2).Value = c.Name;
-                worksheet.Cell(row, 3).Value = c.CreatedDate.ToString("yyyy-MM-dd");
+                worksheet.Cell(row, 3).Value = c.Fees.HasValue ? c.Fees.Value.ToString("N2") : "";
+                worksheet.Cell(row, 4).Value = c.CreatedDate.ToString("yyyy-MM-dd");
                 row++;
             }
 
@@ -127,6 +139,7 @@ namespace digital.Controllers
                 "Categories.xlsx");
         }
 
+        
         [HttpGet]
         public IActionResult ExportCategoriesToPdf()
         {
@@ -140,7 +153,6 @@ namespace digital.Controllers
                 {
                     page.Margin(20);
 
-                    
                     page.Header().Column(col =>
                     {
                         col.Spacing(5);
@@ -149,13 +161,13 @@ namespace digital.Controllers
                         col.Item().LineHorizontal(1);
                     });
 
-                    
                     page.Content().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
                         {
                             columns.RelativeColumn(1); 
                             columns.RelativeColumn(3); 
+                            columns.RelativeColumn(2); 
                             columns.RelativeColumn(3); 
                         });
 
@@ -164,17 +176,18 @@ namespace digital.Controllers
 
                         HeaderCell("No.");
                         HeaderCell("Standard");
+                        HeaderCell("Fees");
                         HeaderCell("Created Date");
 
                         foreach (var c in categories)
                         {
                             table.Cell().Padding(3).Text(counter++.ToString());
                             table.Cell().Padding(3).Text(c.Name ?? "");
+                            table.Cell().Padding(3).Text(c.Fees.HasValue ? c.Fees.Value.ToString("N2") : "");
                             table.Cell().Padding(3).Text(c.CreatedDate.ToString("yyyy-MM-dd"));
                         }
                     });
 
-                    
                     page.Footer().AlignCenter().Text(x =>
                     {
                         x.Span("Page ");
@@ -188,6 +201,16 @@ namespace digital.Controllers
             return File(pdfBytes, "application/pdf", fileName);
         }
 
+      
+        [HttpGet]
+        public JsonResult GetFeesByStandard(int categoryId)
+        {
+            var fee = _categoryRepository.GetAllCategories()
+                        .Where(c => c.Id == categoryId)
+                        .Select(c => c.Fees)
+                        .FirstOrDefault();
 
+            return Json(fee);
+        }
     }
 }

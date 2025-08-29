@@ -1,0 +1,31 @@
+﻿@model List<(Student student, decimal totalFees, decimal paidFees, decimal balance)>
+
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Student Name</th>
+            <th>Total Fees</th>
+            <th>Paid Fees</th>
+            <th>Balance</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model)
+        {
+            <tr>
+                <td>@row.student.Name</td>
+                <td>@row.totalFees</td>
+                <td>@row.paidFees</td>
+                <td>@row.balance</td>
+                <td>
+                    <a class="btn btn-success btn-sm"
+                       href="@Url.Action("CreatePayment", "Fees", new { studentId = row.student.Id, year = ViewBag.Year })">
+                        Add Payment
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -13,10 +13,17 @@
 
         <div class="card shadow-sm rounded p-4 mb-4">
             <form asp-action="Category" method="post" class="row g-3 align-items-end justify-content-center">
+                @Html.AntiForgeryToken()
                 <div class="col-md-4">
                     <label for="Name" class="form-label"><em>Standard</em></label>
                     <input type="text" class="form-control" id="Name" name="Name" required />
                 </div>
+
+                <div class="col-md-3">
+                    <label for="Fees" class="form-label"><em>Fees</em></label>
+                    <input type="number" class="form-control" id="Fees" name="Fees" step="0.01" min="0" />
+                </div>
+
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-success w-100"><em>Submit</em></button>
                 </div>
@@ -36,6 +43,7 @@
                     <thead class="table-light">
                         <tr>
                             <th><em>Standard</em></th>
+                            <th><em>Fees</em></th>
                             <th><em>Edit / Delete</em></th>
                         </tr>
                     </thead>
@@ -44,6 +52,7 @@
                         {
                             <tr>
                                 <td>@item.Name</td>
+                                <td>@(item.Fees.HasValue? item.Fees.Value.ToString("N2") : "-")</td>
                                 <td>
                                     <a asp-action="EditCategory" asp-route-id="@item.Id" class="btn btn-sm btn-warning me-2">Edit</a>
                                     <a asp-action="DeleteCategory" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
@@ -56,3 +65,14 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        
+        $(function () {
+            
+        });
+    </script>
+}

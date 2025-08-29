@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "Fees Management";
+}
+
+<div class="content-wrapper">
+    <section class="content-header">
+        <h1>Fees Management</h1>
+    </section>
+
+    <section class="content">
+        <div class="card p-3">
+            <form id="feesForm" method="post" asp-action="GetReport">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label>Year</label>
+                        <select class="form-control" name="year" asp-items="ViewBag.Years"></select>
+                    </div>
+                    <div class="col-md-4">
+                        <label>Standard</label>
+                        <select class="form-control" id="categoryDropdown" name="categoryId" asp-items="ViewBag.Categories"></select>
+
+                    </div>
+                    <div class="col-md-4">
+                        <label>Fees</label>
+                        <input type="number" class="form-control" id="feesInput" name="fees" placeholder="Enter total fees" />
+
+                    </div>
+                    <div class="col-md-4 align-self-end">
+                        <button type="submit" class="btn btn-primary">Get Report</button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="reportContainer">
+                
+            </div>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $("#feesForm").submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '@Url.Action("GetReport", "Fees")',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $("#reportContainer").html(result);
+                    }
+                });
+            });
+        });
+
+           
+        $(function () {
+            
+            $("#categoryDropdown").change(function () {
+                var categoryId = $(this).val();
+                if (categoryId) {
+                    $.get('@Url.Action("GetCategoryFees", "Fees")', { categoryId: categoryId }, function (data) {
+                        if (data.success) {
+                            $("#feesInput").val(data.fees);
+                        } else {
+                            $("#feesInput").val('');
+                        }
+                    });
+                }
+            });
+
+            
+            $("#feesForm").submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    url: '@Url.Action("GetReport", "Fees")',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (result) {
+                        $("#reportContainer").html(result);
+                    }
+                });
+            });
+        });
+    </script>
+
+
+    
+}
