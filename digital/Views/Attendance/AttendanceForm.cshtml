@@ -17,6 +17,18 @@
 
 @if (ViewBag.IsStudent == true)
 {
+    <div class="mt-4 text-center">
+        <a class="btn btn-success me-2"
+           href="@Url.Action("ExportAttendanceExcel", "Attendance", new { month = selectedMonth, year = selectedYear, studentId = Model.Student.FirstOrDefault()?.Id })">
+            📊 Export to Excel
+        </a>
+
+        <a class="btn btn-danger"
+           href="@Url.Action("ExportAttendancePdf", "Attendance", new { month = selectedMonth, year = selectedYear, studentId = Model.Student.FirstOrDefault()?.Id })">
+            📄 Export to PDF
+        </a>
+    </div>
+
     <div class="d-flex justify-content-center align-items-center" style="min-height: 100vh; background-color: #f8f9fa;">
         <div class="card shadow-lg" style="width: 600px;">
             <div class="card-header text-white text-center fw-bold" style="background-color: #222;">

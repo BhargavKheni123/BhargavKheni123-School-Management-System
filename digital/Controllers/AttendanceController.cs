@@ -1,8 +1,12 @@
-﻿using digital.Interfaces;
+﻿using ClosedXML.Excel;
+using iTextSharp.text;
+using iTextSharp.text.pdf;
+using digital.Interfaces;
 using digital.Models;
 using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+
 
 namespace digital.Controllers
 {
@@ -182,5 +186,124 @@ namespace digital.Controllers
                 .ToList();
             return Json(subCategories);
         }
+        private Dictionary<int, string> BuildAttendanceMap(int studentId, int month, int year)
+        {
+            var records = _attendanceRepository.GetAttendanceByStudentId(studentId)
+                .Where(a => a.Month == month && a.Year == year)
+                .ToList();
+
+            var map = new Dictionary<int, string>();
+            foreach (var rec in records)
+            {
+                map[rec.Day] = rec.Attend;
+            }
+
+            return map;
+        }
+
+        [HttpGet]
+        public IActionResult ExportAttendanceExcel(int month, int year, int studentId)
+        {
+            if (month <= 0) month = DateTime.Now.Month;
+            if (year <= 0) year = DateTime.Now.Year;
+
+            var student = _context.Student.FirstOrDefault(s => s.Id == studentId);
+            if (student == null) return NotFound();
+
+            var map = BuildAttendanceMap(studentId, month, year);
+            int totalDays = DateTime.DaysInMonth(year, month);
+
+            using (var workbook = new XLWorkbook())
+            {
+                var ws = workbook.Worksheets.Add("Attendance Report");
+
+                ws.Cell(1, 1).Value = "Student Name";
+                ws.Cell(1, 2).Value = student.Name;
+                ws.Cell(2, 1).Value = "Month";
+                ws.Cell(2, 2).Value = $"{month}-{year}";
+
+                for (int day = 1; day <= totalDays; day++)
+                {
+                    ws.Cell(4, day).Value = day;
+                }
+
+                for (int day = 1; day <= totalDays; day++)
+                {
+                    string status = map.ContainsKey(day) ? map[day] : "-";
+                    if (status == "Yes") status = "Present";
+                    else if (status == "No") status = "Absent";
+                    ws.Cell(5, day).Value = status;
+                }
+
+
+                using (var stream = new MemoryStream())
+                {
+                    workbook.SaveAs(stream);
+                    return File(stream.ToArray(),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        $"Attendance_{student.Name}_{month}_{year}.xlsx");
+                }
+            }
+        }
+
+
+        [HttpGet]
+        public IActionResult ExportAttendancePdf(int month, int year, int studentId)
+        {
+            if (month <= 0 || month > 12) month = DateTime.Now.Month;
+            if (year <= 0) year = DateTime.Now.Year;
+
+            var student = _context.Student.FirstOrDefault(s => s.Id == studentId);
+            if (student == null) return NotFound();
+
+            var map = BuildAttendanceMap(studentId, month, year);
+            int totalDays = DateTime.DaysInMonth(year, month);
+
+            int totalPresent = map.Values.Count(v => v == "Present");
+            int totalAbsent = map.Values.Count(v => v == "Absent");
+
+            using (var stream = new MemoryStream())
+            {
+                Document doc = new Document(PageSize.A4.Rotate(), 20, 20, 20, 20);
+                PdfWriter.GetInstance(doc, stream);
+                doc.Open();
+
+                doc.Add(new Paragraph($"Attendance Report"));
+                doc.Add(new Paragraph($"Student: {student.Name}"));
+                doc.Add(new Paragraph($"Month: {month}/{year}"));
+                doc.Add(new Paragraph(" "));
+
+                PdfPTable table = new PdfPTable(totalDays);
+                table.WidthPercentage = 100;
+
+                for (int day = 1; day <= totalDays; day++)
+                {
+                    table.AddCell(new Phrase(day.ToString()));
+                }
+
+                for (int day = 1; day <= totalDays; day++)
+                {
+                    string status = map.ContainsKey(day) ? map[day] : "-";
+                    string symbol = status == "Yes" ? "✅ Present" :
+                                    status == "No" ? "❌ Absent" : "-";
+                    table.AddCell(new Phrase(symbol));
+                }
+
+
+                doc.Add(table);
+                doc.Add(new Paragraph(" "));
+
+                doc.Add(new Paragraph($"✅ Total Present: {totalPresent}"));
+                doc.Add(new Paragraph($"❌ Total Absent: {totalAbsent}"));
+
+                doc.Close();
+
+                return File(stream.ToArray(), "application/pdf",
+                    $"Attendance_{student.Name}_{month}_{year}.pdf");
+            }
+        }
+
+
+
     }
 }
