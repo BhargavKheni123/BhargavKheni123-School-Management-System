@@ -14,6 +14,10 @@
                 <label asp-for="Name" class="form-label">Standard</label>
                 <input asp-for="Name" class="form-control" required />
             </div>
+            <div class="col-md-3">
+                <label for="Fees" class="form-label"><em>Fees</em></label>
+                <input type="number" class="form-control" id="Fees" name="Fees" step="0.01" min="0" />
+            </div>
 
             <button type="submit" class="btn btn-primary">Update</button>
             <a asp-action="Category" class="btn btn-secondary ms-2">Cancel</a>
