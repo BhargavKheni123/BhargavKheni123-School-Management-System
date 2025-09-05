@@ -1,11 +1,12 @@
 ﻿using AutoMapper;
+using ClosedXML.Excel;
 using digital.Interfaces;
 using digital.Models;
 using digital.ViewModels;
+using Digital.Services.Reports;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -20,17 +21,21 @@ namespace digital.Controllers
         private readonly IStudentRepository _studentRepository;
         private readonly IGenericRepository<Student> _studentRepo;
         private readonly IMapper _mapper;
+        private readonly IStudentReportService _reportService;
 
         public StudentController(
             ApplicationDbContext context,
             IStudentRepository studentRepository,
             IGenericRepository<Student> studentRepo,
-            IMapper mapper)
+            IMapper mapper,
+            IStudentReportService reportService
+            )
         {
             _context = context;
             _studentRepository = studentRepository;
             _studentRepo = studentRepo;
             _mapper = mapper;
+            _reportService = reportService;
         }
 
         [HttpGet]
@@ -546,6 +551,19 @@ namespace digital.Controllers
 
             string fileName = $"Student_{studentId}_ExamResults.pdf";
             return File(stream.ToArray(), "application/pdf", fileName);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ExportProfiles()
+        {
+            var result = await _reportService.GenerateStudentProfileDocAsync();
+
+            
+            var bytes = result.bytes;
+            var fileName = result.fileName;
+
+            const string contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+            return File(bytes, contentType, fileName);
         }
 
 

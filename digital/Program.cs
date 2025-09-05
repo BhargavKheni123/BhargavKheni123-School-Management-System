@@ -4,6 +4,7 @@ using digital.Mapping;
 using digital.Models;
 using digital.Repositories;
 using digital.Repository;
+using Digital.Services.Reports;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +69,8 @@ builder.Services.AddScoped<IQuestionMasterRepository, QuestionMasterRepository>(
 builder.Services.AddScoped<IStudentExamRepository, StudentExamRepository>();
 builder.Services.AddScoped<ITeacherRepository, TeacherRepository>();
 builder.Services.AddScoped<IFeesRepository, FeesRepository>();
+builder.Services.AddScoped<IStudentReportService, StudentReportService>();
+
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
 

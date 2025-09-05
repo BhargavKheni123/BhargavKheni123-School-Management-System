@@ -30,6 +30,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<StandardFees> StandardFees { get; set; }
     public DbSet<StudentFees> StudentFees { get; set; }
 
+    public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -23,6 +23,7 @@
     <PackageReference Include="AutoMapper" Version="12.0.1" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="DocumentFormat.OpenXML.Extensions" Version="1.0.0" />
     <PackageReference Include="EPPlus" Version="8.1.0" />
     <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.7.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
@@ -33,11 +34,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="QuestPDF" Version="2025.7.0" />
+    <PackageReference Include="Xceed.Words.NET" Version="5.0.25228.6154" />
    <Content Remove="wwwroot\build\config\.eslintrc.json" />
    <Content Update="wwwroot\build\config\postcss.config.js" ExcludeFromPublish="true" />
 	  <None Update="wwwroot/build/config/postcss.config.js">
 		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
 	  </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\templates\" />
   </ItemGroup>
 
 </Project>
