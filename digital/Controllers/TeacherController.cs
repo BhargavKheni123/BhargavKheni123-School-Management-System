@@ -31,8 +31,6 @@ namespace digital.Controllers
         [HttpPost]
         public IActionResult TeacherRegister(TeacherViewModel model)
         {
-            if (ModelState.IsValid)
-            {
                 
                 var teacher = new Teacher
                 {
@@ -61,11 +59,9 @@ namespace digital.Controllers
                 _repository.AddUser(user);
                 _repository.Save();
 
-                return RedirectToAction("TeacherRegister", "Teacher");
-            }
 
             ViewBag.TeacherList = _repository.GetAllTeachers().ToList();
-            return View(model);
+            return RedirectToAction("TeacherRegister", "Teacher");
         }
 
 
@@ -95,8 +91,6 @@ namespace digital.Controllers
         [HttpPost]
         public IActionResult Edit(int id, TeacherViewModel model)
         {
-            if (ModelState.IsValid)
-            {
                 var teacher = _repository.GetTeacherById(id);
                 if (teacher == null)
                 {
@@ -122,11 +116,9 @@ namespace digital.Controllers
                 }
 
                 _repository.Save();
-                return RedirectToAction("TeacherRegister");
-            }
 
             ViewBag.TeacherId = id;
-            return View(model);
+            return RedirectToAction("TeacherRegister");
         }
 
         public IActionResult Delete(int id)

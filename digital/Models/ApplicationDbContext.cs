@@ -30,6 +30,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<StandardFees> StandardFees { get; set; }
     public DbSet<StudentFees> StudentFees { get; set; }
 
+    public DbSet<Assignment> Assignments { get; set; }
+    public DbSet<AssignmentStudent> AssignmentStudents { get; set; }
     public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
 
 
@@ -42,6 +44,16 @@ public class ApplicationDbContext : DbContext
             .WithMany(q => q.AnswerOptions)
             .HasForeignKey(a => a.QuestionId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<AssignmentStudent>()
+            .HasOne(a => a.Assignment)
+            .WithMany(a => a.AssignmentStudents)
+            .HasForeignKey(a => a.AssignmentId);
+
+        modelBuilder.Entity<AssignmentStudent>()
+            .HasOne(s => s.Student)
+            .WithMany()
+            .HasForeignKey(s => s.StudentId);
     }
 
 

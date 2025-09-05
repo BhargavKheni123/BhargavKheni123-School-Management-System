@@ -72,6 +72,7 @@ builder.Services.AddScoped<IFeesRepository, FeesRepository>();
 builder.Services.AddScoped<IStudentReportService, StudentReportService>();
 
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IAssignmentRepository, AssignmentRepository>();
 
 
 // Singleton helpers
