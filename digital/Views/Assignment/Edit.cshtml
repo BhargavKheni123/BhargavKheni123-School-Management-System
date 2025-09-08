@@ -1,9 +1,7 @@
 ﻿@model digital.ViewModels.AssignmentViewModel
 @{
-    ViewData["Title"] = "Assignment Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Edit Assignment";
 }
-
 <style>
     .student-content {
         margin-left: 250px;
@@ -85,7 +83,10 @@
     </div>
 
     <div class="register-form">
-<form asp-action="Create" enctype="multipart/form-data" method="post">
+
+<form asp-action="Edit" enctype="multipart/form-data" method="post">
+    <input type="hidden" asp-for="Id" />
+
     <div>
         <label>Title</label>
         <input asp-for="Title" class="form-control" />
@@ -99,7 +100,6 @@
     <div>
         <label>Standard</label>
         <select asp-for="CategoryId" asp-items="Model.Categories" class="form-control">
-
                     <option value="">-- Select Standard --</option>
         </select>
 
@@ -108,90 +108,34 @@
     <div>
         <label>Class</label>
         <select asp-for="SubCategoryId" asp-items="Model.SubCategories" class="form-control">
-                    <option value="">-- Select Class --</option>
+            <option value="">--Select Class--</option>
         </select>
     </div>
 
     <div>
         <label>Subject</label>
         <select asp-for="SubjectId" asp-items="Model.Subjects" class="form-control">
-                    <option value="">-- Select Subject --</option>
+            <option value="">---Select subject--</option>
         </select>
     </div>
 
     <div>
-        <label>Submission Deadline</label>
+        <label>Deadline</label>
         <input asp-for="SubmissionDeadline" type="date" class="form-control" />
     </div>
 
     <div>
-        <label>Upload Reference File</label><br />
-        <input type="radio" asp-for="FileType" value="PDF" /> PDF
-        <input type="radio" asp-for="FileType" value="Word" /> Word
-        <input type="radio" asp-for="FileType" value="Image" /> Image
-        <input type="radio" asp-for="FileType" value="PPT" /> PPT
-        <br />
-       
+        <label>Upload New File (Optional)</label>
+        <input asp-for="UploadFile" type="file" class="form-control" />
+        @if (!string.IsNullOrEmpty(Model.FilePath))
+        {
+            <p>Current File: <a href="~/@Model.FilePath" target="_blank">View</a></p>
+        }
     </div>
 
-            <div>
-                <label>Assign To Students</label><br />
-
-                <input asp-for="AssignAllStudents" type="checkbox" id="AssignAllStudents" /> All Students
-                <br /><br />
-
-                <div id="studentCheckboxList" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px;">
-                </div>
-            </div>
-
-
     <br />
-    <button type="submit" class="btn btn-primary">Create Assignment</button>
+    <button type="submit" class="btn btn-success">Save Changes</button>
 </form>
-</div>
-
-
-<h2>Assignments</h2>
-
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Deadline</th>
-            <th>File</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-        <tbody>
-            @foreach (var item in Model.AssignmentList)
-            {
-                <tr>
-                    <td>@item.Title</td>
-                    <td>@item.Description</td>
-                    <td>@item.SubmissionDeadline.ToShortDateString()</td>
-                    <td>
-                        @if (!string.IsNullOrEmpty(item.FilePath))
-                        {
-                            <a href="~/@item.FilePath" target="_blank">Download @item.FileType</a>
-                        }
-                    </td>
-
-                    <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Edit</a>
-                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-
-</table>
-
-</div>
-
-
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
@@ -211,47 +155,14 @@
                             subCategoryDropdown.empty();
                             subCategoryDropdown.append('<option value="">-- Select Class --</option>');
 
-                            $.each(data, function (i, subCategory) {
+                            $.each(data, function (i, subCategory) 
+                            {
                                 subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
                             });
                         }
                     });
                 }
             });
-
-            $('#SubCategoryId').change(function () {
-                var categoryId = $('#CategoryId').val();
-                var subCategoryId = $(this).val();
-
-                if (categoryId !== "" && subCategoryId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetStudents", "Assignment")',
-                        type: 'GET',
-                        data: { categoryId: categoryId, subCategoryId: subCategoryId },
-                        success: function (data) {
-                            var container = $('#studentCheckboxList');
-                            container.empty();
-
-                            $.each(data, function (i, student) {
-                                container.append(
-                                    '<div><label>' +
-                                    '<input type="checkbox" name="SelectedStudents" value="' + student.id + '" /> ' +
-                                    student.name +
-                                    '</label></div>'
-                                );
-                            });
-                        }
-                    });
-                }
-            });
-
-            $('#AssignAllStudents').change(function () {
-                var checked = $(this).is(':checked');
-                $('#studentCheckboxList input[type="checkbox"]').prop('checked', checked);
-            });
         });
     </script>
-
-
-}
-
+    }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using digital.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,7 @@ namespace digital.ViewModels
         public IFormFile UploadFile { get; set; }
 
         public string? FileType { get; set; }
+        public string? FilePath { get; set; }
 
         public List<SelectListItem> Categories { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> SubCategories { get; set; } = new List<SelectListItem>();
@@ -43,5 +45,7 @@ namespace digital.ViewModels
         public List<int> SelectedStudents { get; set; } = new List<int>();
         public bool AssignAllStudents { get; set; }
         public List<SelectListItem> Students { get; set; } = new List<SelectListItem>();
+        public List<Assignment> AssignmentList { get; set; } = new List<Assignment>();
+
     }
 }
