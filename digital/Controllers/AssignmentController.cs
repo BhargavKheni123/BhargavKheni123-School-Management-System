@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml.Packaging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using System;
 using System.IO;
@@ -196,5 +197,22 @@ namespace digital.Controllers
             var assignments = await _repository.GetAllAssignmentsAsync();
             return View(assignments);
         }
+
+        public async Task<IActionResult> DownloadStudentSubmission(int submissionId)
+        {
+            var submission = await _context.AssignmentSubmissions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                .FirstOrDefaultAsync(s => s.Id == submissionId);
+
+            if (submission == null || string.IsNullOrEmpty(submission.FilePath))
+                return NotFound();
+
+            var filePath = Path.Combine(_webHostEnvironment.WebRootPath, submission.FilePath.TrimStart('/'));
+            var fileName = Path.GetFileName(filePath);
+            return PhysicalFile(filePath, "application/octet-stream", fileName);
+        }
+
+
     }
 }

@@ -22,9 +22,8 @@
             <th>Title</th>
             <th>Assigned</th>
             <th>Deadline</th>
-            <th>Marks</th>
+            <th>Marks </th>
             <th>Assignment Doc</th>
-            <th>Your Submission</th>
             <th>Upload</th>
         </tr>
     </thead>
@@ -32,42 +31,21 @@
         @foreach (var item in Model)
         {
             var a = item.Assignment;
-            var s = item.Submission;
+            var s = item.AssignmentSubmissions;
             bool closed = DateTime.Now > a.SubmissionDeadline;
-
 
             <tr>
                 <td>@(a.Subject?.Name ?? "-")</td>
                 <td>@a.Title</td>
                 <td>@a.CreatedDate.ToString("yyyy-MM-dd")</td>
-                <td>@a.SubmissionDeadline.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>@a.SubmissionDeadline.ToString("yyyy-MM-dd")</td>
 
-                <td>@(s?.Marks?.ToString() ?? "-")</td>
-
-                <td>
-                    @if (!string.IsNullOrEmpty(a.FilePath))
-                    {
-                        <a href="@Url.Action("DownloadAssignment", "Teacher", new { id = a.Id })" target="_blank">
-                            Download
-                        </a>
-                    }
-                    else
-                    {
-                        <span>-</span>
-                    }
-                </td>
+                <td>@a.Marks</td>
 
                 <td>
-                    @if (s != null && !string.IsNullOrEmpty(s.FilePath))
-                    {
-                        <a href="@Url.Action("DownloadSubmission", "StudentAssignment", new { id = s.Id })" target="_blank">
-                            View Submission
-                        </a>
-                    }
-                    else
-                    {
-                        <span>-</span>
-                    }
+                    <a asp-action="DownloadAssignment" asp-route-id="@a.Id" class="btn btn-sm btn-primary">
+                        Download
+                    </a>
                 </td>
 
                 <td>

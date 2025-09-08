@@ -1,14 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using digital.Repository;
+using Digital.Models;
+using Digital.Models.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Digital.Models;
-using Digital.Models.ViewModels;
+using Microsoft.Extensions.Hosting;
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 public class StudentAssignmentController : Controller
 {
@@ -16,17 +18,20 @@ public class StudentAssignmentController : Controller
     private readonly IAssignmentSubmissionRepository _subRepo;
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
+    private readonly IAssignmentRepository _assignmentRepo;
 
     public StudentAssignmentController(
         ApplicationDbContext ctx,
         IAssignmentSubmissionRepository subRepo,
         IWebHostEnvironment env,
-        IConfiguration config)
+        IConfiguration config,
+        IAssignmentRepository assignmentRepo)
     {
         _ctx = ctx;
         _subRepo = subRepo;
         _env = env;
         _config = config;
+        _assignmentRepo = assignmentRepo;
     }
 
     [HttpGet]
@@ -44,7 +49,7 @@ public class StudentAssignmentController : Controller
         var model = assignments.Select(a => new StudentAssignmentItemViewModel
         {
             Assignment = a,
-            Submission = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
+            AssignmentSubmissions = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
         }).ToList();
 
         return View(model);
@@ -56,21 +61,41 @@ public class StudentAssignmentController : Controller
     public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
     {
         if (file == null || file.Length == 0)
-            return Content("Please select a file");
+            return Content("Please select a file to upload.");
 
-        var student = await _ctx.Student.FirstOrDefaultAsync();
-        var assignment = await _ctx.Assignment.Include(a => a.Subject).FirstOrDefaultAsync(a => a.Id == AssignmentId);
+        var studentIdStr = HttpContext.Session.GetString("StudentId");
+        if (!int.TryParse(studentIdStr, out int studentId))
+            return Content("Student not logged in properly or session expired");
 
-        if (assignment == null || student == null)
-            return Content("Invalid assignment or student");
+        var student = await _ctx.Student.FirstOrDefaultAsync(s => s.Id == studentId);
+        if (student == null) return Content("No logged-in student found");
 
-        var root = Path.Combine(_env.WebRootPath, "Assignments");
-        var folderPath = Path.Combine(root, "TempUploads");
+
+        var assignment = await _ctx.Assignment
+            .Include(a => a.Subject)
+            .FirstOrDefaultAsync(a => a.Id == AssignmentId);
+        if (assignment == null)
+            return Content("Invalid assignment.");
+
+        var extension = Path.GetExtension(file.FileName).ToLower();
+        if (assignment.FileType == "PDF" && extension != ".pdf")
+            return Content("This assignment only accepts PDF uploads.");
+        if (assignment.FileType == "Word" && extension != ".docx")
+            return Content("This assignment only accepts Word uploads.");
+
+        var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
+        var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
+        var studentName = student.Name.Replace(" ", "_");
+        var subjectName = assignment.Subject?.Name ?? "Subject";
+
+        var folderPath = Path.Combine(_env.WebRootPath, "Assignments", "Submissions",
+                                      standardName, divisionName, studentName, subjectName);
 
         if (!Directory.Exists(folderPath))
             Directory.CreateDirectory(folderPath);
 
-        var fileName = Path.GetFileName(file.FileName);
+        
+        var fileName = $"Assignment_{assignment.Id}{extension}";
         var filePath = Path.Combine(folderPath, fileName);
 
         using (var stream = new FileStream(filePath, FileMode.Create))
@@ -78,19 +103,52 @@ public class StudentAssignmentController : Controller
             await file.CopyToAsync(stream);
         }
 
-        var submission = new AssignmentSubmission
-        {
-            AssignmentId = AssignmentId,
-            StudentId = student.Id,
-            FilePath = filePath.Replace(_env.WebRootPath, ""),
-            SubmittedDate = DateTime.Now,
-            
-        };
+        
+        var submission = await _ctx.AssignmentSubmissions
+            .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 
-        _ctx.AssignmentSubmissions.Add(submission);
+        if (submission == null)
+        {
+            submission = new AssignmentSubmission
+            {
+                AssignmentId = AssignmentId,
+                StudentId = student.Id,
+                FileName = fileName,
+                FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
+                SubmittedDate = DateTime.Now
+            };
+            _ctx.AssignmentSubmissions.Add(submission);
+        }
+        else
+        {
+            submission.FileName = fileName;
+            submission.FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/");
+            submission.SubmittedDate = DateTime.Now;
+            _ctx.AssignmentSubmissions.Update(submission);
+        }
+
         await _ctx.SaveChangesAsync();
+
+        TempData["Success"] = "Assignment uploaded successfully!";
+        TempData["UploadPath"] = filePath; 
 
         return RedirectToAction("Index");
     }
+
+
+    public async Task<IActionResult> DownloadAssignment(int id)
+    {
+        var assignment = await _assignmentRepo.GetAssignmentByIdAsync(id);
+        if (assignment == null || string.IsNullOrEmpty(assignment.FilePath))
+            return NotFound();
+
+        var filePath = Path.Combine(_env.WebRootPath, assignment.FilePath.TrimStart('/'));
+        var fileName = Path.GetFileName(filePath);
+        var contentType = "application/octet-stream";
+
+        return PhysicalFile(filePath, contentType, fileName);
+    }
+
+
 
 }
