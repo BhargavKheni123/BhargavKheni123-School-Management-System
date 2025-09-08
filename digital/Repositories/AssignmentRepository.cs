@@ -15,6 +15,12 @@ namespace digital.Repository
             _context = context;
         }
 
+        public async Task AddAssignmentAsync(Assignment assignment)
+        {
+            _context.Assignments.Add(assignment);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AddAssignmentAsync(Assignment assignment, List<int> studentIds, bool assignAll)
         {
             _context.Assignments.Add(assignment);
@@ -55,6 +61,35 @@ namespace digital.Repository
             return await _context.Assignments
                 .Include(a => a.AssignmentStudents)
                 .ToListAsync();
+        }
+
+        public async Task<Assignment> GetAssignmentByIdAsync(int id)
+        {
+            return await _context.Assignments
+                .Include(a => a.AssignmentStudents)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task UpdateAssignmentAsync(Assignment assignment)
+        {
+            _context.Assignments.Update(assignment);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAssignmentAsync(int id)
+        {
+            var assignment = await _context.Assignments.FindAsync(id);
+            if (assignment != null)
+            {
+                var relatedStudents = _context.AssignmentStudents
+                                              .Where(x => x.AssignmentId == id)
+                                              .ToList();
+
+                _context.AssignmentStudents.RemoveRange(relatedStudents);
+                _context.Assignments.Remove(assignment);
+
+                await _context.SaveChangesAsync();
+            }
         }
     }
 }
