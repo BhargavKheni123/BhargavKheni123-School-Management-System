@@ -63,13 +63,8 @@ public class StudentAssignmentController : Controller
         if (file == null || file.Length == 0)
             return Content("Please select a file to upload.");
 
-        var studentIdStr = HttpContext.Session.GetString("StudentId");
-        if (!int.TryParse(studentIdStr, out int studentId))
-            return Content("Student not logged in properly or session expired");
-
-        var student = await _ctx.Student.FirstOrDefaultAsync(s => s.Id == studentId);
-        if (student == null) return Content("No logged-in student found");
-
+        var student = await _ctx.Student.FirstOrDefaultAsync();
+        if (student == null) return Content("No student found in DB");
 
         var assignment = await _ctx.Assignment
             .Include(a => a.Subject)
@@ -94,7 +89,6 @@ public class StudentAssignmentController : Controller
         if (!Directory.Exists(folderPath))
             Directory.CreateDirectory(folderPath);
 
-        
         var fileName = $"Assignment_{assignment.Id}{extension}";
         var filePath = Path.Combine(folderPath, fileName);
 
@@ -103,7 +97,6 @@ public class StudentAssignmentController : Controller
             await file.CopyToAsync(stream);
         }
 
-        
         var submission = await _ctx.AssignmentSubmissions
             .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 
@@ -116,6 +109,7 @@ public class StudentAssignmentController : Controller
                 FileName = fileName,
                 FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
                 SubmittedDate = DateTime.Now
+               
             };
             _ctx.AssignmentSubmissions.Add(submission);
         }
@@ -130,10 +124,11 @@ public class StudentAssignmentController : Controller
         await _ctx.SaveChangesAsync();
 
         TempData["Success"] = "Assignment uploaded successfully!";
-        TempData["UploadPath"] = filePath; 
+        TempData["UploadPath"] = filePath;
 
         return RedirectToAction("Index");
     }
+
 
 
     public async Task<IActionResult> DownloadAssignment(int id)
