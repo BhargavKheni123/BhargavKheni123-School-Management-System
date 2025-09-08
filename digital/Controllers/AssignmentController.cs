@@ -33,9 +33,30 @@ namespace digital.Controllers
             {
                 Categories = _context.Categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
                 Subjects = _context.Subjects.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList(),
-                AssignmentList = _context.Assignments.ToList()
+                AssignmentList = _context.Assignment.ToList()
             };
             return View(vm);
+        }
+        [HttpGet]
+        public JsonResult GetSubCategories(int categoryId)
+        {
+            var subcategories = _context.SubCategories
+                .Where(sc => sc.CategoryId == categoryId)
+                .Select(sc => new { id = sc.Id, name = sc.Name })
+                .ToList();
+
+            return Json(subcategories);
+        }
+
+        [HttpGet]
+        public JsonResult GetStudents(int categoryId, int subCategoryId)
+        {
+            var students = _context.Student
+                .Where(s => s.CategoryId == categoryId && s.SubCategoryId == subCategoryId)
+                .Select(s => new { id = s.Id, name = s.Name })
+                .ToList();
+
+            return Json(students);
         }
 
         [HttpPost]
@@ -66,6 +87,7 @@ namespace digital.Controllers
                             col.Item().Text($"Standard: {vm.CategoryId}");
                             col.Item().Text($"Class: {vm.SubCategoryId}");
                             col.Item().Text($"Subject: {vm.SubjectId}");
+                            col.Item().Text($"Marks: {vm.Marks}");
                             col.Item().Text($"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}");
                         });
                     });
@@ -104,6 +126,7 @@ namespace digital.Controllers
                 CategoryId = vm.CategoryId,
                 SubCategoryId = vm.SubCategoryId,
                 SubjectId = vm.SubjectId,
+                Marks = vm.Marks,
                 SubmissionDeadline = vm.SubmissionDeadline,
                 FilePath = filePath.Replace(wwwRootPath + "\\", ""),
                 FileType = vm.FileType,
@@ -112,7 +135,6 @@ namespace digital.Controllers
 
                 _context.Assignment.Add(assignment);
                 await _context.SaveChangesAsync();
-            await _repository.AddAssignmentAsync(assignment, vm.SelectedStudents, vm.AssignAllStudents);
 
             return RedirectToAction(nameof(Create));
         }
@@ -131,6 +153,7 @@ namespace digital.Controllers
                 CategoryId = assignment.CategoryId,
                 SubCategoryId = assignment.SubCategoryId,
                 SubjectId = assignment.SubjectId,
+                Marks = assignment.Marks,   
                 SubmissionDeadline = assignment.SubmissionDeadline,
                 FilePath = assignment.FilePath,
 
@@ -153,6 +176,7 @@ namespace digital.Controllers
             assignment.CategoryId = vm.CategoryId;
             assignment.SubCategoryId = vm.SubCategoryId;
             assignment.SubjectId = vm.SubjectId;
+            assignment.Marks = vm.Marks;
             assignment.SubmissionDeadline = vm.SubmissionDeadline;
 
             await _repository.UpdateAssignmentAsync(assignment);

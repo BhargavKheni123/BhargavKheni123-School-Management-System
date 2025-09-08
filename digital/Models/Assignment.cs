@@ -13,6 +13,7 @@ public class Assignment
     public DateTime SubmissionDeadline { get; set; }
     public string? FilePath { get; set; }
     public string FileType { get; set; }
+    public int Marks { get; set; }
 
     
     public Subject Subject { get; set; }

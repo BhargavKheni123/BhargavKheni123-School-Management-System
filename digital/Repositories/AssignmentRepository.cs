@@ -18,7 +18,7 @@ namespace digital.Repository
 
         public async Task AddAssignmentAsync(Assignment assignment)
         {
-            _context.Assignments.Add(assignment);
+            _context.Assignment.Add(assignment);
             await _context.SaveChangesAsync();
         }
 
@@ -66,28 +66,28 @@ namespace digital.Repository
 
         public async Task<Assignment> GetAssignmentByIdAsync(int id)
         {
-            return await _context.Assignments
-                .Include(a => a.AssignmentStudents)
+            return await _context.Assignment
+                .Include(a => a.Submission)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task UpdateAssignmentAsync(Assignment assignment)
         {
-            _context.Assignments.Update(assignment);
+            _context.Assignment.Update(assignment);
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAssignmentAsync(int id)
         {
-            var assignment = await _context.Assignments.FindAsync(id);
+            var assignment = await _context.Assignment.FindAsync(id);
             if (assignment != null)
             {
-                var relatedStudents = _context.AssignmentStudents
+                var relatedStudents = _context.AssignmentSubmissions
                                               .Where(x => x.AssignmentId == id)
                                               .ToList();
 
-                _context.AssignmentStudents.RemoveRange(relatedStudents);
-                _context.Assignments.Remove(assignment);
+                _context.AssignmentSubmissions.RemoveRange(relatedStudents);
+                _context.Assignment.Remove(assignment);
 
                 await _context.SaveChangesAsync();
             }

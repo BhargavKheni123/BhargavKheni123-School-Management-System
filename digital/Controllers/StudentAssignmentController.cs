@@ -32,8 +32,7 @@ public class StudentAssignmentController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        // abhi fake student bana ke return kar do
-        var student = await _ctx.Student.FirstOrDefaultAsync(); // koi bhi ek student le aayega
+        var student = await _ctx.Student.FirstOrDefaultAsync(); 
         if (student == null) return Content("No student found in DB");
 
         var assignments = await _ctx.Assignment
@@ -59,7 +58,6 @@ public class StudentAssignmentController : Controller
         if (file == null || file.Length == 0)
             return Content("Please select a file");
 
-        // koi bhi ek student use karo
         var student = await _ctx.Student.FirstOrDefaultAsync();
         var assignment = await _ctx.Assignment.Include(a => a.Subject).FirstOrDefaultAsync(a => a.Id == AssignmentId);
 
@@ -85,7 +83,8 @@ public class StudentAssignmentController : Controller
             AssignmentId = AssignmentId,
             StudentId = student.Id,
             FilePath = filePath.Replace(_env.WebRootPath, ""),
-            SubmittedAt = DateTime.Now
+            SubmittedDate = DateTime.Now,
+            
         };
 
         _ctx.AssignmentSubmissions.Add(submission);

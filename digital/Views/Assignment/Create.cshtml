@@ -118,6 +118,10 @@
                     <option value="">-- Select Subject --</option>
         </select>
     </div>
+     <div>
+        <label>Marks</label>
+        <input asp-for="Marks" class="form-control" />
+    </div>
 
     <div>
         <label>Submission Deadline</label>
@@ -147,6 +151,8 @@
 
     <br />
     <button type="submit" class="btn btn-primary">Create Assignment</button>
+    
+  <a asp-action="Create" class="btn btn-secondary">Cancel</a>
 </form>
 </div>
 
@@ -159,6 +165,7 @@
             <th>Title</th>
             <th>Description</th>
             <th>Deadline</th>
+            <th>Marks</th>
             <th>File</th>
             <th>Actions</th>
         </tr>
@@ -169,6 +176,7 @@
                 <tr>
                     <td>@item.Title</td>
                     <td>@item.Description</td>
+                    <td>@item.Marks</td>w
                     <td>@item.SubmissionDeadline.ToShortDateString()</td>
                     <td>
                         @if (!string.IsNullOrEmpty(item.FilePath))

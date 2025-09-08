@@ -26,6 +26,8 @@ namespace digital.ViewModels
 
         [Required]
         public int SubjectId { get; set; }
+        [Required]
+        public int Marks { get; set; }
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
