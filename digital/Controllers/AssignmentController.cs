@@ -7,10 +7,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Presentation;
+using A = DocumentFormat.OpenXml.Drawing;
+using SixLabors.ImageSharp.Drawing.Processing; 
+using SixLabors.Fonts;
+
+
+
 
 namespace digital.Controllers
 {
@@ -72,7 +83,6 @@ namespace digital.Controllers
 
             string uniqueFileName = Guid.NewGuid().ToString();
             string filePath = "";
-
             if (vm.FileType == "PDF")
             {
                 filePath = Path.Combine(folderPath, uniqueFileName + ".pdf");
@@ -96,6 +106,7 @@ namespace digital.Controllers
 
                 doc.GeneratePdf(filePath);
             }
+            // ====== Word Generate ======
             else if (vm.FileType == "Word")
             {
                 filePath = Path.Combine(folderPath, uniqueFileName + ".docx");
@@ -110,15 +121,94 @@ namespace digital.Controllers
                         new DocumentFormat.OpenXml.Wordprocessing.Run(
                             new DocumentFormat.OpenXml.Wordprocessing.Text($"Title: {vm.Title}")
                         )));
-
                     body.Append(new DocumentFormat.OpenXml.Wordprocessing.Paragraph(
                         new DocumentFormat.OpenXml.Wordprocessing.Run(
                             new DocumentFormat.OpenXml.Wordprocessing.Text($"Description: {vm.Description}")
                         )));
-
                     mainPart.Document.Append(body);
                 }
             }
+            else if (vm.FileType == "Image")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".png");
+
+                using (var image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(800, 600))
+                {
+                    image.Mutate(ctx =>
+                    {
+                        ctx.Fill(SixLabors.ImageSharp.Color.White); 
+
+                        int y = 20;
+                        var font = SixLabors.Fonts.SystemFonts.CreateFont("Arial", 20);
+
+                        ctx.DrawText($"Title: {vm.Title}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Description: {vm.Description}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Standard: {vm.CategoryId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Class: {vm.SubCategoryId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Subject: {vm.SubjectId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Marks: {vm.Marks}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                    });
+
+                    await image.SaveAsPngAsync(filePath);
+                }
+            }
+
+            else if (vm.FileType == "PPT")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".pptx");
+
+                using (var ppt = PresentationDocument.Create(filePath, PresentationDocumentType.Presentation))
+                {
+                    var presentationPart = ppt.AddPresentationPart();
+                    presentationPart.Presentation = new Presentation();
+
+                    var slidePart = presentationPart.AddNewPart<SlidePart>();
+                    slidePart.Slide = new Slide(new CommonSlideData(new ShapeTree()));
+
+                    var slideIdList = presentationPart.Presentation.AppendChild(new SlideIdList());
+                    uint slideId = 256;
+                    slideIdList.Append(new SlideId
+                    {
+                        Id = slideId,
+                        RelationshipId = presentationPart.GetIdOfPart(slidePart)
+                    });
+
+                    var notes = $"Title: {vm.Title}\n" +
+                                $"Description: {vm.Description}\n" +
+                                $"Standard: {vm.CategoryId}\n" +
+                                $"Class: {vm.SubCategoryId}\n" +
+                                $"Subject: {vm.SubjectId}\n" +
+                                $"Marks: {vm.Marks}\n" +
+                                $"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}";
+
+                    var shapeTree = slidePart.Slide.CommonSlideData.ShapeTree;
+                    var shape = new Shape(
+                        new NonVisualShapeProperties(
+                            new NonVisualDrawingProperties() { Id = 2, Name = "ContentBox" },
+                            new NonVisualShapeDrawingProperties(new A.ShapeLocks() { NoGrouping = true }),
+                            new ApplicationNonVisualDrawingProperties()
+                        ),
+                        new ShapeProperties(),
+                        new TextBody(
+                            new A.BodyProperties(),
+                            new A.ListStyle(),
+                            new A.Paragraph(new A.Run(new A.Text(notes)))
+                        )
+                    );
+
+                    shapeTree.Append(shape);
+
+                    presentationPart.Presentation.Save();
+                }
+            }
+
 
             var assignment = new Assignment
             {
@@ -129,16 +219,18 @@ namespace digital.Controllers
                 SubjectId = vm.SubjectId,
                 Marks = vm.Marks,
                 SubmissionDeadline = vm.SubmissionDeadline,
-                FilePath = filePath.Replace(wwwRootPath + "\\", ""),
+                FilePath = string.IsNullOrEmpty(filePath) ? "" : filePath.Replace(wwwRootPath, "").Replace("\\", "/"),
                 FileType = vm.FileType,
                 CreatedDate = DateTime.Now
             };
 
-                _context.Assignment.Add(assignment);
-                await _context.SaveChangesAsync();
+            _context.Assignment.Add(assignment);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Create));
         }
+
+
 
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
