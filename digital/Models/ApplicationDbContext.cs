@@ -1,7 +1,8 @@
 ﻿using digital.Models;
+using digital.Models;
+using Digital.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Xml;
-using digital.Models;
 
 public class ApplicationDbContext : DbContext
 {
@@ -30,9 +31,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<StandardFees> StandardFees { get; set; }
     public DbSet<StudentFees> StudentFees { get; set; }
 
-    public DbSet<Assignment> Assignments { get; set; }
-    public DbSet<AssignmentStudent> AssignmentStudents { get; set; }
+    public DbSet<Assignment> Assignment { get; set; }
     public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
+
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -45,12 +47,12 @@ public class ApplicationDbContext : DbContext
             .HasForeignKey(a => a.QuestionId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<AssignmentStudent>()
-            .HasOne(a => a.Assignment)
-            .WithMany(a => a.AssignmentStudents)
-            .HasForeignKey(a => a.AssignmentId);
+        modelBuilder.Entity<AssignmentSubmission>()
+           .HasOne(s => s.Assignment)
+           .WithMany(a => a.Submission)
+           .HasForeignKey(s => s.AssignmentId);
 
-        modelBuilder.Entity<AssignmentStudent>()
+        modelBuilder.Entity<AssignmentSubmission>()
             .HasOne(s => s.Student)
             .WithMany()
             .HasForeignKey(s => s.StudentId);

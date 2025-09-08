@@ -1,4 +1,5 @@
 ﻿using digital.Models;
+using Digital.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace digital.Repository
 
         public async Task AddAssignmentAsync(Assignment assignment, List<int> studentIds, bool assignAll)
         {
-            _context.Assignments.Add(assignment);
+            _context.Assignment.Add(assignment);
             await _context.SaveChangesAsync();
 
             if (assignAll)
@@ -28,7 +29,7 @@ namespace digital.Repository
 
                 foreach (var student in allStudents)
                 {
-                    _context.AssignmentStudents.Add(new AssignmentStudent
+                    _context.AssignmentSubmissions.Add(new AssignmentSubmission
                     {
                         AssignmentId = assignment.Id,
                         StudentId = student.Id
@@ -39,7 +40,7 @@ namespace digital.Repository
             {
                 foreach (var studentId in studentIds)
                 {
-                    _context.AssignmentStudents.Add(new AssignmentStudent
+                    _context.AssignmentSubmissions.Add(new AssignmentSubmission
                     {
                         AssignmentId = assignment.Id,
                         StudentId = studentId
@@ -52,8 +53,8 @@ namespace digital.Repository
 
         public async Task<List<Assignment>> GetAllAssignmentsAsync()
         {
-            return await _context.Assignments
-                .Include(a => a.AssignmentStudents)
+            return await _context.Assignment
+                .Include(a => a.Submission)
                 .ToListAsync();
         }
     }

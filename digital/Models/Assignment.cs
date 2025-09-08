@@ -1,48 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using digital.Models;
+using Digital.Models;
 
-namespace digital.Models
+public class Assignment
 {
-    [Table("Assignment")]
-    public class Assignment
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public int CategoryId { get; set; }
+    public int SubCategoryId { get; set; }
+    public int SubjectId { get; set; }
+    public DateTime CreatedDate { get; set; }
+    public DateTime SubmissionDeadline { get; set; }
+    public string? FilePath { get; set; }
+    public string FileType { get; set; }
 
-        [Required]
-        public string Title { get; set; }
+    
+    public Subject Subject { get; set; }
+    public ICollection<AssignmentSubmission> Submission { get; set; }
 
-        public string? Description { get; set; }
-
-        [Required]
-        public int CategoryId { get; set; }
-
-        [Required]
-        public int SubCategoryId { get; set; }
-
-        [Required]
-        public int SubjectId { get; set; }
-
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
-
-        [Required]
-        public DateTime SubmissionDeadline { get; set; }
-
-        public string? FilePath { get; set; }
-        public string? FileType { get; set; }
-        public ICollection<AssignmentStudent> AssignmentStudents { get; set; }
-    }
-
-    [Table("AssignmentStudent")]
-    public class AssignmentStudent
-    {
-        public int Id { get; set; }
-
-        public int AssignmentId { get; set; }
-        public Assignment Assignment { get; set; }
-
-        public int StudentId { get; set; }
-        public Student Student { get; set; }
-    }
 }

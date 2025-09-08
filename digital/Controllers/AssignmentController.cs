@@ -100,7 +100,7 @@ namespace digital.Controllers
                     CreatedDate = DateTime.Now
                 };
 
-                _context.Assignments.Add(assignment);
+                _context.Assignment.Add(assignment);
                 await _context.SaveChangesAsync();
 
                 return RedirectToAction(nameof(Create));
