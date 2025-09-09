@@ -37,23 +37,25 @@ public class StudentAssignmentController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var student = await _ctx.Student.FirstOrDefaultAsync(); 
+        var student = await _ctx.Student.FirstOrDefaultAsync();
         if (student == null) return Content("No student found in DB");
 
-        var assignments = await _ctx.Assignment
-            .Where(a => a.CategoryId == student.CategoryId && a.SubCategoryId == student.SubCategoryId)
-            .Include(a => a.Subject)
-            .OrderByDescending(a => a.CreatedDate)
+        var assignments = await _ctx.AssignmentSubmissions
+            .Where(s => s.StudentId == student.Id)
+            .Include(s => s.Assignment)
+                .ThenInclude(a => a.Subject)
+            .OrderByDescending(s => s.Assignment.CreatedDate)
             .ToListAsync();
 
-        var model = assignments.Select(a => new StudentAssignmentItemViewModel
+        var model = assignments.Select(s => new StudentAssignmentItemViewModel
         {
-            Assignment = a,
-            AssignmentSubmissions = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
+            Assignment = s.Assignment,
+            AssignmentSubmissions = s
         }).ToList();
 
         return View(model);
     }
+
 
 
 
@@ -109,26 +111,26 @@ public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
     var submission = await _ctx.AssignmentSubmissions
         .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 
-    if (submission == null)
-    {
-        submission = new AssignmentSubmission
+        if (submission == null)
         {
-            AssignmentId = AssignmentId,
-            StudentId = student.Id,
-            FileName = fileName,
-            FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
-            SubmittedDate = DateTime.Now,
-            Marks = null
-        };
-        _ctx.AssignmentSubmissions.Add(submission);
-    }
-    else
-    {
-        submission.FileName = fileName;
-        submission.FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/");
-        submission.SubmittedDate = DateTime.Now;
-        _ctx.AssignmentSubmissions.Update(submission);
-    }
+            submission = new AssignmentSubmission
+            {
+                AssignmentId = AssignmentId,
+                StudentId = student.Id,
+                FileName = "Pending",
+                FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
+                SubmittedDate = DateTime.Now
+               
+            };
+            _ctx.AssignmentSubmissions.Add(submission);
+        }
+        else
+        {
+            submission.FileName = fileName;
+            submission.FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/");
+            submission.SubmittedDate = DateTime.Now;
+            _ctx.AssignmentSubmissions.Update(submission);
+        }
 
     await _ctx.SaveChangesAsync();
 

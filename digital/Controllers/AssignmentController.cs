@@ -225,7 +225,7 @@ namespace digital.Controllers
             };
 
             _context.Assignment.Add(assignment);
-            await _context.SaveChangesAsync();
+            await _repository.AddAssignmentAsync(assignment, vm.SelectedStudents, vm.AssignAllStudents);
 
             return RedirectToAction(nameof(Create));
         }
