@@ -58,76 +58,84 @@ public class StudentAssignmentController : Controller
 
 
     [HttpPost]
-    public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
+public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
+{
+    if (file == null || file.Length == 0)
+        return Content("Please select a file to upload.");
+
+    // ✅ 1. Get logged-in student
+    int? studentId = HttpContext.Session.GetInt32("StudentId");
+    if (studentId == null)
+        return Content("Session expired. Please login again.");
+
+    var student = await _ctx.Student.FirstOrDefaultAsync(s => s.Id == studentId);
+    if (student == null) return Content("Student not found in DB");
+
+    // ✅ 2. Get assignment
+    var assignment = await _ctx.Assignment
+        .Include(a => a.Subject)
+        .FirstOrDefaultAsync(a => a.Id == AssignmentId);
+    if (assignment == null)
+        return Content("Invalid assignment.");
+
+    // ✅ 3. File type check
+    var extension = Path.GetExtension(file.FileName).ToLower();
+    if (assignment.FileType == "PDF" && extension != ".pdf")
+        return Content("This assignment only accepts PDF uploads.");
+    if (assignment.FileType == "Word" && extension != ".docx")
+        return Content("This assignment only accepts Word uploads.");
+
+    // ✅ 4. Build folder path
+    var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
+    var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
+    var studentName = student.Name.Replace(" ", "_");
+    var subjectName = assignment.Subject?.Name ?? "Subject";
+
+    var folderPath = Path.Combine(_env.WebRootPath, "Assignments", "Submissions",
+                                  standardName, divisionName, studentName, subjectName);
+
+    if (!Directory.Exists(folderPath))
+        Directory.CreateDirectory(folderPath);
+
+    var fileName = $"Assignment_{assignment.Id}{extension}";
+    var filePath = Path.Combine(folderPath, fileName);
+
+    using (var stream = new FileStream(filePath, FileMode.Create))
     {
-        if (file == null || file.Length == 0)
-            return Content("Please select a file to upload.");
-
-        var student = await _ctx.Student.FirstOrDefaultAsync();
-        if (student == null) return Content("No student found in DB");
-
-        var assignment = await _ctx.Assignment
-            .Include(a => a.Subject)
-            .FirstOrDefaultAsync(a => a.Id == AssignmentId);
-        if (assignment == null)
-            return Content("Invalid assignment.");
-
-        var extension = Path.GetExtension(file.FileName).ToLower();
-        if (assignment.FileType == "PDF" && extension != ".pdf")
-            return Content("This assignment only accepts PDF uploads.");
-        if (assignment.FileType == "Word" && extension != ".docx")
-            return Content("This assignment only accepts Word uploads.");
-
-        var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
-        var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
-        var studentName = student.Name.Replace(" ", "_");
-        var subjectName = assignment.Subject?.Name ?? "Subject";
-
-        var folderPath = Path.Combine(_env.WebRootPath, "Assignments", "Submissions",
-                                      standardName, divisionName, studentName, subjectName);
-
-        if (!Directory.Exists(folderPath))
-            Directory.CreateDirectory(folderPath);
-
-        var fileName = $"Assignment_{assignment.Id}{extension}";
-        var filePath = Path.Combine(folderPath, fileName);
-
-        using (var stream = new FileStream(filePath, FileMode.Create))
-        {
-            await file.CopyToAsync(stream);
-        }
-
-        var submission = await _ctx.AssignmentSubmissions
-            .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
-
-        if (submission == null)
-        {
-            submission = new AssignmentSubmission
-            {
-                AssignmentId = AssignmentId,
-                StudentId = student.Id,
-                FileName = fileName,
-                FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
-                SubmittedDate = DateTime.Now
-               
-            };
-            _ctx.AssignmentSubmissions.Add(submission);
-        }
-        else
-        {
-            submission.FileName = fileName;
-            submission.FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/");
-            submission.SubmittedDate = DateTime.Now;
-            _ctx.AssignmentSubmissions.Update(submission);
-        }
-
-        await _ctx.SaveChangesAsync();
-
-        TempData["Success"] = "Assignment uploaded successfully!";
-        TempData["UploadPath"] = filePath;
-
-        return RedirectToAction("Index");
+        await file.CopyToAsync(stream);
     }
+
+    // ✅ 5. Save / Update DB record
+    var submission = await _ctx.AssignmentSubmissions
+        .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
+
+    if (submission == null)
+    {
+        submission = new AssignmentSubmission
+        {
+            AssignmentId = AssignmentId,
+            StudentId = student.Id,
+            FileName = fileName,
+            FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
+            SubmittedDate = DateTime.Now,
+            Marks = null
+        };
+        _ctx.AssignmentSubmissions.Add(submission);
+    }
+    else
+    {
+        submission.FileName = fileName;
+        submission.FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/");
+        submission.SubmittedDate = DateTime.Now;
+        _ctx.AssignmentSubmissions.Update(submission);
+    }
+
+    await _ctx.SaveChangesAsync();
+
+    TempData["Success"] = "Assignment uploaded successfully!";
+    return RedirectToAction("Index");
+}
+
 
 
 
