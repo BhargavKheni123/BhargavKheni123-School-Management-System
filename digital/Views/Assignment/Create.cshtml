@@ -146,7 +146,17 @@
                 <br /><br />
 
                 <div id="studentCheckboxList" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px;">
+                    @foreach (var student in Model.Students)
+                    {
+                        <div>
+                            <label>
+                                <input type="checkbox" name="SelectedStudents" value="@student.Value" />
+                                @student.Text
+                            </label>
+                        </div>
+                    }
                 </div>
+
             </div>
 
 

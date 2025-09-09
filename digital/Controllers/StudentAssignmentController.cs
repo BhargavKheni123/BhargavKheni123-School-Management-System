@@ -37,23 +37,25 @@ public class StudentAssignmentController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var student = await _ctx.Student.FirstOrDefaultAsync(); 
+        var student = await _ctx.Student.FirstOrDefaultAsync();
         if (student == null) return Content("No student found in DB");
 
-        var assignments = await _ctx.Assignment
-            .Where(a => a.CategoryId == student.CategoryId && a.SubCategoryId == student.SubCategoryId)
-            .Include(a => a.Subject)
-            .OrderByDescending(a => a.CreatedDate)
+        var assignments = await _ctx.AssignmentSubmissions
+            .Where(s => s.StudentId == student.Id)
+            .Include(s => s.Assignment)
+                .ThenInclude(a => a.Subject)
+            .OrderByDescending(s => s.Assignment.CreatedDate)
             .ToListAsync();
 
-        var model = assignments.Select(a => new StudentAssignmentItemViewModel
+        var model = assignments.Select(s => new StudentAssignmentItemViewModel
         {
-            Assignment = a,
-            AssignmentSubmissions = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
+            Assignment = s.Assignment,
+            AssignmentSubmissions = s
         }).ToList();
 
         return View(model);
     }
+
 
 
 
@@ -106,7 +108,7 @@ public class StudentAssignmentController : Controller
             {
                 AssignmentId = AssignmentId,
                 StudentId = student.Id,
-                FileName = fileName,
+                FileName = "Pending",
                 FilePath = filePath.Replace(_env.WebRootPath, "").Replace("\\", "/"),
                 SubmittedDate = DateTime.Now
                
