@@ -55,11 +55,11 @@ namespace digital.Controllers
             };
 
             ViewBag.AssignmentList = _context.Assignment
-                .Include(a => a.Teacher).ThenInclude(t => t.Teacher) 
-                .Include(a => a.Category)
-                .Include(a => a.SubCategory)
-                .Include(a => a.Subject)
-                .ToList();
+    .Include(a => a.Category)
+    .Include(a => a.SubCategory)
+    .Include(a => a.Subject)
+    .ToList();
+
 
             return View(vm);
         }

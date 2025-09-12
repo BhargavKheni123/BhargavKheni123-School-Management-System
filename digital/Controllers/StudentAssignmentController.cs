@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 using System.Linq;
@@ -37,7 +36,7 @@ public class StudentAssignmentController : Controller
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var student = await _ctx.Student.FirstOrDefaultAsync(); 
+        var student = await _ctx.Student.FirstOrDefaultAsync();
         if (student == null) return Content("No student found in DB");
 
         var assignments = await _ctx.Assignment
@@ -49,13 +48,12 @@ public class StudentAssignmentController : Controller
         var model = assignments.Select(a => new StudentAssignmentItemViewModel
         {
             Assignment = a,
-            AssignmentSubmissions = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
+            AssignmentSubmissions = _ctx.AssignmentSubmissions
+                .FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
         }).ToList();
 
         return View(model);
     }
-
-
 
     [HttpPost]
     public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
@@ -63,10 +61,6 @@ public class StudentAssignmentController : Controller
         if (file == null || file.Length == 0)
             return Content("Please select a file to upload.");
 
-    int? studentId = HttpContext.Session.GetInt32("StudentId");
-    if (studentId == null)
-        return Content("Session expired. Please login again.");
-       
         int? studentId = HttpContext.Session.GetInt32("StudentId");
         if (studentId == null)
             return Content("Session expired. Please login again.");
@@ -74,32 +68,20 @@ public class StudentAssignmentController : Controller
         var student = await _ctx.Student.FirstOrDefaultAsync(s => s.Id == studentId);
         if (student == null) return Content("Student not found in DB");
 
-    var assignment = await _ctx.Assignment
-        .Include(a => a.Subject)
-        .FirstOrDefaultAsync(a => a.Id == AssignmentId);
-    if (assignment == null)
-        return Content("Invalid assignment.");
         var assignment = await _ctx.Assignment
             .Include(a => a.Subject)
             .FirstOrDefaultAsync(a => a.Id == AssignmentId);
         if (assignment == null)
             return Content("Invalid assignment.");
 
-    var extension = Path.GetExtension(file.FileName).ToLower();
-    if (assignment.FileType == "PDF" && extension != ".pdf")
-        return Content("This assignment only accepts PDF uploads.");
-    if (assignment.FileType == "Word" && extension != ".docx")
-        return Content("This assignment only accepts Word uploads.");
+        // Validate file type
         var extension = Path.GetExtension(file.FileName).ToLower();
         if (assignment.FileType == "PDF" && extension != ".pdf")
             return Content("This assignment only accepts PDF uploads.");
         if (assignment.FileType == "Word" && extension != ".docx")
             return Content("This assignment only accepts Word uploads.");
 
-    var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
-    var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
-    var studentName = student.Name.Replace(" ", "_");
-    var subjectName = assignment.Subject?.Name ?? "Subject";
+        // Build folder structure: Standard -> Division -> Student -> Subject
         var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
         var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
         var studentName = student.Name.Replace(" ", "_");
@@ -119,8 +101,7 @@ public class StudentAssignmentController : Controller
             await file.CopyToAsync(stream);
         }
 
-    var submission = await _ctx.AssignmentSubmissions
-        .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
+        // Save submission
         var submission = await _ctx.AssignmentSubmissions
             .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 
@@ -151,9 +132,6 @@ public class StudentAssignmentController : Controller
         return RedirectToAction("Index");
     }
 
-
-
-
     public async Task<IActionResult> DownloadAssignment(int id)
     {
         var assignment = await _assignmentRepo.GetAssignmentByIdAsync(id);
@@ -167,6 +145,35 @@ public class StudentAssignmentController : Controller
         return PhysicalFile(filePath, contentType, fileName);
     }
 
+    private string GetGradeLetter(decimal? obtained, decimal? total)
+    {
+        if (!obtained.HasValue) return "Not Submitted";
+        if (!total.HasValue || total.Value == 0) return "-";
+
+        decimal percent = (obtained.Value / total.Value) * 100;
+
+        if (percent >= 90) return "A+";
+        if (percent >= 80) return "A";
+        if (percent >= 70) return "B";
+        if (percent >= 60) return "C";
+        if (percent >= 50) return "D";
+        return "F";
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MyGrades()
+    {
+        int? studentId = HttpContext.Session.GetInt32("StudentId");
+        if (studentId == null) return RedirectToAction("Login", "Account");
+
+        var submissions = await _ctx.AssignmentSubmissions
+            .Include(s => s.Assignment)
+            .Where(s => s.StudentId == studentId)
+            .OrderByDescending(s => s.SubmittedDate)
+            .ToListAsync();
+
+        return View(submissions);
+    }
 
 
 }

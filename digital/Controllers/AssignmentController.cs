@@ -309,6 +309,48 @@ namespace digital.Controllers
             return PhysicalFile(filePath, "application/octet-stream", fileName);
         }
 
+        private string GetGradeLetter(decimal? obtained, decimal? total)
+        {
+            if (!obtained.HasValue) return "Not Submitted";
+            if (!total.HasValue || total.Value == 0) return "-";
 
+            decimal percent = (obtained.Value / total.Value) * 100;
+
+            if (percent >= 90) return "A+";
+            if (percent >= 80) return "A";
+            if (percent >= 70) return "B";
+            if (percent >= 60) return "C";
+            if (percent >= 50) return "D";
+            return "F";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TeacherSubmissions(int assignmentId)
+        {
+            var submissions = await _context.AssignmentSubmissions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                .Where(s => s.AssignmentId == assignmentId)
+                .ToListAsync();
+
+            return View(submissions);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateMarks(int submissionId, decimal obtainedMarks)
+        {
+            var submission = await _context.AssignmentSubmissions
+                .Include(s => s.Assignment)
+                .FirstOrDefaultAsync(s => s.Id == submissionId);
+
+            if (submission == null) return NotFound();
+
+            submission.Marks = obtainedMarks;
+            await _context.SaveChangesAsync();
+
+            var grade = GetGradeLetter(submission.Marks, submission.Assignment.Marks);
+
+            return Json(new { success = true, grade });
+        }
     }
 }
