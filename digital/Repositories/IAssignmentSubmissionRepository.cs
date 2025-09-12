@@ -9,7 +9,4 @@ public interface IAssignmentSubmissionRepository
     Task AddAsync(AssignmentSubmission submission);
     Task<IEnumerable<AssignmentSubmission>> GetByAssignmentAsync(int assignmentId);
    
-    
-
-
 }

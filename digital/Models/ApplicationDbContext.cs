@@ -49,7 +49,7 @@ public class ApplicationDbContext : DbContext
 
         modelBuilder.Entity<AssignmentSubmission>()
            .HasOne(s => s.Assignment)
-           .WithMany(a => a.Submission)
+           .WithMany(a => a.AssignmentSubmissions)
            .HasForeignKey(s => s.AssignmentId);
 
         modelBuilder.Entity<AssignmentSubmission>()

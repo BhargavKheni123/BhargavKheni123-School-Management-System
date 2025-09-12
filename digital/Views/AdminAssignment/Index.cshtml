@@ -1,0 +1,93 @@
+﻿@model digital.Models.AdminAssignmentViewModel
+@{
+    var list = ViewBag.AssignmentList ;
+}
+
+<h2>Admin Assignment Management</h2>
+
+<form asp-action="Index" enctype="multipart/form-data" method="post" class="mb-4">
+    <div class="row">
+        <div class="col-md-3">
+            <label>Teacher</label>
+            <select asp-for="Assignment.TeacherId" asp-items="Model.Teachers" class="form-control"></select>
+        </div>
+        <div class="col-md-3">
+            <label>Standard</label>
+            <select asp-for="Assignment.CategoryId" asp-items="Model.Categories" class="form-control"></select>
+        </div>
+        <div class="col-md-3">
+            <label>Division</label>
+            <select asp-for="Assignment.SubCategoryId" asp-items="Model.SubCategories" class="form-control"></select>
+        </div>
+        <div class="col-md-3">
+            <label>Subject</label>
+            <select asp-for="Assignment.SubjectId" asp-items="Model.Subjects" class="form-control"></select>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-4">
+            <label>Title</label>
+            <input asp-for="Assignment.Title" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label>Description</label>
+            <textarea asp-for="Assignment.Description" class="form-control"></textarea>
+        </div>
+        <div class="col-md-2">
+            <label>Deadline</label>
+            <input asp-for="Assignment.SubmissionDeadline" type="date" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label>Marks</label>
+            <input asp-for="Assignment.Marks" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-md-6">
+            <label>Upload File</label>
+            <input type="file" name="file" class="form-control" />
+        </div>
+        <div class="col-md-6 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Upload</button>
+        </div>
+    </div>
+</form>
+
+<hr />
+
+<h3>Assignment List</h3>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Teacher</th>
+            <th>Standard</th>
+            <th>Division</th>
+            <th>Subject</th>
+            <th>Created Date</th>
+            <th>Deadline</th>
+            <th>Marks</th>
+            <th>File Type</th>
+            <th>File</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in list)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Teacher?.Name</td>
+                <td>@item.Category?.Name</td>
+                <td>@item.SubCategory?.Name</td>
+                <td>@item.Subject?.Name</td>
+                <td>@item.CreatedDate.ToString("dd-MM-yyyy")</td>
+                <td>@item.SubmissionDeadline?.ToString("dd-MM-yyyy")</td>
+                <td>@item.Marks</td>
+                <td>@item.FileType</td>
+                <td><a href="@item.FilePath" target="_blank">Download</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

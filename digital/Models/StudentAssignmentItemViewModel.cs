@@ -1,4 +1,6 @@
-﻿namespace Digital.Models.ViewModels
+﻿using digital.Models;
+
+namespace Digital.Models.ViewModels
 {
     public class StudentAssignmentItemViewModel
     {

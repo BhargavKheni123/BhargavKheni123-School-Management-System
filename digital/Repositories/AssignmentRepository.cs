@@ -60,14 +60,14 @@ namespace digital.Repository
         public async Task<List<Assignment>> GetAllAssignmentsAsync()
         {
             return await _context.Assignment
-                .Include(a => a.Submission)
+                .Include(a => a.AssignmentSubmissions)
                 .ToListAsync();
         }
 
         public async Task<Assignment> GetAssignmentByIdAsync(int id)
         {
             return await _context.Assignment
-                .Include(a => a.Submission)
+                .Include(a => a.AssignmentSubmissions)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

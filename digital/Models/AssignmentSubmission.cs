@@ -1,4 +1,6 @@
-﻿namespace Digital.Models
+﻿using digital.Models;
+
+namespace Digital.Models
 {
     public class AssignmentSubmission
     {

@@ -106,7 +106,6 @@ namespace digital.Controllers
 
                 doc.GeneratePdf(filePath);
             }
-            // ====== Word Generate ======
             else if (vm.FileType == "Word")
             {
                 filePath = Path.Combine(folderPath, uniqueFileName + ".docx");
@@ -246,10 +245,9 @@ namespace digital.Controllers
                 CategoryId = assignment.CategoryId,
                 SubCategoryId = assignment.SubCategoryId,
                 SubjectId = assignment.SubjectId,
-                Marks = assignment.Marks,   
-                SubmissionDeadline = assignment.SubmissionDeadline,
+                Marks = assignment.Marks,
+                //SubmissionDeadline = assignment.SubmissionDeadline,
                 FilePath = assignment.FilePath,
-
                 Categories = _context.Categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
                 Subjects = _context.Subjects.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList()
             };
