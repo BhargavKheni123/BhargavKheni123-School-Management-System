@@ -190,6 +190,7 @@
                     <td>@item.Description</td>
                     <td>@item.Marks</td>
                     <td>@item.SubmissionDeadline</td>
+                    <td>@(item.SubmissionDeadline?.ToShortDateString() ?? "No Deadline")</td>
                     <td>
                         @if (!string.IsNullOrEmpty(item.FilePath))
                         {
