@@ -345,7 +345,7 @@ namespace digital.Controllers
 
             if (submission == null) return NotFound();
 
-            submission.Marks = obtainedMarks;
+            //submission.Marks = obtainedMarks;
             await _context.SaveChangesAsync();
 
             var grade = GetGradeLetter(submission.Marks, submission.Assignment.Marks);

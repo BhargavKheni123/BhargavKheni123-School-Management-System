@@ -8,3 +8,5 @@ namespace Digital.Models.ViewModels
         public AssignmentSubmission? AssignmentSubmissions { get; set; }
     }
 }
+
+
