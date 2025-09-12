@@ -19,12 +19,11 @@ namespace digital.Models
         public string ExamType { get; set; }
 
         [Required]
-        public int CategoryId { get; set; }   // Class
+        public int CategoryId { get; set; }   
 
         [Required]
         public int SubjectId { get; set; }
 
-        // ✅ was non-nullable; make it nullable to match existing DB rows
         public int? AssignedTeacherId { get; set; }
 
         public int? CreatedBy { get; set; }
@@ -33,7 +32,6 @@ namespace digital.Models
         [ForeignKey("CategoryId")]
         public virtual Category Category { get; set; }
 
-        // ✅ was non-nullable; make it nullable to match existing DB rows
         public DateTime? ExamDate { get; set; }
 
         [ForeignKey("SubjectId")]

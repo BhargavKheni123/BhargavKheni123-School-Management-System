@@ -56,7 +56,23 @@ public class ApplicationDbContext : DbContext
             .HasOne(s => s.Student)
             .WithMany()
             .HasForeignKey(s => s.StudentId);
+
+        modelBuilder.Entity<Assignment>()
+       .Property(a => a.SubmissionDeadline)
+       .HasColumnType("datetime2");
+
+        modelBuilder.Entity<Assignment>()
+            .Property(a => a.CreatedDate)
+            .HasColumnType("datetime2");
+
+        modelBuilder.Entity<AssignmentSubmission>()
+            .Property(s => s.SubmittedDate)
+            .HasColumnType("datetime2");
+        modelBuilder.Entity<StudentAnswer>()
+            .Property(sa => sa.SubmittedOn)
+            .HasColumnType("datetime2");
     }
+
 
 
 }

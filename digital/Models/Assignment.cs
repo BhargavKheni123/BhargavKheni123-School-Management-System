@@ -10,7 +10,7 @@ public class Assignment
     public int SubCategoryId { get; set; }
     public int SubjectId { get; set; }
     public DateTime CreatedDate { get; set; }
-    public DateTime SubmissionDeadline { get; set; }
+    public DateTime? SubmissionDeadline { get; set; }
     public string? FilePath { get; set; }
     public string FileType { get; set; }
     public int Marks { get; set; }

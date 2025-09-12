@@ -40,17 +40,16 @@ public class StudentAssignmentController : Controller
         var student = await _ctx.Student.FirstOrDefaultAsync();
         if (student == null) return Content("No student found in DB");
 
-        var assignments = await _ctx.AssignmentSubmissions
-            .Where(s => s.StudentId == student.Id)
-            .Include(s => s.Assignment)
-                .ThenInclude(a => a.Subject)
-            .OrderByDescending(s => s.Assignment.CreatedDate)
+        var assignments = await _ctx.Assignment
+            .Where(a => a.CategoryId == student.CategoryId && a.SubCategoryId == student.SubCategoryId)
+            .Include(a => a.Subject)
+            .OrderByDescending(a => a.CreatedDate)
             .ToListAsync();
 
-        var model = assignments.Select(s => new StudentAssignmentItemViewModel
+        var model = assignments.Select(a => new StudentAssignmentItemViewModel
         {
-            Assignment = s.Assignment,
-            AssignmentSubmissions = s
+            Assignment = a,
+            AssignmentSubmissions = _ctx.AssignmentSubmissions.FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
         }).ToList();
 
         return View(model);
@@ -65,7 +64,6 @@ public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
     if (file == null || file.Length == 0)
         return Content("Please select a file to upload.");
 
-    // ✅ 1. Get logged-in student
     int? studentId = HttpContext.Session.GetInt32("StudentId");
     if (studentId == null)
         return Content("Session expired. Please login again.");
@@ -73,21 +71,18 @@ public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
     var student = await _ctx.Student.FirstOrDefaultAsync(s => s.Id == studentId);
     if (student == null) return Content("Student not found in DB");
 
-    // ✅ 2. Get assignment
     var assignment = await _ctx.Assignment
         .Include(a => a.Subject)
         .FirstOrDefaultAsync(a => a.Id == AssignmentId);
     if (assignment == null)
         return Content("Invalid assignment.");
 
-    // ✅ 3. File type check
     var extension = Path.GetExtension(file.FileName).ToLower();
     if (assignment.FileType == "PDF" && extension != ".pdf")
         return Content("This assignment only accepts PDF uploads.");
     if (assignment.FileType == "Word" && extension != ".docx")
         return Content("This assignment only accepts Word uploads.");
 
-    // ✅ 4. Build folder path
     var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
     var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
     var studentName = student.Name.Replace(" ", "_");
@@ -107,7 +102,6 @@ public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
         await file.CopyToAsync(stream);
     }
 
-    // ✅ 5. Save / Update DB record
     var submission = await _ctx.AssignmentSubmissions
         .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 

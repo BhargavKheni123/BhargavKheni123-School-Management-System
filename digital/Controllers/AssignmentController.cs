@@ -75,6 +75,12 @@ namespace digital.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AssignmentViewModel vm)
         {
+            if (vm.SubmissionDeadline < new DateTime(1753, 1, 1))
+            {
+                ModelState.AddModelError("SubmissionDeadline", "Invalid date");
+                return View(vm);
+            }
+
             string wwwRootPath = _webHostEnvironment.WebRootPath;
             string folderPath = Path.Combine(wwwRootPath, "uploads");
 
@@ -106,7 +112,6 @@ namespace digital.Controllers
 
                 doc.GeneratePdf(filePath);
             }
-            // ====== Word Generate ======
             else if (vm.FileType == "Word")
             {
                 filePath = Path.Combine(folderPath, uniqueFileName + ".docx");
@@ -218,14 +223,14 @@ namespace digital.Controllers
                 SubCategoryId = vm.SubCategoryId,
                 SubjectId = vm.SubjectId,
                 Marks = vm.Marks,
-                SubmissionDeadline = vm.SubmissionDeadline,
+                SubmissionDeadline = vm.SubmissionDeadline ?? DateTime.Now,
                 FilePath = string.IsNullOrEmpty(filePath) ? "" : filePath.Replace(wwwRootPath, "").Replace("\\", "/"),
                 FileType = vm.FileType,
                 CreatedDate = DateTime.Now
             };
 
             _context.Assignment.Add(assignment);
-            await _repository.AddAssignmentAsync(assignment, vm.SelectedStudents, vm.AssignAllStudents);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Create));
         }
@@ -270,7 +275,7 @@ namespace digital.Controllers
             assignment.SubCategoryId = vm.SubCategoryId;
             assignment.SubjectId = vm.SubjectId;
             assignment.Marks = vm.Marks;
-            assignment.SubmissionDeadline = vm.SubmissionDeadline;
+            assignment.SubmissionDeadline = vm.SubmissionDeadline ?? DateTime.Now;
 
             await _repository.UpdateAssignmentAsync(assignment);
 

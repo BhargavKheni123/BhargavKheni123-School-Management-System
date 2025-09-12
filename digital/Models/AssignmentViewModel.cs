@@ -32,8 +32,8 @@ namespace digital.ViewModels
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         [Required]
-        [Display(Name = "Submission Deadline")]
-        public DateTime SubmissionDeadline { get; set; }
+        public DateTime? SubmissionDeadline { get; set; }
+
 
         public IFormFile UploadFile { get; set; }
 
