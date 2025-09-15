@@ -214,7 +214,6 @@ namespace digital.Controllers
                 }
             }
 
-
             var assignment = new Assignment
             {
                 Title = vm.Title,
@@ -228,9 +227,11 @@ namespace digital.Controllers
                 FileType = vm.FileType,
                 CreatedDate = DateTime.Now
             };
+            Console.WriteLine("AssignAllStudents: " + vm.AssignAllStudents);
+            Console.WriteLine("Selected Students Count: " + vm.SelectedStudents?.Count);
 
-            _context.Assignment.Add(assignment);
-            await _context.SaveChangesAsync();
+            await _repository.AddAssignmentAsync(assignment, vm.SelectedStudents, vm.AssignAllStudents);
+
 
             return RedirectToAction(nameof(Create));
         }
@@ -240,6 +241,7 @@ namespace digital.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+
             var assignment = await _repository.GetAssignmentByIdAsync(id);
             if (assignment == null) return NotFound();
 
@@ -252,7 +254,7 @@ namespace digital.Controllers
                 SubCategoryId = assignment.SubCategoryId,
                 SubjectId = assignment.SubjectId,
                 Marks = assignment.Marks,
-                //SubmissionDeadline = assignment.SubmissionDeadline,
+                SubmissionDeadline = assignment.SubmissionDeadline,
                 FilePath = assignment.FilePath,
                 Categories = _context.Categories.Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name }).ToList(),
                 Subjects = _context.Subjects.Select(s => new SelectListItem { Value = s.Id.ToString(), Text = s.Name }).ToList()
@@ -265,6 +267,144 @@ namespace digital.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(AssignmentViewModel vm)
         {
+            if (vm.SubmissionDeadline < new DateTime(1753, 1, 1))
+            {
+                ModelState.AddModelError("SubmissionDeadline", "Invalid date");
+                return View(vm);
+            }
+
+            string wwwRootPath = _webHostEnvironment.WebRootPath;
+            string folderPath = Path.Combine(wwwRootPath, "uploads");
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            string uniqueFileName = Guid.NewGuid().ToString();
+            string filePath = "";
+            if (vm.FileType == "PDF")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".pdf");
+
+                var doc = QuestPDF.Fluent.Document.Create(container =>
+                {
+                    container.Page(page =>
+                    {
+                        page.Content().Padding(20).Column(col =>
+                        {
+                            col.Item().Text($"Title: {vm.Title}");
+                            col.Item().Text($"Description: {vm.Description}");
+                            col.Item().Text($"Standard: {vm.CategoryId}");
+                            col.Item().Text($"Class: {vm.SubCategoryId}");
+                            col.Item().Text($"Subject: {vm.SubjectId}");
+                            col.Item().Text($"Marks: {vm.Marks}");
+                            col.Item().Text($"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}");
+                        });
+                    });
+                });
+
+                doc.GeneratePdf(filePath);
+            }
+            else if (vm.FileType == "Word")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".docx");
+
+                using (var doc = WordprocessingDocument.Create(filePath, DocumentFormat.OpenXml.WordprocessingDocumentType.Document))
+                {
+                    var mainPart = doc.AddMainDocumentPart();
+                    mainPart.Document = new DocumentFormat.OpenXml.Wordprocessing.Document();
+                    var body = new DocumentFormat.OpenXml.Wordprocessing.Body();
+
+                    body.Append(new DocumentFormat.OpenXml.Wordprocessing.Paragraph(
+                        new DocumentFormat.OpenXml.Wordprocessing.Run(
+                            new DocumentFormat.OpenXml.Wordprocessing.Text($"Title: {vm.Title}")
+                        )));
+                    body.Append(new DocumentFormat.OpenXml.Wordprocessing.Paragraph(
+                        new DocumentFormat.OpenXml.Wordprocessing.Run(
+                            new DocumentFormat.OpenXml.Wordprocessing.Text($"Description: {vm.Description}")
+                        )));
+                    mainPart.Document.Append(body);
+                }
+            }
+            else if (vm.FileType == "Image")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".png");
+
+                using (var image = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(800, 600))
+                {
+                    image.Mutate(ctx =>
+                    {
+                        ctx.Fill(SixLabors.ImageSharp.Color.White);
+
+                        int y = 20;
+                        var font = SixLabors.Fonts.SystemFonts.CreateFont("Arial", 20);
+
+                        ctx.DrawText($"Title: {vm.Title}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Description: {vm.Description}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Standard: {vm.CategoryId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Class: {vm.SubCategoryId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Subject: {vm.SubjectId}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Marks: {vm.Marks}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                        y += 40;
+                        ctx.DrawText($"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}", font, SixLabors.ImageSharp.Color.Black, new SixLabors.ImageSharp.PointF(20, y));
+                    });
+
+                    await image.SaveAsPngAsync(filePath);
+                }
+            }
+
+            else if (vm.FileType == "PPT")
+            {
+                filePath = Path.Combine(folderPath, uniqueFileName + ".pptx");
+
+                using (var ppt = PresentationDocument.Create(filePath, PresentationDocumentType.Presentation))
+                {
+                    var presentationPart = ppt.AddPresentationPart();
+                    presentationPart.Presentation = new Presentation();
+
+                    var slidePart = presentationPart.AddNewPart<SlidePart>();
+                    slidePart.Slide = new Slide(new CommonSlideData(new ShapeTree()));
+
+                    var slideIdList = presentationPart.Presentation.AppendChild(new SlideIdList());
+                    uint slideId = 256;
+                    slideIdList.Append(new SlideId
+                    {
+                        Id = slideId,
+                        RelationshipId = presentationPart.GetIdOfPart(slidePart)
+                    });
+
+                    var notes = $"Title: {vm.Title}\n" +
+                                $"Description: {vm.Description}\n" +
+                                $"Standard: {vm.CategoryId}\n" +
+                                $"Class: {vm.SubCategoryId}\n" +
+                                $"Subject: {vm.SubjectId}\n" +
+                                $"Marks: {vm.Marks}\n" +
+                                $"Deadline: {vm.SubmissionDeadline:dd-MM-yyyy}";
+
+                    var shapeTree = slidePart.Slide.CommonSlideData.ShapeTree;
+                    var shape = new Shape(
+                        new NonVisualShapeProperties(
+                            new NonVisualDrawingProperties() { Id = 2, Name = "ContentBox" },
+                            new NonVisualShapeDrawingProperties(new A.ShapeLocks() { NoGrouping = true }),
+                            new ApplicationNonVisualDrawingProperties()
+                        ),
+                        new ShapeProperties(),
+                        new TextBody(
+                            new A.BodyProperties(),
+                            new A.ListStyle(),
+                            new A.Paragraph(new A.Run(new A.Text(notes)))
+                        )
+                    );
+
+                    shapeTree.Append(shape);
+
+                    presentationPart.Presentation.Save();
+                }
+            }
             var assignment = await _repository.GetAssignmentByIdAsync(vm.Id);
             if (assignment == null) return NotFound();
 

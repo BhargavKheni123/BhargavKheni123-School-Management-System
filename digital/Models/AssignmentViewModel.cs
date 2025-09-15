@@ -44,8 +44,8 @@ namespace digital.ViewModels
         public List<SelectListItem> SubCategories { get; set; } = new List<SelectListItem>();
         public List<SelectListItem> Subjects { get; set; } = new List<SelectListItem>();
 
-        public List<int> SelectedStudents { get; set; } = new List<int>();
         public bool AssignAllStudents { get; set; }
+        public List<int> SelectedStudents { get; set; }
         public List<SelectListItem> Students { get; set; } = new List<SelectListItem>();
         public List<Assignment> AssignmentList { get; set; } = new List<Assignment>();
 

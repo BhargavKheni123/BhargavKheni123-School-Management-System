@@ -265,10 +265,13 @@
                 }
             });
 
-            $('#AssignAllStudents').change(function () {
-                var checked = $(this).is(':checked');
-                $('#studentCheckboxList input[type="checkbox"]').prop('checked', checked);
-            });
+             $('#AssignAllStudents').change(function () {
+            if ($(this).is(':checked')) {
+                $('#studentCheckboxList input[type="checkbox"]').prop('checked', false).prop('disabled', true);
+            } else {
+                $('#studentCheckboxList input[type="checkbox"]').prop('disabled', false);
+            }
+        });
         });
     </script>
 

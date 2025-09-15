@@ -1,9 +1,11 @@
 ﻿using digital.Models;
 using digital.Repository;
 using digital.ViewModels;
+using digital.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using digital.ViewModels;
+using System.IO.Compression;
+using System.Text;
 
 namespace digital.Controllers
 {
@@ -244,9 +246,54 @@ namespace digital.Controllers
             return View(model);
         }
 
+    [HttpGet]
+    public IActionResult ExportResult(int resultId)
+    {
+        var studentId = HttpContext.Session.GetInt32("StudentId");
+        if (studentId == null) return RedirectToAction("Login", "Account");
 
+        var result = _repository.GetExamResult(resultId, studentId.Value);
+        if (result == null) return NotFound();
 
+        var answers = _repository.GetAnswersByResultId(result.Id);
 
+        var sb = new StringBuilder();
+        sb.AppendLine($"Student: {result.Student.Name}");
+        sb.AppendLine($"Subject: {result.Subject.Name}");
+        sb.AppendLine($"Exam Type: {result.ExamType}");
+        sb.AppendLine($"Score: {result.CorrectAnswers}/{result.TotalQuestions}");
+        sb.AppendLine("--------------------------------------------------");
 
+        int qNo = 1;
+        foreach (var ans in answers)
+        {
+            var correct = ans.Question.AnswerOptions.FirstOrDefault(o => o.IsCorrect)?.OptionText;
+            sb.AppendLine($"Q{qNo++}. {ans.Question.QuestionText}");
+            sb.AppendLine($"   Your Answer: {ans.SelectedAnswer}");
+            sb.AppendLine($"   Correct Answer: {correct}");
+            sb.AppendLine();
+        }
+
+        byte[] textBytes = Encoding.UTF8.GetBytes(sb.ToString());
+
+        using (var memoryStream = new MemoryStream())
+        {
+            using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+            {
+                var entry = zipArchive.CreateEntry("Result.txt");
+                using (var entryStream = entry.Open())
+                using (var writer = new StreamWriter(entryStream, Encoding.UTF8))
+                {
+                    writer.Write(sb.ToString());
+                }
+            }
+
+            return File(memoryStream.ToArray(), "application/zip", "ExamResult.zip");
+        }
     }
+
+
+
+
+}
 }

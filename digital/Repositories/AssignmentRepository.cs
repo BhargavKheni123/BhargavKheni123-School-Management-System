@@ -25,13 +25,13 @@ namespace digital.Repository
         public async Task AddAssignmentAsync(Assignment assignment, List<int> studentIds, bool assignAll)
         {
             _context.Assignment.Add(assignment);
-            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync(); 
 
-            if (assignAll)
+            if (assignAll) 
             {
-                var allStudents = _context.Student
+                var allStudents = await _context.Student
                     .Where(s => s.CategoryId == assignment.CategoryId && s.SubCategoryId == assignment.SubCategoryId)
-                    .ToList();
+                    .ToListAsync();
 
                 foreach (var student in allStudents)
                 {
@@ -42,7 +42,7 @@ namespace digital.Repository
                     });
                 }
             }
-            else
+            else if (studentIds != null && studentIds.Any()) 
             {
                 foreach (var studentId in studentIds)
                 {
@@ -56,6 +56,10 @@ namespace digital.Repository
 
             await _context.SaveChangesAsync();
         }
+
+
+
+
 
         public async Task<List<Assignment>> GetAllAssignmentsAsync()
         {
@@ -92,5 +96,6 @@ namespace digital.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
     }
 }

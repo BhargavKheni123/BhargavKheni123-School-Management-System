@@ -128,47 +128,104 @@
         <label>Deadline</label>
         <input asp-for="SubmissionDeadline" type="date" class="form-control" />
     </div>
+            <div>
+                <label>Upload Reference File</label><br />
+                <input type="radio" asp-for="FileType" value="PDF" /> PDF
+                <input type="radio" asp-for="FileType" value="Word" /> Word
+                <input type="radio" asp-for="FileType" value="Image" /> Image
+                <input type="radio" asp-for="FileType" value="PPT" /> PPT
+                <br />
 
-    <div>
-        <label>Upload New File (Optional)</label>
-        <input asp-for="UploadFile" type="file" class="form-control" />
-        @if (!string.IsNullOrEmpty(Model.FilePath))
-        {
-            <p>Current File: <a href="~/@Model.FilePath" target="_blank">View</a></p>
-        }
-    </div>
+            </div>
+
+
+            <div>
+                <label>Assign To Students</label><br />
+
+                <input asp-for="AssignAllStudents" type="checkbox" id="AssignAllStudents" /> All Students
+                <br /><br />
+
+                <div id="studentCheckboxList" style="max-height:200px; overflow-y:auto; border:1px solid #ccc; padding:10px;">
+                    @foreach (var student in Model.Students)
+                    {
+                        <div>
+                            <label>
+                                <input type="checkbox" name="SelectedStudents" value="@student.Value" />
+                                @student.Text
+                            </label>
+                        </div>
+                    }
+                </div>
+
+            </div>
+   
 
     <br />
     <button type="submit" class="btn btn-success">Save Changes</button>
      <a asp-action="Create" class="btn btn-secondary">Cancel</a>
 </form>
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+            <partial name="_ValidationScriptsPartial" />
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#CategoryId').change(function () {
-                var categoryId = $(this).val();
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script>
+                $(document).ready(function () {
+                    $('#CategoryId').change(function () {
+                        var categoryId = $(this).val();
 
-                if (categoryId !== "") {
-                    $.ajax({
-                        url: '@Url.Action("GetSubCategories", "Assignment")',
-                        type: 'GET',
-                        data: { categoryId: categoryId },
-                        success: function (data) {
-                            var subCategoryDropdown = $('#SubCategoryId');
-                            subCategoryDropdown.empty();
-                            subCategoryDropdown.append('<option value="">-- Select Class --</option>');
+                        if (categoryId !== "") {
+                            $.ajax({
+                                url: '@Url.Action("GetSubCategories", "Assignment")',
+                                type: 'GET',
+                                data: { categoryId: categoryId },
+                                success: function (data) {
+                                    var subCategoryDropdown = $('#SubCategoryId');
+                                    subCategoryDropdown.empty();
+                                    subCategoryDropdown.append('<option value="">-- Select Class --</option>');
 
-                            $.each(data, function (i, subCategory) 
-                            {
-                                subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
+                                    $.each(data, function (i, subCategory) {
+                                        subCategoryDropdown.append('<option value="' + subCategory.id + '">' + subCategory.name + '</option>');
+                                    });
+                                }
                             });
                         }
                     });
-                }
-            });
-        });
-    </script>
-    }
+
+                    $('#SubCategoryId').change(function () {
+                        var categoryId = $('#CategoryId').val();
+                        var subCategoryId = $(this).val();
+
+                        if (categoryId !== "" && subCategoryId !== "") {
+                            $.ajax({
+                                url: '@Url.Action("GetStudents", "Assignment")',
+                                type: 'GET',
+                                data: { categoryId: categoryId, subCategoryId: subCategoryId },
+                                success: function (data) {
+                                    var container = $('#studentCheckboxList');
+                                    container.empty();
+
+                                    $.each(data, function (i, student) {
+                                        container.append(
+                                            '<div><label>' +
+                                            '<input type="checkbox" name="SelectedStudents" value="' + student.id + '" /> ' +
+                                            student.name +
+                                            '</label></div>'
+                                        );
+                                    });
+                                }
+                            });
+                        }
+                    });
+
+                     $('#AssignAllStudents').change(function () {
+                    if ($(this).is(':checked')) {
+                        $('#studentCheckboxList input[type="checkbox"]').prop('checked', false).prop('disabled', true);
+                    } else {
+                        $('#studentCheckboxList input[type="checkbox"]').prop('disabled', false);
+                    }
+                });
+                });
+            </script>
+
+
+}
