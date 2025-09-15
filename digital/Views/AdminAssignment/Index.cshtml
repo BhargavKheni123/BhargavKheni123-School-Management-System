@@ -1,7 +1,11 @@
 ﻿@model digital.Models.AdminAssignmentViewModel
+
 @{
-    var list = ViewBag.AssignmentList ;
+    ViewData["Title"] = "AssignmentList";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var list = ViewBag.AssignmentList;
 }
+
 <style>
     .student-content {
         margin-left: 250px;
@@ -79,8 +83,9 @@
 
 <div class="student-content">
     <div class="register-header">
-        Admin Assignment Management
+        Assignment Details
     </div>
+<h2>Admin Assignment Management</h2>
 
 <form asp-action="Index" enctype="multipart/form-data" method="post" class="mb-4">
     <div class="row">

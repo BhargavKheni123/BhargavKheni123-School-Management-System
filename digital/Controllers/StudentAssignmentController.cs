@@ -18,19 +18,25 @@ public class StudentAssignmentController : Controller
     private readonly IWebHostEnvironment _env;
     private readonly IConfiguration _config;
     private readonly IAssignmentRepository _assignmentRepo;
+    private readonly ApplicationDbContext _context;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
     public StudentAssignmentController(
         ApplicationDbContext ctx,
         IAssignmentSubmissionRepository subRepo,
         IWebHostEnvironment env,
         IConfiguration config,
-        IAssignmentRepository assignmentRepo)
+        IAssignmentRepository assignmentRepo,
+        ApplicationDbContext context,
+        IWebHostEnvironment webHostEnvironment)
     {
         _ctx = ctx;
         _subRepo = subRepo;
         _env = env;
         _config = config;
         _assignmentRepo = assignmentRepo;
+        _context = context;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     [HttpGet]
@@ -203,6 +209,31 @@ public class StudentAssignmentController : Controller
 
         return View(model);
     }
+    [HttpPost]
+    public async Task<IActionResult> SubmitAssignment(int submissionId, IFormFile file)
+    {
+        var submission = await _context.AssignmentSubmissions.FindAsync(submissionId);
+        if (submission == null) return NotFound();
+
+        // file save karo
+        var folder = Path.Combine(_webHostEnvironment.WebRootPath, "student_submissions");
+        if (!Directory.Exists(folder))
+            Directory.CreateDirectory(folder);
+
+        var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+        var filePath = Path.Combine(folder, fileName);
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        submission.FilePath = "/student_submissions/" + fileName;
+        submission.SubmittedDate = DateTime.Now; 
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction("MyAssignments");
+    }
+
 
 
 }

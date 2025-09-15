@@ -41,5 +41,12 @@
                 </div>
             }
         </div>
+
     }
+    <div class="mt-3">
+        <a asp-action="ExportResult" asp-route-resultId="@Model.Result.Id" class="btn btn-success">
+            Export as ZIP
+        </a>
+    </div>
+
 </div>
