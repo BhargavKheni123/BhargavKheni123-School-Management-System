@@ -52,8 +52,16 @@ public class StudentAssignmentController : Controller
                 .FirstOrDefault(s => s.AssignmentId == a.Id && s.StudentId == student.Id)
         }).ToList();
 
+        
+        ViewBag.GetGradeLetter = new Func<decimal?, decimal?, string>((obt, total) =>
+        {
+            return GetGradeLetter(obt, total);
+        });
+
+        ViewBag.Student = student;
         return View(model);
     }
+
 
     [HttpPost]
     public async Task<IActionResult> Upload(int AssignmentId, IFormFile file)
@@ -74,14 +82,12 @@ public class StudentAssignmentController : Controller
         if (assignment == null)
             return Content("Invalid assignment.");
 
-        // Validate file type
         var extension = Path.GetExtension(file.FileName).ToLower();
         if (assignment.FileType == "PDF" && extension != ".pdf")
             return Content("This assignment only accepts PDF uploads.");
         if (assignment.FileType == "Word" && extension != ".docx")
             return Content("This assignment only accepts Word uploads.");
 
-        // Build folder structure: Standard -> Division -> Student -> Subject
         var standardName = _ctx.Categories.FirstOrDefault(c => c.Id == student.CategoryId)?.Name ?? "Standard";
         var divisionName = _ctx.SubCategories.FirstOrDefault(sc => sc.Id == student.SubCategoryId)?.Name ?? "Division";
         var studentName = student.Name.Replace(" ", "_");
@@ -101,7 +107,6 @@ public class StudentAssignmentController : Controller
             await file.CopyToAsync(stream);
         }
 
-        // Save submission
         var submission = await _ctx.AssignmentSubmissions
             .FirstOrDefaultAsync(s => s.AssignmentId == assignment.Id && s.StudentId == student.Id);
 
@@ -160,8 +165,22 @@ public class StudentAssignmentController : Controller
         return "F";
     }
 
-    [HttpGet]
-    public async Task<IActionResult> MyGrades()
+    //[HttpGet]
+    //public async Task<IActionResult> MyGrades()
+    //{
+    //    int? studentId = HttpContext.Session.GetInt32("StudentId");
+    //    if (studentId == null) return RedirectToAction("Login", "Account");
+
+    //    var submissions = await _ctx.AssignmentSubmissions
+    //        .Include(s => s.Assignment)
+    //        .Where(s => s.StudentId == studentId)
+    //        .OrderByDescending(s => s.SubmittedDate)
+    //        .ToListAsync();
+
+    //    return View(submissions);
+    //}
+
+    public async Task<IActionResult> MyAssignments()
     {
         int? studentId = HttpContext.Session.GetInt32("StudentId");
         if (studentId == null) return RedirectToAction("Login", "Account");
@@ -172,7 +191,17 @@ public class StudentAssignmentController : Controller
             .OrderByDescending(s => s.SubmittedDate)
             .ToListAsync();
 
-        return View(submissions);
+        var model = submissions.Select(s => new
+        {
+            Title = s.Assignment.Title,
+            SubmittedDate = s.SubmittedDate,
+            Checked = s.Marks.HasValue,   
+            Grade = s.Marks.HasValue
+                ? GetGradeLetter(s.Marks, s.Assignment.Marks)  
+                : "Pending"
+        }).ToList();
+
+        return View(model);
     }
 
 

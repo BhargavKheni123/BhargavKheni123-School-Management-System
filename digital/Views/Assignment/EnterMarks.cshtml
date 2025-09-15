@@ -1,0 +1,71 @@
+﻿@model digital.ViewModels.TeacherSubmissionViewModel
+@{
+    ViewData["Title"] = "Enter Marks";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>@Model.AssignmentTitle - Enter Marks</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Submission Date</th>
+            <th>File</th>
+            <th>Total Marks</th>
+            <th>Marks Obtained</th>
+            <th>Grade</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var sub in Model.Submissions)
+        {
+            <tr data-submission-id="@sub.SubmissionId">
+                <td>@sub.StudentId</td>
+                <td>@(sub.SubmissionDate?.ToShortDateString() ?? "-")</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(sub.FilePath))
+                    {
+                        <a href="@Url.Content(sub.FilePath)" target="_blank">Download</a>
+                    }
+                </td>
+                <td>@sub.TotalMarks</td>
+                <td>
+                    <input type="number" class="marks-input form-control"
+                           value="@(sub.Marks ?? 0)"
+                           min="0" max="@sub.TotalMarks" />
+                </td>
+                <td class="grade-cell">@sub.Grade</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('.marks-input').on('change', function(){
+                var row = $(this).closest('tr');
+                var submissionId = row.data('submission-id');
+                var marks = $(this).val();
+
+                $.ajax({
+                    url: '@Url.Action("SaveStudentMarks", "Assignment")',
+                    type: 'POST',
+                    data: { submissionId: submissionId, marks: marks },
+                    success: function(response){
+                        if(response.success){
+                            row.find('.grade-cell').text(response.grade);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(){
+                        alert("Error saving marks!");
+                    }
+                });
+            });
+        });
+    </script>
+}

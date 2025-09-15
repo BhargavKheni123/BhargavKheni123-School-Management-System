@@ -31,6 +31,7 @@ namespace digital.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+
         public AssignmentController(IAssignmentRepository repository, ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _repository = repository;
@@ -309,6 +310,176 @@ namespace digital.Controllers
             return PhysicalFile(filePath, "application/octet-stream", fileName);
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> TeacherSubmissions(int assignmentId)
+        {
+            var submissions = await _context.AssignmentSubmissions
+                .Include(s => s.Student)
+                .Include(s => s.Assignment)
+                .Where(s => s.AssignmentId == assignmentId)
+                .ToListAsync();
+
+            return View(submissions);
+        }
+
+        //[HttpGet]
+        //public IActionResult TeacherSubmissions(int assignmentId) 
+        //{
+        //    var assignment = _context.Assignment.FirstOrDefault(a => a.Id == assignmentId);
+        //    if (assignment == null) return NotFound();
+
+        //    var submissions = _context.AssignmentSubmissions
+        //        .Where(s => s.AssignmentId == assignmentId)
+        //        .Select(s => new SubmissionWithEvaluation
+        //        {
+        //            SubmissionId = s.Id,
+        //            StudentId = s.StudentId,
+        //            FilePath = s.FilePath,
+        //            SubmissionDate = s.SubmittedDate,
+        //            Grade = _context.AssignmentEvaluations
+        //                        .Where(e => e.AssignmentId == s.AssignmentId )
+        //                        .Select(e => e.Grade)
+        //                        .FirstOrDefault() ?? "Not Graded",
+        //            IsChecked = _context.AssignmentEvaluations
+        //                        .Where(e => e.AssignmentId == s.AssignmentId )
+        //                        .Select(e => e.IsChecked)
+        //                        .FirstOrDefault()
+        //        })
+        //        .ToList();
+
+        //    var vm = new TeacherSubmissionViewModel
+        //    {
+        //        AssignmentId = assignmentId,
+        //        AssignmentTitle = assignment.Title,
+        //        Submissions = submissions
+        //    };
+
+        //    return View(vm);
+        //}
+
+
+        [HttpPost]
+        public async Task<JsonResult> SaveEvaluation(int submissionId, string grade, bool isChecked, int teacherId)
+        {
+            try
+            {
+                var submission = await _context.AssignmentSubmissions
+                    .FirstOrDefaultAsync(s => s.Id == submissionId);
+
+                if (submission == null)
+                    return Json(new { success = false, message = "Submission not found." });
+
+                var evaluation = await _context.AssignmentEvaluations
+                    .FirstOrDefaultAsync(e => e.AssignmentId == submission.AssignmentId && e.TeacherId == teacherId);
+
+                if (evaluation == null)
+                {
+                    evaluation = new AssignmentEvaluation
+                    {
+                        AssignmentId = submission.AssignmentId,
+                        TeacherId = teacherId
+                    };
+                    _context.AssignmentEvaluations.Add(evaluation);
+                }
+
+                evaluation.Grade = grade;
+                evaluation.IsChecked = isChecked;
+                evaluation.CheckedDate = isChecked ? DateTime.Now : null;
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+        [HttpGet]
+        public Task<IActionResult> EnterMarks(int assignmentId)
+        {
+            var assignment = _context.Assignment
+                .FirstOrDefault(a => a.Id == assignmentId);
+
+            if (assignment == null) return Task.FromResult<IActionResult>(NotFound());
+
+            int teacherId = Convert.ToInt32(HttpContext.Session.GetString("TeacherId"));
+
+            var submissions = _context.AssignmentSubmissions
+                .Include(s => s.Student)
+                .Where(s => s.AssignmentId == assignmentId)
+                .ToList();
+
+            var vm = new TeacherSubmissionViewModel
+            {
+                AssignmentId = assignmentId,
+                AssignmentTitle = assignment.Title,
+                Submissions = submissions.Select(s =>
+                {
+                    var evaluation = _context.AssignmentEvaluations
+                        .FirstOrDefault(e => e.AssignmentId == s.AssignmentId && e.TeacherId == teacherId);
+
+                    return new SubmissionWithEvaluation
+                    {
+                        SubmissionId = s.Id,
+                        StudentId = s.StudentId,
+                        FilePath = s.FilePath,
+                        SubmissionDate = s.SubmittedDate,
+                        Marks = s.Marks,
+                        TotalMarks = assignment.Marks,
+                        Grade = evaluation != null ? evaluation.Grade : GetGradeLetter(s.Marks, assignment.Marks),
+                        IsChecked = evaluation != null ? evaluation.IsChecked : false
+                    };
+                }).ToList()
+            };
+
+            return Task.FromResult<IActionResult>(View(vm));
+        }
+
+
+
+        [HttpPost]
+        public async Task<JsonResult> SaveStudentMarks(int submissionId, decimal marks, int teacherId)
+        {
+            try
+            {
+                var submission = await _context.AssignmentSubmissions
+                    .Include(s => s.Assignment)
+                    .FirstOrDefaultAsync(s => s.Id == submissionId);
+
+                if (submission == null)
+                    return Json(new { success = false, message = "Submission not found." });
+
+                var evaluation = await _context.AssignmentEvaluations
+                    .FirstOrDefaultAsync(e => e.AssignmentId == submission.AssignmentId && e.TeacherId == teacherId);
+
+                if (evaluation == null)
+                {
+                    evaluation = new AssignmentEvaluation
+                    {
+                        AssignmentId = submission.AssignmentId,
+                        TeacherId = teacherId
+                    };
+                    _context.AssignmentEvaluations.Add(evaluation);
+                }
+
+                evaluation.IsChecked = true;
+                evaluation.Grade = GetGradeLetter(marks, (decimal?)submission.Assignment.Marks);
+                evaluation.CheckedDate = DateTime.Now;
+
+                evaluation.Grade = GetGradeLetter(marks, (decimal?)submission.Assignment.Marks);
+
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, grade = evaluation.Grade });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         private string GetGradeLetter(decimal? obtained, decimal? total)
         {
             if (!obtained.HasValue) return "Not Submitted";
@@ -324,33 +495,5 @@ namespace digital.Controllers
             return "F";
         }
 
-        [HttpGet]
-        public async Task<IActionResult> TeacherSubmissions(int assignmentId)
-        {
-            var submissions = await _context.AssignmentSubmissions
-                .Include(s => s.Student)
-                .Include(s => s.Assignment)
-                .Where(s => s.AssignmentId == assignmentId)
-                .ToListAsync();
-
-            return View(submissions);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> UpdateMarks(int submissionId, decimal obtainedMarks)
-        {
-            var submission = await _context.AssignmentSubmissions
-                .Include(s => s.Assignment)
-                .FirstOrDefaultAsync(s => s.Id == submissionId);
-
-            if (submission == null) return NotFound();
-
-            //submission.Marks = obtainedMarks;
-            await _context.SaveChangesAsync();
-
-            var grade = GetGradeLetter(submission.Marks, submission.Assignment.Marks);
-
-            return Json(new { success = true, grade });
-        }
     }
 }

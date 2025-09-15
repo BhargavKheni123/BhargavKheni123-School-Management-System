@@ -124,7 +124,21 @@
                     <td>@a.CreatedDate.ToString("yyyy-MM-dd")</td>
                     <td>@a.SubmissionDeadline</td>
 
-                    <td>@a.Marks</td>
+                    <td>
+                        @if (s == null)
+                        {
+                            <span class="text-muted">Not Submitted</span>
+                        }
+                        else if (s.Marks == null)
+                        {
+                            <span class="text-warning">Pending</span>
+                        }
+                        else
+                        {
+                            <span class="text-success">Grade: @Html.Raw(ViewBag.GetGradeLetter?.Invoke(s.Marks, a.Marks)) (@s.Marks/@a.Marks)</span>
+                        }
+                    </td>
+
 
                     <td>
                         <a asp-action="DownloadAssignment" asp-route-id="@a.Id" class="btn btn-sm btn-primary">
@@ -150,5 +164,3 @@
             }
         </tbody>
     </table>
-
-

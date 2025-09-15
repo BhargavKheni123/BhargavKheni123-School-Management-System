@@ -92,5 +92,20 @@ namespace digital.Repository
                 await _context.SaveChangesAsync();
             }
         }
+        public AssignmentEvaluation GetEvaluation(int assignmentId, int teacherId)
+        {
+            return _context.AssignmentEvaluations
+                .FirstOrDefault(e => e.AssignmentId == assignmentId && e.TeacherId == teacherId);
+        }
+
+        public void SaveEvaluation(AssignmentEvaluation evaluation)
+        {
+            if (evaluation.EvaluationId == 0)
+                _context.AssignmentEvaluations.Add(evaluation);
+            else
+                _context.AssignmentEvaluations.Update(evaluation);
+
+            _context.SaveChanges();
+        }
     }
 }

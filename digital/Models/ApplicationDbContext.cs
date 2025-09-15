@@ -34,6 +34,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Assignment> Assignment { get; set; }
     public DbSet<AssignmentSubmission> AssignmentSubmissions { get; set; }
 
+    public DbSet<AssignmentEvaluation> AssignmentEvaluations { get; set; }
 
 
 

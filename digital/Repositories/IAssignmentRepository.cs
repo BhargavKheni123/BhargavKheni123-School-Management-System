@@ -12,5 +12,7 @@ namespace digital.Repository
         Task<Assignment> GetAssignmentByIdAsync(int id);
         Task UpdateAssignmentAsync(Assignment assignment);
         Task DeleteAssignmentAsync(int id);
+        AssignmentEvaluation GetEvaluation(int assignmentId, int teacherId);
+        void SaveEvaluation(AssignmentEvaluation evaluation);
     }
 }
