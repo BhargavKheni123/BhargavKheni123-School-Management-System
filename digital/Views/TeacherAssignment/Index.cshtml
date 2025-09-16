@@ -1,0 +1,48 @@
+﻿@model List<Digital.Models.AssignmentSubmission>
+
+<div class="container mt-4">
+    <h2>Student Submissions</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Student</th>
+                <th>Subject</th>
+                <th>Assignment Title</th>
+                <th>Submitted Date</th>
+                <th>File</th>
+                <th>Marks</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td>@s.Student?.Name</td>
+                    <td>@s.Assignment?.Subject?.Name</td>
+                    <td>@s.Assignment?.Title</td>
+                    <td>@s.SubmittedDate</td>
+                    <td>
+                        <a asp-action="DownloadSubmission" asp-route-id="@s.Id" class="btn btn-sm btn-primary">
+                            Download
+                        </a>
+                    </td>
+                    <td>@(s.Marks.HasValue? s.Marks.ToString() : "Not Graded")</td>
+                    <td>
+                        <form asp-action="GradeSubmission" method="post" class="d-flex">
+                            <input type="hidden" name="submissionId" value="@s.Id" />
+                            <input type="number" name="marks" class="form-control form-control-sm" placeholder="Enter Marks" required />
+                            <button type="submit" class="btn btn-success btn-sm ms-2">Save</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
