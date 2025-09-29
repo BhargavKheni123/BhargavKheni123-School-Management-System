@@ -10,5 +10,6 @@ namespace digital.Interfaces
 
         void AddStudent(Student student);
         int GetTotalStudents();
+        List<Student> GetStudentsByClass(int categoryId, int subCategoryId);
     }
 }

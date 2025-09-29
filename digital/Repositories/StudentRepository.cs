@@ -38,5 +38,25 @@ namespace digital.Repositories
             return _context.Student.Count();
         }
 
+
+        public List<Student> GetStudentsByClass(int categoryId, int subCategoryId)
+        {
+            return _context.Student
+                .Where(s => s.CategoryId == categoryId && s.SubCategoryId == subCategoryId)
+                .Include(s => s.Category)     
+                .Include(s => s.SubCategory)  
+                .ToList();
+        }
+
+       
+        public List<Student> GetStudentsByClassSP(int categoryId, int subCategoryId)
+        {
+            return _context.Student
+                .FromSqlRaw("EXEC GetStudentsByClass @CategoryId = {0}, @SubCategoryId = {1}", categoryId, subCategoryId)
+                .ToList();
+        }
+
+
+
     }
 }

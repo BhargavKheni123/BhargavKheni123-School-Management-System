@@ -11,7 +11,7 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using System.IO;
-
+using digital.ViewModels;
 
 namespace digital.Controllers
 {
@@ -564,6 +564,25 @@ namespace digital.Controllers
 
             const string contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             return File(bytes, contentType, fileName);
+        }
+
+        [HttpGet]
+        public IActionResult StudentsByClass(int? CategoryId, int? SubCategoryId)
+        {
+            var vm = new StudentViewModel
+            {
+                Categories = _context.Categories
+                                     .Select(c => new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                                     .ToList(),
+                SubCategories = new List<SelectListItem>()
+            };
+
+            if (CategoryId.HasValue && SubCategoryId.HasValue)
+            {
+                vm.StudentList = _studentRepository.GetStudentsByClass(CategoryId.Value, SubCategoryId.Value);
+            }
+
+            return View(vm);
         }
 
 
